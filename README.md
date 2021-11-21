@@ -7,11 +7,10 @@ fast 64-bit hash function, mainly designed for hash table uses.
 
 It features both a high large-block hashing performance (28 GB/s on Ryzen
 3700X) and a high hashing throughput for small messages (about 13 cycles/hash
-for 7-byte messages). Performance on 32-bit systems is, however, quite low.
+for 7-byte messages if `UseSeed==0`, 16 cycles/hash otherwise). Performance on
+32-bit systems is, however, quite low.
 
-It passes all [SMHasher](https://github.com/rurban/smhasher) tests. But its
-uses in PerlinNoise-like applications may be limited due to its design
-(if `UseSeed` is larger than 32 bits).
+It passes all [SMHasher](https://github.com/rurban/smhasher) tests.
 
 Note that this function is not cryptographically-secure, and in open systems
 it should only be used with a secret seed, to minimize a chance of collision
