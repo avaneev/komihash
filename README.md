@@ -7,7 +7,7 @@ fast 64-bit hash function, mainly designed for hash table uses.
 
 It features both a high large-block hashing performance (28 GB/s on Ryzen
 3700X) and a high hashing throughput for small messages (about 13 cycles/hash
-for 7-byte messages if `UseSeed==0`, 16 cycles/hash otherwise). Performance on
+for 7-byte messages if `UseSeed==0`, 15 cycles/hash otherwise). Performance on
 32-bit systems is, however, quite low.
 
 It passes all [SMHasher](https://github.com/rurban/smhasher) tests.
