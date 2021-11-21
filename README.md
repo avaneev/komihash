@@ -18,5 +18,5 @@ attack.
 
 ## Other ##
 
-The function is called the way it is called is to honor Komi Republic
+The function is named the way it is named is to honor Komi Republic
 (Russia), native to the author.
