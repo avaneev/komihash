@@ -1,5 +1,5 @@
 /**
- * komihash.h version 1.1
+ * komihash.h version 1.2
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -40,13 +40,21 @@
  * A macro that applies byte-swapping.
  */
 
+#define KOMIHASH_BYTESW32( v ) __builtin_bswap32( v )
 #define KOMIHASH_BYTESW64( v ) __builtin_bswap64( v )
 
 #elif defined( _MSC_VER ) || defined( __INTEL_COMPILER )
 
+#define KOMIHASH_BYTESW32( v ) _byteswap_ulong( v )
 #define KOMIHASH_BYTESW64( v ) _byteswap_uint64( v )
 
 #else // defined( _MSC_VER ) || defined( __INTEL_COMPILER )
+
+#define KOMIHASH_BYTESW32( v ) ( \
+	( v & 0xFF000000 ) >> 24 | \
+	( v & 0x00FF0000 ) >> 8 | \
+	( v & 0x0000FF00 ) << 8 | \
+	( v & 0x000000FF ) << 24 )
 
 #define KOMIHASH_BYTESW64( v ) ( \
 	( v & 0xFF00000000000000 ) >> 56 | \
@@ -66,12 +74,35 @@
 	 * A macro that applies byte-swapping used for endianness-correction.
 	 */
 
+	#define KOMIHASH_EC32( v ) ( v )
 	#define KOMIHASH_EC64( v ) ( v )
+
 #elif defined( __BIG_ENDIAN__ ) || ( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ )
+
+	#define KOMIHASH_EC32( v ) KOMIHASH_BYTESW32( v )
 	#define KOMIHASH_EC64( v ) KOMIHASH_BYTESW64( v )
+
 #else // endianness check
+
 	#error KOMIHASH: cannot obtain endianness
+
 #endif // endianness check
+
+/**
+ * An auxiliary function that returns an unsigned 32-bit value created out of
+ * individual bytes in a buffer. This function is used to convert endianness
+ * of supplied 32-bit unsigned values, and to avoid unaligned memory accesses.
+ *
+ * @param p 4-byte buffer. Alignment is unimportant.
+ */
+
+static inline uint32_t kh_lu32ec( const uint8_t* const p )
+{
+	uint32_t v;
+	memcpy( &v, p, sizeof( v ));
+
+	return( KOMIHASH_EC32( v ));
+}
 
 /**
  * An auxiliary function that returns an unsigned 64-bit value created out of
@@ -84,7 +115,7 @@
 static inline uint64_t kh_lu64ec( const uint8_t* const p )
 {
 	uint64_t v;
-	memcpy( &v, p, 8 );
+	memcpy( &v, p, sizeof( v ));
 
 	return( KOMIHASH_EC64( v ));
 }
@@ -99,10 +130,35 @@ static inline uint64_t kh_lu64ec( const uint8_t* const p )
  * @param fb Final byte used for padding.
  */
 
-static inline uint64_t kh_lpu64_f( const uint8_t* Msg,
+static inline uint64_t kh_lpu64( const uint8_t* Msg,
 	const uint8_t* const MsgEnd, const uint64_t fb )
 {
 	uint64_t r = fb << (( MsgEnd - Msg ) << 3 );
+
+	if( Msg < MsgEnd - 3 )
+	{
+		r |= (uint64_t) kh_lu32ec( Msg );
+		Msg += sizeof( uint32_t );
+
+		if( Msg < MsgEnd )
+		{
+			r |= (uint64_t) *Msg << 32;
+			Msg++;
+
+			if( Msg < MsgEnd )
+			{
+				r |= (uint64_t) *Msg << 40;
+				Msg++;
+
+				if( Msg < MsgEnd )
+				{
+					r |= (uint64_t) *Msg << 48;
+				}
+			}
+		}
+
+		return( r );
+	}
 
 	if( Msg < MsgEnd )
 	{
@@ -117,30 +173,6 @@ static inline uint64_t kh_lpu64_f( const uint8_t* Msg,
 			if( Msg < MsgEnd )
 			{
 				r |= (uint64_t) *Msg << 16;
-				Msg++;
-
-				if( Msg < MsgEnd )
-				{
-					r |= (uint64_t) *Msg << 24;
-					Msg++;
-
-					if( Msg < MsgEnd )
-					{
-						r |= (uint64_t) *Msg << 32;
-						Msg++;
-
-						if( Msg < MsgEnd )
-						{
-							r |= (uint64_t) *Msg << 40;
-							Msg++;
-
-							if( Msg < MsgEnd )
-							{
-								r |= (uint64_t) *Msg << 48;
-							}
-						}
-					}
-				}
 			}
 		}
 	}
@@ -301,11 +333,11 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 	if( Msg < MsgEnd - 7 )
 	{
 		Seed1 ^= kh_lu64ec( Msg );
-		Seed5 ^= kh_lpu64_f( Msg + 8, MsgEnd, fb );
+		Seed5 ^= kh_lpu64( Msg + 8, MsgEnd, fb );
 	}
 	else
 	{
-		Seed1 ^= kh_lpu64_f( Msg, MsgEnd, fb );
+		Seed1 ^= kh_lpu64( Msg, MsgEnd, fb );
 	}
 
 	kh_m128( &Seed1, &Seed5, &r1a, &r1b );
