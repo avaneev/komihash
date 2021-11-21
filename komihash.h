@@ -1,5 +1,5 @@
 /**
- * komihash.h version 1.2
+ * komihash.h version 1.3
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -250,8 +250,8 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 	uint64_t Seed2 = 0x13198A2E03707344;
 	uint64_t Seed5 = 0x452821E638D01377;
 
-	Seed1 ^= UseSeed >> 32;
-	Seed5 ^= (uint32_t) UseSeed;
+	Seed1 ^= UseSeed << 32;
+	Seed5 ^= UseSeed & 0xFFFFFFFF00000000;
 
 	uint64_t fb = 1;
 
