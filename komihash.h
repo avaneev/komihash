@@ -1,5 +1,5 @@
 /**
- * komihash.h version 1.0
+ * komihash.h version 1.1
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -230,7 +230,7 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 
 	const uint8_t* const MsgEnd = Msg + MsgLen;
 
-	if( MsgLen >= 64 )
+	if( MsgLen > 63 )
 	{
 		uint64_t Seed3 = 0xA4093822299F31D0;
 		uint64_t Seed4 = 0x082EFA98EC4E6C89;
@@ -252,14 +252,16 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 
 			kh_m128( &Seed1, &Seed5, &r1a, &r1b );
 			kh_m128( &Seed2, &Seed6, &r2a, &r2b );
-			kh_m128( &Seed3, &Seed7, &r3a, &r3b );
-			kh_m128( &Seed4, &Seed8, &r4a, &r4b );
 
 			Seed5 += r1b;
 			Seed6 += r2b;
+			Seed2 = Seed5 ^ r2a;
+
+			kh_m128( &Seed3, &Seed7, &r3a, &r3b );
+			kh_m128( &Seed4, &Seed8, &r4a, &r4b );
+
 			Seed7 += r3b;
 			Seed8 += r4b;
-			Seed2 = Seed5 ^ r2a;
 			Seed3 = Seed6 ^ r3a;
 			Seed4 = Seed7 ^ r4a;
 			Seed1 = Seed8 ^ r1a;
