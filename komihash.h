@@ -1,5 +1,5 @@
 /**
- * komihash.h version 1.7
+ * komihash.h version 1.8
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -130,7 +130,7 @@ static inline uint64_t kh_lu64ec( const uint8_t* const p )
  * @param fb Final byte used for padding.
  */
 
-static inline uint64_t kh_lpu64( const uint8_t* Msg,
+static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
 	const uint8_t* const MsgEnd, const uint64_t fb )
 {
 	const int l = (int) ( MsgEnd - Msg );
@@ -250,19 +250,27 @@ static inline uint64_t kh_lpu64( const uint8_t* Msg,
 static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 	const uint64_t UseSeed )
 {
-	uint64_t Seed1 = 0x243F6A8885A308D3; // The first mantissa bits of PI.
+	uint64_t Seed1; // Seeds are initialized to the first mantissa bits of PI.
 	uint64_t Seed2 = 0x13198A2E03707344;
-	uint64_t Seed5 = 0x452821E638D01377;
-	uint64_t r1a, r1b;
+	uint64_t Seed5;
 
 	if( UseSeed != 0 )
 	{
-		Seed1 ^= UseSeed & 0xFFFFFFFF00000000;
-		Seed5 ^= UseSeed << 32;
+		Seed1 = 0x243F6A8885A308D3 ^ ( UseSeed & 0xFFFFFFFF00000000 );
+		Seed5 = 0x452821E638D01377 ^ ( UseSeed << 32 );
+
+		uint64_t r1a, r1b;
 
 		kh_m128( &Seed1, &Seed5, &r1a, &r1b );
 		Seed5 += r1b;
 		Seed1 = Seed5 ^ r1a;
+	}
+	else
+	{
+		// Assign an immediate multiplication result, by default (UseSeed==0).
+
+		Seed1 = 0x01D2EE0AE40A48DC;
+		Seed5 = 0x4EF2E8526FEA8BC9;
 	}
 
 	const uint8_t* const MsgEnd = Msg + MsgLen;
@@ -280,7 +288,7 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 		uint64_t Seed6 = 0xBE5466CF34E90C6C;
 		uint64_t Seed7 = 0xC0AC29B7C97C50DD;
 		uint64_t Seed8 = 0x3F84D5B5B5470917;
-		uint64_t r2a, r2b, r3a, r3b, r4a, r4b;
+		uint64_t r1a, r1b, r2a, r2b, r3a, r3b, r4a, r4b;
 
 		do
 		{
@@ -327,6 +335,8 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 		Seed2 ^= Seed3 ^ Seed4;
 	}
 
+	uint64_t r1a, r1b;
+
 	while( Msg < MsgEnd - 15 )
 	{
 		Seed1 ^= kh_lu64ec( Msg );
@@ -342,11 +352,11 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 	if( Msg < MsgEnd - 7 )
 	{
 		Seed1 ^= kh_lu64ec( Msg );
-		Seed5 ^= kh_lpu64( Msg + 8, MsgEnd, fb );
+		Seed5 ^= kh_lpu64ec( Msg + 8, MsgEnd, fb );
 	}
 	else
 	{
-		Seed1 ^= kh_lpu64( Msg, MsgEnd, fb );
+		Seed1 ^= kh_lpu64ec( Msg, MsgEnd, fb );
 	}
 
 	kh_m128( &Seed1, &Seed5, &r1a, &r1b );
