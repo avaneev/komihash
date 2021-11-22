@@ -1,8 +1,8 @@
-# KOMIHASH - Very Fast Non-Cryptographic Hash Function ##
+# KOMIHASH - Very Fast Hash Function ##
 
 ## Introduction ##
 
-The `komihash()` function available in the `komihash.c` file implements a very
+The `komihash()` function available in the `komihash.h` file implements a very
 fast 64-bit hash function, mainly designed for hash table uses.
 
 It features both a high large-block hashing performance (28 GB/s on Ryzen
@@ -13,8 +13,8 @@ for 7-byte messages if `UseSeed==0`, 15 cycles/hash otherwise). Performance on
 It passes all [SMHasher](https://github.com/rurban/smhasher) tests.
 
 Note that this function is not cryptographically-secure, and in open systems
-it should only be used with a secret seed, to minimize a chance of collision
-attack.
+it should only be used with a secret seed, to minimize the chance of a
+collision attack.
 
 ## Other ##
 
