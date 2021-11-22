@@ -1,5 +1,5 @@
 /**
- * komihash.h version 1.6
+ * komihash.h version 1.7
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -234,29 +234,31 @@ static inline uint64_t kh_lpu64( const uint8_t* Msg,
 
 /**
  * KOMIHASH hash function. Produces and returns 64-bit hash of the specified
- * message. Designed for 64-bit hash table uses.
+ * message. Designed for 64-bit hash-table uses. Produces identical hashes on
+ * both big- and little-endian systems.
  *
  * @param Msg The message to produce hash from. The alignment of the message
  * is unimportant.
  * @param MsgLen Message's length, in bytes.
  * @param UseSeed Optional value, to use instead of the default seed. To use
  * the default seed, set to 0. The UseSeed value can have any bit length and
- * statistical quality, and is used only as an additional entropy source.
+ * statistical quality, and is used only as an additional entropy source. May
+ * need endianness-correction if this value is shared between big- and
+ * little-endian systems.
  */
 
 static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 	const uint64_t UseSeed )
 {
-	uint64_t Seed1 = 0x243F6A8885A308D3; // The first bits of PI.
+	uint64_t Seed1 = 0x243F6A8885A308D3; // The first mantissa bits of PI.
 	uint64_t Seed2 = 0x13198A2E03707344;
 	uint64_t Seed5 = 0x452821E638D01377;
+	uint64_t r1a, r1b;
 
 	if( UseSeed != 0 )
 	{
 		Seed1 ^= UseSeed & 0xFFFFFFFF00000000;
 		Seed5 ^= UseSeed << 32;
-
-		uint64_t r1a, r1b;
 
 		kh_m128( &Seed1, &Seed5, &r1a, &r1b );
 		Seed5 += r1b;
@@ -266,7 +268,7 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 	const uint8_t* const MsgEnd = Msg + MsgLen;
 	uint64_t fb = 1;
 
-	if( MsgLen > 0 )
+	if( MsgLen != 0 )
 	{
 		fb <<= ( MsgEnd[ -1 ] >> 7 );
 	}
@@ -278,7 +280,7 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 		uint64_t Seed6 = 0xBE5466CF34E90C6C;
 		uint64_t Seed7 = 0xC0AC29B7C97C50DD;
 		uint64_t Seed8 = 0x3F84D5B5B5470917;
-		uint64_t r1a, r1b, r2a, r2b, r3a, r3b, r4a, r4b;
+		uint64_t r2a, r2b, r3a, r3b, r4a, r4b;
 
 		do
 		{
@@ -324,8 +326,6 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 
 		Seed2 ^= Seed3 ^ Seed4;
 	}
-
-	uint64_t r1a, r1b;
 
 	while( Msg < MsgEnd - 15 )
 	{
