@@ -15,16 +15,17 @@ hashing performance on big-endian systems may be lower due to the need of
 byte-swapping.
 
 It passes all [SMHasher](https://github.com/rurban/smhasher) tests.
+Performance estimates on that page are, however, unreliable.
 
 Technically, `komihash` is close to the class of hash functions like `wyhash`
 and `CircleHash`, that are, in turn, close to the `lehmer64` PRNG. However,
 `komihash` is structurally different to them in that it accumulates the full
-128-bit multiplication result without "compressing" it into a single 64-bit
-state variable. Thus `komihash` does not lose differentiation between
-consecutive states while others do not. Another important difference in
-`komihash` is that it parses the input message without overlaps. While
-overlaps allow a function to have fewer code branches, they are considered
-"non-ideal", potentially causing collisions and seed value flaws.
+128-bit multiplication result without "compressing" into a single 64-bit state
+variable. Thus `komihash` does not lose differentiation between consecutive
+states while others may. Another important difference in `komihash` is that it
+parses the input message without overlaps. While overlaps allow a function to
+have fewer code branches, they are considered "non-ideal", potentially causing
+collisions and seed value flaws.
 
 Note that this function is not cryptographically-secure, and in open systems
 it should only be used with a secret seed, to minimize the chance of a
