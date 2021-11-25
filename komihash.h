@@ -1,5 +1,5 @@
 /**
- * komihash.h version 2.2
+ * komihash.h version 2.3
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -89,6 +89,16 @@
 	#define KOMIHASH_EC64( v ) ( v )
 
 #endif // endianness check
+
+// Likely/unlikely macros that work as manual profiling, efficient with GNUC.
+
+#if defined( __GNUC__ )
+	#define KOMIHASH_LIKELY( x )  __builtin_expect( x, 1 )
+	#define KOMIHASH_UNLIKELY( x )  __builtin_expect( x, 0 )
+#else // defined( __GNUC__ )
+	#define KOMIHASH_LIKELY( x ) ( x )
+	#define KOMIHASH_UNLIKELY( x ) ( x )
+#endif // defined( __GNUC__ )
 
 /**
  * An auxiliary function that returns an unsigned 32-bit value created out of
@@ -260,18 +270,18 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 
 	const uint8_t* const MsgEnd = Msg + MsgLen;
 
-	if( MsgLen < 16 )
+	if( KOMIHASH_LIKELY( MsgLen < 16 ))
 	{
 		r2a = Seed1;
 		r2b = Seed5;
 
-		if( MsgLen > 7 )
+		if( KOMIHASH_LIKELY( MsgLen > 7 ))
 		{
 			r2a ^= kh_lu64ec( Msg );
 			r2b ^= kh_lpu64ec( Msg + 8, MsgEnd, 1 << ( MsgEnd[ -1 ] >> 7 ));
 		}
 		else
-		if( MsgLen != 0 )
+		if( KOMIHASH_LIKELY( MsgLen != 0 ))
 		{
 			r2a ^= kh_lpu64ec( Msg, MsgEnd, 1 << ( MsgEnd[ -1 ] >> 7 ));
 		}
@@ -290,7 +300,7 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 	const uint64_t fb = 1 << ( MsgEnd[ -1 ] >> 7 );
 	uint64_t Seed2 = 0x13198A2E03707344 ^ Seed1;
 
-	if( MsgLen > 63 )
+	if( KOMIHASH_UNLIKELY( MsgLen > 63 ))
 	{
 		uint64_t Seed3 = 0xA4093822299F31D0 ^ Seed1;
 		uint64_t Seed4 = 0x082EFA98EC4E6C89 ^ Seed1;
@@ -324,7 +334,7 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 			Seed4 = Seed7 ^ r4a;
 			Seed1 = Seed8 ^ r1a;
 
-		} while( Msg < MsgEnd - 63 );
+		} while( KOMIHASH_LIKELY( Msg < MsgEnd - 63 ));
 
 		kh_m128( Seed2, Seed6, &r2a, &r2b );
 		kh_m128( Seed3, Seed7, &r3a, &r3b );
@@ -340,7 +350,7 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 		Seed2 ^= Seed3 ^ Seed4;
 	}
 
-	while( Msg < MsgEnd - 15 )
+	while( KOMIHASH_LIKELY( Msg < MsgEnd - 15 ))
 	{
 		kh_m128( Seed1 ^ kh_lu64ec( Msg ),
 			Seed5 ^ kh_lu64ec( Msg + 8 ), &r1a, &r1b );
@@ -351,7 +361,7 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 		Seed1 = Seed5 ^ r1a;
 	}
 
-	if( Msg < MsgEnd - 7 )
+	if( KOMIHASH_UNLIKELY( Msg < MsgEnd - 7 ))
 	{
 		r2a = Seed1 ^ kh_lu64ec( Msg );
 		r2b = Seed5 ^ kh_lpu64ec( Msg + 8, MsgEnd, fb );
