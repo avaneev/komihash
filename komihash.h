@@ -1,5 +1,5 @@
 /**
- * komihash.h version 2.1
+ * komihash.h version 2.2
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -141,7 +141,7 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
 	if( l > 3 )
 	{
 		r |= (uint64_t) kh_lu32ec( Msg );
-		Msg += sizeof( uint32_t );
+		Msg += 4;
 
 		if( Msg < MsgEnd )
 		{
@@ -161,7 +161,7 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
 		return( r );
 	}
 
-	if( l > 0 )
+	if( l != 0 )
 	{
 		r |= *Msg;
 
@@ -250,9 +250,13 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 {
 	// Seeds are initialized to the first mantissa bits of PI.
 
-	uint64_t Seed1 = 0x243F6A8885A308D3 ^ ( UseSeed & 0xFFFFFFFF00000000 );
-	uint64_t Seed5 = 0x452821E638D01377 ^ ( UseSeed << 32 );
+	uint64_t Seed1 = 0x243F6A8885A308D3 ^ ( UseSeed & 0x5555555555555555 );
+	uint64_t Seed5 = 0x452821E638D01377 ^ ( UseSeed & 0xAAAAAAAAAAAAAAAA );
 	uint64_t r1a, r1b, r2a, r2b;
+
+	kh_m128( Seed1, Seed5, &r2a, &r2b ); // Required for PerlinNoise.
+	Seed5 += r2b;
+	Seed1 = Seed5 ^ r2a;
 
 	const uint8_t* const MsgEnd = Msg + MsgLen;
 
@@ -284,15 +288,15 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 	}
 
 	const uint64_t fb = 1 << ( MsgEnd[ -1 ] >> 7 );
-	uint64_t Seed2 = 0x13198A2E03707344;
+	uint64_t Seed2 = 0x13198A2E03707344 ^ Seed1;
 
 	if( MsgLen > 63 )
 	{
-		uint64_t Seed3 = 0xA4093822299F31D0;
-		uint64_t Seed4 = 0x082EFA98EC4E6C89;
-		uint64_t Seed6 = 0xBE5466CF34E90C6C;
-		uint64_t Seed7 = 0xC0AC29B7C97C50DD;
-		uint64_t Seed8 = 0x3F84D5B5B5470917;
+		uint64_t Seed3 = 0xA4093822299F31D0 ^ Seed1;
+		uint64_t Seed4 = 0x082EFA98EC4E6C89 ^ Seed1;
+		uint64_t Seed6 = 0xBE5466CF34E90C6C ^ Seed5;
+		uint64_t Seed7 = 0xC0AC29B7C97C50DD ^ Seed5;
+		uint64_t Seed8 = 0x3F84D5B5B5470917 ^ Seed5;
 		uint64_t r3a, r3b, r4a, r4b;
 
 		do
