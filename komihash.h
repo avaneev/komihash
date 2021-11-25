@@ -1,5 +1,5 @@
 /**
- * komihash.h version 1.8
+ * komihash.h version 2.0
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -84,7 +84,9 @@
 
 #else // endianness check
 
-	#error KOMIHASH: cannot obtain endianness
+	#warning KOMIHASH: cannot determine endianness, assuming little-endian.
+	#define KOMIHASH_EC32( v ) ( v )
+	#define KOMIHASH_EC64( v ) ( v )
 
 #endif // endianness check
 
@@ -99,7 +101,7 @@
 static inline uint32_t kh_lu32ec( const uint8_t* const p )
 {
 	uint32_t v;
-	memcpy( &v, p, sizeof( v ));
+	memcpy( &v, p, 4 );
 
 	return( KOMIHASH_EC32( v ));
 }
@@ -115,7 +117,7 @@ static inline uint32_t kh_lu32ec( const uint8_t* const p )
 static inline uint64_t kh_lu64ec( const uint8_t* const p )
 {
 	uint64_t v;
-	memcpy( &v, p, sizeof( v ));
+	memcpy( &v, p, 8 );
 
 	return( KOMIHASH_EC64( v ));
 }
@@ -144,14 +146,12 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
 		if( Msg < MsgEnd )
 		{
 			r |= (uint64_t) *Msg << 32;
-			Msg++;
 
-			if( Msg < MsgEnd )
+			if( ++Msg < MsgEnd )
 			{
 				r |= (uint64_t) *Msg << 40;
-				Msg++;
 
-				if( Msg < MsgEnd )
+				if( ++Msg < MsgEnd )
 				{
 					r |= (uint64_t) *Msg << 48;
 				}
@@ -164,14 +164,12 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
 	if( Msg < MsgEnd )
 	{
 		r |= *Msg;
-		Msg++;
 
-		if( Msg < MsgEnd )
+		if( ++Msg < MsgEnd )
 		{
 			r |= (uint64_t) *Msg << 8;
-			Msg++;
 
-			if( Msg < MsgEnd )
+			if( ++Msg < MsgEnd )
 			{
 				r |= (uint64_t) *Msg << 16;
 			}
@@ -183,10 +181,10 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
 
 #if defined( __SIZEOF_INT128__ )
 
-	static inline void kh_m128( const uint64_t* m1, const uint64_t* m2,
-		uint64_t* ra, uint64_t* rb )
+	static inline void kh_m128( const uint64_t m1, const uint64_t m2,
+		uint64_t* const ra, uint64_t* const rb )
 	{
-		const __uint128_t r = (__uint128_t) *m1 * *m2;
+		const __uint128_t r = (__uint128_t) m1 * m2;
 
 		*ra = (uint64_t) r;
 		*rb = (uint64_t) ( r >> 64 );
@@ -196,10 +194,10 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
 
 	#include <intrin.h>
 
-	static inline void kh_m128( const uint64_t* m1, const uint64_t* m2,
-		uint64_t* ra, uint64_t* rb )
+	static inline void kh_m128( const uint64_t m1, const uint64_t m2,
+		uint64_t* const ra, uint64_t* const rb )
 	{
-		*ra = _umul128( *m1, *m2, rb );
+		*ra = _umul128( m1, m2, rb );
 	}
 
 #else // defined( _MSC_VER )
@@ -213,18 +211,18 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
 		return( x * (uint64_t) y );
 	}
 
-	static inline void kh_m128( const uint64_t* ab, const uint64_t* cd,
-		uint64_t* ra, uint64_t* rb )
+	static inline void kh_m128( const uint64_t ab, const uint64_t cd,
+		uint64_t* const ra, uint64_t* const rb )
 	{
-		uint64_t ad = kh__emulu( (uint32_t) ( *ab >> 32 ), (uint32_t) *cd );
-		uint64_t bd = kh__emulu( (uint32_t) *ab, (uint32_t) *cd );
-		uint64_t adbc = ad + kh__emulu( (uint32_t) *ab,
-			(uint32_t) ( *cd >> 32 ));
+		uint64_t ad = kh__emulu( (uint32_t) ( ab >> 32 ), (uint32_t) cd );
+		uint64_t bd = kh__emulu( (uint32_t) ab, (uint32_t) cd );
+		uint64_t adbc = ad + kh__emulu( (uint32_t) ab,
+			(uint32_t) ( cd >> 32 ));
 
 		uint64_t adbc_carry = !!( adbc < ad );
 		uint64_t lo = bd + ( adbc << 32 );
 
-		*rb = kh__emulu( (uint32_t) ( *ab >> 32 ), (uint32_t) ( *cd >> 32 )) +
+		*rb = kh__emulu( (uint32_t) ( ab >> 32 ), (uint32_t) ( cd >> 32 )) +
 			( adbc >> 32 ) + ( adbc_carry << 32 ) + !!( lo < bd );
 
 		*ra = lo;
@@ -250,30 +248,15 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
 static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 	const uint64_t UseSeed )
 {
-	uint64_t Seed1; // Seeds are initialized to the first mantissa bits of PI.
+	// Seeds are initialized to the first mantissa bits of PI.
+
+	uint64_t Seed1 = 0x243F6A8885A308D3 ^ ( UseSeed & 0xFFFFFFFF00000000 );
 	uint64_t Seed2 = 0x13198A2E03707344;
-	uint64_t Seed5;
-
-	if( UseSeed != 0 )
-	{
-		Seed1 = 0x243F6A8885A308D3 ^ ( UseSeed & 0xFFFFFFFF00000000 );
-		Seed5 = 0x452821E638D01377 ^ ( UseSeed << 32 );
-
-		uint64_t r1a, r1b;
-
-		kh_m128( &Seed1, &Seed5, &r1a, &r1b );
-		Seed5 += r1b;
-		Seed1 = Seed5 ^ r1a;
-	}
-	else
-	{
-		// Assign an immediate multiplication result, by default (UseSeed==0).
-
-		Seed1 = 0x01D2EE0AE40A48DC;
-		Seed5 = 0x4EF2E8526FEA8BC9;
-	}
+	uint64_t Seed5 = 0x452821E638D01377 ^ ( UseSeed << 32 );
 
 	const uint8_t* const MsgEnd = Msg + MsgLen;
+	uint64_t r1a, r1b;
+
 	uint64_t fb = 1;
 
 	if( MsgLen != 0 )
@@ -281,89 +264,88 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 		fb <<= ( MsgEnd[ -1 ] >> 7 );
 	}
 
-	if( MsgLen > 63 )
+	if( MsgLen > 15 )
 	{
-		uint64_t Seed3 = 0xA4093822299F31D0;
-		uint64_t Seed4 = 0x082EFA98EC4E6C89;
-		uint64_t Seed6 = 0xBE5466CF34E90C6C;
-		uint64_t Seed7 = 0xC0AC29B7C97C50DD;
-		uint64_t Seed8 = 0x3F84D5B5B5470917;
-		uint64_t r1a, r1b, r2a, r2b, r3a, r3b, r4a, r4b;
-
-		do
+		if( MsgLen > 63 )
 		{
-			Seed1 ^= kh_lu64ec( Msg );
-			Seed2 ^= kh_lu64ec( Msg + 8 );
-			Seed3 ^= kh_lu64ec( Msg + 16 );
-			Seed4 ^= kh_lu64ec( Msg + 24 );
-			Seed5 ^= kh_lu64ec( Msg + 32 );
-			Seed6 ^= kh_lu64ec( Msg + 40 );
-			Seed7 ^= kh_lu64ec( Msg + 48 );
-			Seed8 ^= kh_lu64ec( Msg + 56 );
+			uint64_t Seed3 = 0xA4093822299F31D0;
+			uint64_t Seed4 = 0x082EFA98EC4E6C89;
+			uint64_t Seed6 = 0xBE5466CF34E90C6C;
+			uint64_t Seed7 = 0xC0AC29B7C97C50DD;
+			uint64_t Seed8 = 0x3F84D5B5B5470917;
+			uint64_t r2a, r2b, r3a, r3b, r4a, r4b;
 
-			kh_m128( &Seed1, &Seed5, &r1a, &r1b );
-			kh_m128( &Seed2, &Seed6, &r2a, &r2b );
+			do
+			{
+				kh_m128( Seed1 ^ kh_lu64ec( Msg ),
+					Seed5 ^ kh_lu64ec( Msg + 8 ), &r1a, &r1b );
 
-			Seed5 += r1b;
+				kh_m128( Seed2 ^ kh_lu64ec( Msg + 16 ),
+					Seed6 ^ kh_lu64ec( Msg + 24 ), &r2a, &r2b );
+
+				kh_m128( Seed3 ^ kh_lu64ec( Msg + 32 ),
+					Seed7 ^ kh_lu64ec( Msg + 40 ), &r3a, &r3b );
+
+				kh_m128( Seed4 ^ kh_lu64ec( Msg + 48 ),
+					Seed8 ^ kh_lu64ec( Msg + 56 ), &r4a, &r4b );
+
+				Msg += 8 * 8;
+
+				Seed5 += r1b;
+				Seed6 += r2b;
+				Seed7 += r3b;
+				Seed8 += r4b;
+				Seed2 = Seed5 ^ r2a;
+				Seed3 = Seed6 ^ r3a;
+				Seed4 = Seed7 ^ r4a;
+				Seed1 = Seed8 ^ r1a;
+
+			} while( Msg < MsgEnd - 63 );
+
+			kh_m128( Seed2, Seed6, &r2a, &r2b );
+			kh_m128( Seed3, Seed7, &r3a, &r3b );
+			kh_m128( Seed4, Seed8, &r4a, &r4b );
+
 			Seed6 += r2b;
-			Seed2 = Seed5 ^ r2a;
-
-			kh_m128( &Seed3, &Seed7, &r3a, &r3b );
-			kh_m128( &Seed4, &Seed8, &r4a, &r4b );
-
 			Seed7 += r3b;
 			Seed8 += r4b;
-			Seed3 = Seed6 ^ r3a;
-			Seed4 = Seed7 ^ r4a;
-			Seed1 = Seed8 ^ r1a;
+			Seed2 = Seed6 ^ r2a;
+			Seed3 = Seed7 ^ r3a;
+			Seed4 = Seed8 ^ r4a;
 
-			Msg += sizeof( uint64_t ) * 8;
+			Seed2 ^= Seed3 ^ Seed4;
+		}
 
-		} while( Msg < MsgEnd - 63 );
+		while( Msg < MsgEnd - 15 )
+		{
+			kh_m128( Seed1 ^ kh_lu64ec( Msg ),
+				Seed5 ^ kh_lu64ec( Msg + 8 ), &r1a, &r1b );
 
-		kh_m128( &Seed2, &Seed6, &r2a, &r2b );
-		kh_m128( &Seed3, &Seed7, &r3a, &r3b );
-		kh_m128( &Seed4, &Seed8, &r4a, &r4b );
+			Msg += 8 * 2;
 
-		Seed6 += r2b;
-		Seed7 += r3b;
-		Seed8 += r4b;
-		Seed2 = Seed6 ^ r2a;
-		Seed3 = Seed7 ^ r3a;
-		Seed4 = Seed8 ^ r4a;
-
-		Seed2 ^= Seed3 ^ Seed4;
+			Seed5 += r1b;
+			Seed1 = Seed5 ^ r1a;
+		}
 	}
 
-	uint64_t r1a, r1b;
-
-	while( Msg < MsgEnd - 15 )
-	{
-		Seed1 ^= kh_lu64ec( Msg );
-		Seed5 ^= kh_lu64ec( Msg + 8 );
-
-		kh_m128( &Seed1, &Seed5, &r1a, &r1b );
-		Seed5 += r1b;
-		Seed1 = Seed5 ^ r1a;
-
-		Msg += sizeof( uint64_t ) * 2;
-	}
+	uint64_t v1, v2;
 
 	if( Msg < MsgEnd - 7 )
 	{
-		Seed1 ^= kh_lu64ec( Msg );
-		Seed5 ^= kh_lpu64ec( Msg + 8, MsgEnd, fb );
+		v1 = Seed1 ^ kh_lu64ec( Msg );
+		v2 = Seed5 ^ kh_lpu64ec( Msg + 8, MsgEnd, fb );
 	}
 	else
 	{
-		Seed1 ^= kh_lpu64ec( Msg, MsgEnd, fb );
+		v1 = Seed1 ^ kh_lpu64ec( Msg, MsgEnd, fb );
+		v2 = Seed5;
 	}
 
-	kh_m128( &Seed1, &Seed5, &r1a, &r1b );
+	kh_m128( v1, v2, &r1a, &r1b );
 	Seed5 += r1b;
 	Seed1 = Seed5 ^ r1a;
 
-	kh_m128( &Seed1, &Seed5, &r1a, &r1b );
+	kh_m128( Seed1, Seed5, &r1a, &r1b );
 	Seed5 += r1b;
 	Seed1 = Seed5 ^ r1a;
 
