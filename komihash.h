@@ -1,5 +1,5 @@
 /**
- * komihash.h version 2.0
+ * komihash.h version 2.1
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -161,7 +161,7 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
 		return( r );
 	}
 
-	if( Msg < MsgEnd )
+	if( l > 0 )
 	{
 		r |= *Msg;
 
@@ -251,103 +251,120 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 	// Seeds are initialized to the first mantissa bits of PI.
 
 	uint64_t Seed1 = 0x243F6A8885A308D3 ^ ( UseSeed & 0xFFFFFFFF00000000 );
-	uint64_t Seed2 = 0x13198A2E03707344;
 	uint64_t Seed5 = 0x452821E638D01377 ^ ( UseSeed << 32 );
+	uint64_t r1a, r1b, r2a, r2b;
 
 	const uint8_t* const MsgEnd = Msg + MsgLen;
-	uint64_t r1a, r1b;
 
-	uint64_t fb = 1;
-
-	if( MsgLen != 0 )
+	if( MsgLen < 16 )
 	{
-		fb <<= ( MsgEnd[ -1 ] >> 7 );
-	}
+		r2a = Seed1;
+		r2b = Seed5;
 
-	if( MsgLen > 15 )
-	{
-		if( MsgLen > 63 )
+		if( MsgLen > 7 )
 		{
-			uint64_t Seed3 = 0xA4093822299F31D0;
-			uint64_t Seed4 = 0x082EFA98EC4E6C89;
-			uint64_t Seed6 = 0xBE5466CF34E90C6C;
-			uint64_t Seed7 = 0xC0AC29B7C97C50DD;
-			uint64_t Seed8 = 0x3F84D5B5B5470917;
-			uint64_t r2a, r2b, r3a, r3b, r4a, r4b;
-
-			do
-			{
-				kh_m128( Seed1 ^ kh_lu64ec( Msg ),
-					Seed5 ^ kh_lu64ec( Msg + 8 ), &r1a, &r1b );
-
-				kh_m128( Seed2 ^ kh_lu64ec( Msg + 16 ),
-					Seed6 ^ kh_lu64ec( Msg + 24 ), &r2a, &r2b );
-
-				kh_m128( Seed3 ^ kh_lu64ec( Msg + 32 ),
-					Seed7 ^ kh_lu64ec( Msg + 40 ), &r3a, &r3b );
-
-				kh_m128( Seed4 ^ kh_lu64ec( Msg + 48 ),
-					Seed8 ^ kh_lu64ec( Msg + 56 ), &r4a, &r4b );
-
-				Msg += 8 * 8;
-
-				Seed5 += r1b;
-				Seed6 += r2b;
-				Seed7 += r3b;
-				Seed8 += r4b;
-				Seed2 = Seed5 ^ r2a;
-				Seed3 = Seed6 ^ r3a;
-				Seed4 = Seed7 ^ r4a;
-				Seed1 = Seed8 ^ r1a;
-
-			} while( Msg < MsgEnd - 63 );
-
-			kh_m128( Seed2, Seed6, &r2a, &r2b );
-			kh_m128( Seed3, Seed7, &r3a, &r3b );
-			kh_m128( Seed4, Seed8, &r4a, &r4b );
-
-			Seed6 += r2b;
-			Seed7 += r3b;
-			Seed8 += r4b;
-			Seed2 = Seed6 ^ r2a;
-			Seed3 = Seed7 ^ r3a;
-			Seed4 = Seed8 ^ r4a;
-
-			Seed2 ^= Seed3 ^ Seed4;
+			r2a ^= kh_lu64ec( Msg );
+			r2b ^= kh_lpu64ec( Msg + 8, MsgEnd, 1 << ( MsgEnd[ -1 ] >> 7 ));
+		}
+		else
+		if( MsgLen != 0 )
+		{
+			r2a ^= kh_lpu64ec( Msg, MsgEnd, 1 << ( MsgEnd[ -1 ] >> 7 ));
 		}
 
-		while( Msg < MsgEnd - 15 )
+		kh_m128( r2a, r2b, &r1a, &r1b );
+		Seed5 += r1b;
+		Seed1 = Seed5 ^ r1a;
+
+		kh_m128( Seed1, Seed5, &r2a, &r2b );
+		Seed5 += r2b;
+		Seed1 = Seed5 ^ r2a;
+
+		return( Seed1 );
+	}
+
+	const uint64_t fb = 1 << ( MsgEnd[ -1 ] >> 7 );
+	uint64_t Seed2 = 0x13198A2E03707344;
+
+	if( MsgLen > 63 )
+	{
+		uint64_t Seed3 = 0xA4093822299F31D0;
+		uint64_t Seed4 = 0x082EFA98EC4E6C89;
+		uint64_t Seed6 = 0xBE5466CF34E90C6C;
+		uint64_t Seed7 = 0xC0AC29B7C97C50DD;
+		uint64_t Seed8 = 0x3F84D5B5B5470917;
+		uint64_t r3a, r3b, r4a, r4b;
+
+		do
 		{
 			kh_m128( Seed1 ^ kh_lu64ec( Msg ),
 				Seed5 ^ kh_lu64ec( Msg + 8 ), &r1a, &r1b );
 
-			Msg += 8 * 2;
+			kh_m128( Seed2 ^ kh_lu64ec( Msg + 16 ),
+				Seed6 ^ kh_lu64ec( Msg + 24 ), &r2a, &r2b );
+
+			kh_m128( Seed3 ^ kh_lu64ec( Msg + 32 ),
+				Seed7 ^ kh_lu64ec( Msg + 40 ), &r3a, &r3b );
+
+			kh_m128( Seed4 ^ kh_lu64ec( Msg + 48 ),
+				Seed8 ^ kh_lu64ec( Msg + 56 ), &r4a, &r4b );
+
+			Msg += 8 * 8;
 
 			Seed5 += r1b;
-			Seed1 = Seed5 ^ r1a;
-		}
+			Seed6 += r2b;
+			Seed7 += r3b;
+			Seed8 += r4b;
+			Seed2 = Seed5 ^ r2a;
+			Seed3 = Seed6 ^ r3a;
+			Seed4 = Seed7 ^ r4a;
+			Seed1 = Seed8 ^ r1a;
+
+		} while( Msg < MsgEnd - 63 );
+
+		kh_m128( Seed2, Seed6, &r2a, &r2b );
+		kh_m128( Seed3, Seed7, &r3a, &r3b );
+		kh_m128( Seed4, Seed8, &r4a, &r4b );
+
+		Seed6 += r2b;
+		Seed7 += r3b;
+		Seed8 += r4b;
+		Seed2 = Seed6 ^ r2a;
+		Seed3 = Seed7 ^ r3a;
+		Seed4 = Seed8 ^ r4a;
+
+		Seed2 ^= Seed3 ^ Seed4;
 	}
 
-	uint64_t v1, v2;
+	while( Msg < MsgEnd - 15 )
+	{
+		kh_m128( Seed1 ^ kh_lu64ec( Msg ),
+			Seed5 ^ kh_lu64ec( Msg + 8 ), &r1a, &r1b );
+
+		Msg += 8 * 2;
+
+		Seed5 += r1b;
+		Seed1 = Seed5 ^ r1a;
+	}
 
 	if( Msg < MsgEnd - 7 )
 	{
-		v1 = Seed1 ^ kh_lu64ec( Msg );
-		v2 = Seed5 ^ kh_lpu64ec( Msg + 8, MsgEnd, fb );
+		r2a = Seed1 ^ kh_lu64ec( Msg );
+		r2b = Seed5 ^ kh_lpu64ec( Msg + 8, MsgEnd, fb );
 	}
 	else
 	{
-		v1 = Seed1 ^ kh_lpu64ec( Msg, MsgEnd, fb );
-		v2 = Seed5;
+		r2a = Seed1 ^ kh_lpu64ec( Msg, MsgEnd, fb );
+		r2b = Seed5;
 	}
 
-	kh_m128( v1, v2, &r1a, &r1b );
+	kh_m128( r2a, r2b, &r1a, &r1b );
 	Seed5 += r1b;
 	Seed1 = Seed5 ^ r1a;
 
-	kh_m128( Seed1, Seed5, &r1a, &r1b );
-	Seed5 += r1b;
-	Seed1 = Seed5 ^ r1a;
+	kh_m128( Seed1, Seed5, &r2a, &r2b );
+	Seed5 += r2b;
+	Seed1 = Seed5 ^ r2a;
 
 	return( Seed1 ^ Seed2 );
 }
