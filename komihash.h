@@ -1,5 +1,5 @@
 /**
- * komihash.h version 2.5
+ * komihash.h version 2.6
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -297,7 +297,7 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 	const uint64_t fb = 1 << ( MsgEnd[ -1 ] >> 7 );
 	uint64_t Seed2 = 0x13198A2E03707344 ^ Seed1;
 
-	if( MsgLen > 63 )
+	if( KOMIHASH_UNLIKELY( MsgLen > 63 ))
 	{
 		uint64_t Seed3 = 0xA4093822299F31D0 ^ Seed1;
 		uint64_t Seed4 = 0x082EFA98EC4E6C89 ^ Seed1;
@@ -322,6 +322,10 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 
 			Msg += 8 * 8;
 
+			// Such "shifting" arrangement does not increase PRNG's period
+			// beyond 2^64, but reduces a chance of any occassional
+			// synchronization between PRNG lanes happening.
+
 			Seed5 += r1b;
 			Seed6 += r2b;
 			Seed7 += r3b;
@@ -333,19 +337,17 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 
 		} while( KOMIHASH_LIKELY( Msg < MsgEnd - 63 ));
 
-		kh_m128( Seed1, Seed5, &r1a, &r1b );
 		kh_m128( Seed2, Seed6, &r2a, &r2b );
 		kh_m128( Seed3, Seed7, &r3a, &r3b );
 		kh_m128( Seed4, Seed8, &r4a, &r4b );
 
-		Seed5 += r1b;
 		Seed6 += r2b;
 		Seed7 += r3b;
 		Seed8 += r4b;
 		Seed2 = Seed5 ^ r2a;
 		Seed3 = Seed6 ^ r3a;
 		Seed4 = Seed7 ^ r4a;
-		Seed1 = Seed8 ^ r1a;
+		Seed5 = Seed8;
 
 		Seed2 ^= Seed3 ^ Seed4;
 	}
