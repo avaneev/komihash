@@ -1,5 +1,5 @@
 /**
- * komihash.h version 2.7
+ * komihash.h version 2.8
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -294,7 +294,6 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 		return( Seed1 );
 	}
 
-	const uint64_t fb = 1 << ( MsgEnd[ -1 ] >> 7 );
 	uint64_t Seed2 = 0x13198A2E03707344 ^ Seed1;
 
 	if( MsgLen > 63 )
@@ -362,6 +361,8 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 		Seed5 += r1b;
 		Seed1 = Seed5 ^ r1a;
 	}
+
+	const uint64_t fb = 1 << ( MsgEnd[ -1 ] >> 7 );
 
 	if( KOMIHASH_LIKELY( Msg < MsgEnd - 7 ))
 	{
