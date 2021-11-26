@@ -25,7 +25,7 @@ states while others may. Another important difference in `komihash` is that it
 parses the input message without overlaps. While overlaps allow a function to
 have fewer code branches, they are considered "non-ideal", potentially causing
 collisions and seed value flaws. Beside that, `komihash` features a superior
-user seed handling, and PerlinNoise hashing.
+user seed handling and PerlinNoise hashing.
 
 Note that this function is not cryptographically-secure, and in open systems
 it should only be used with a secret seed, to minimize the chance of a

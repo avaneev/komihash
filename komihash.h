@@ -1,5 +1,5 @@
 /**
- * komihash.h version 2.4
+ * komihash.h version 2.5
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -89,7 +89,7 @@
 // Likelihood macros that are used for manually-guided optimization
 // (inefficient in clang).
 
-#if defined( __GNUC__ )
+#if defined( __GNUC__ ) || ( defined( __GNUC__ ) && defined( __ICL ))
 	#define KOMIHASH_LIKELY( x )  __builtin_expect( x, 1 )
 	#define KOMIHASH_UNLIKELY( x )  __builtin_expect( x, 0 )
 #else // likelihood macros
@@ -297,7 +297,7 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 	const uint64_t fb = 1 << ( MsgEnd[ -1 ] >> 7 );
 	uint64_t Seed2 = 0x13198A2E03707344 ^ Seed1;
 
-	if( KOMIHASH_UNLIKELY( MsgLen > 63 ))
+	if( MsgLen > 63 )
 	{
 		uint64_t Seed3 = 0xA4093822299F31D0 ^ Seed1;
 		uint64_t Seed4 = 0x082EFA98EC4E6C89 ^ Seed1;
@@ -333,16 +333,19 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 
 		} while( KOMIHASH_LIKELY( Msg < MsgEnd - 63 ));
 
+		kh_m128( Seed1, Seed5, &r1a, &r1b );
 		kh_m128( Seed2, Seed6, &r2a, &r2b );
 		kh_m128( Seed3, Seed7, &r3a, &r3b );
 		kh_m128( Seed4, Seed8, &r4a, &r4b );
 
+		Seed5 += r1b;
 		Seed6 += r2b;
 		Seed7 += r3b;
 		Seed8 += r4b;
-		Seed2 = Seed6 ^ r2a;
-		Seed3 = Seed7 ^ r3a;
-		Seed4 = Seed8 ^ r4a;
+		Seed2 = Seed5 ^ r2a;
+		Seed3 = Seed6 ^ r3a;
+		Seed4 = Seed7 ^ r4a;
+		Seed1 = Seed8 ^ r1a;
 
 		Seed2 ^= Seed3 ^ Seed4;
 	}
@@ -358,7 +361,7 @@ static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
 		Seed1 = Seed5 ^ r1a;
 	}
 
-	if( KOMIHASH_UNLIKELY( Msg < MsgEnd - 7 ))
+	if( KOMIHASH_LIKELY( Msg < MsgEnd - 7 ))
 	{
 		r2a = Seed1 ^ kh_lu64ec( Msg );
 		r2b = Seed5 ^ kh_lpu64ec( Msg + 8, MsgEnd, fb );
