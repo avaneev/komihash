@@ -39,7 +39,9 @@ non-cryptographic hash function such instruction provides no additional
 security benefit. While it may seem that such instruction protects from simple
 "state XORing" collision attacks, in practice it offers no protection if one
 considers how powerful SAT solvers are: in a matter of seconds, they can
-"forge" a preimage of any length that produces a required hash value.
+"forge" a preimage of any length that produces a required hash value. It is
+also important to note that in such "fast" hash functions like `komihash` the
+input message has a complete control over the state variables.
 
 ## Other ##
 
