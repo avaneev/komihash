@@ -8,7 +8,7 @@ identical hashes on both big- and little-endian systems. Function's code is
 portable, scalar.
 
 This function features both a high large-block hashing performance (27.5 GB/s
-on Ryzen 3700X) and a high hashing throughput for small messages (about 13
+on Ryzen 3700X) and a high hashing throughput for small messages (about 12
 cycles/hash for 0-15-byte messages). Performance on 32-bit systems is,
 however, quite low. Also, large-block hashing performance on big-endian
 systems may be lower due to the need of byte-swapping.
@@ -30,6 +30,16 @@ user seed handling and PerlinNoise hashing.
 Note that this function is not cryptographically-secure, and in open systems
 it should only be used with a secret seed, to minimize the chance of a
 collision attack.
+
+## Discussion ##
+
+You may wonder why `komihash` does not include a quite common `^MsgLen` XOR
+instruction at some place in the code. The reason is that for a
+non-cryptographic hash function such instruction provides no additional
+security benefit. While it may seem that such instruction protects from simple
+"state XORing" collision attacks, in practice it offers no protection if one
+considers how powerful SAT solvers are: in a matter of seconds, they can
+"forge" a preimage of any length that produces a required hash value.
 
 ## Other ##
 
