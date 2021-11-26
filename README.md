@@ -43,6 +43,18 @@ considers how powerful SAT solvers are: in a matter of seconds, they can
 also important to note that in such "fast" hash functions like `komihash` the
 input message has a complete control over the state variables.
 
+Is 128-bit version of this hash function planned? Most probably, not. While
+such version may be reasonable for data structure compatibility reasons, there
+is no much practical sense to use 128-bit hashes at a local level: a reliable
+64-bit hash allows one to have 4.2 billion diverse binary objects (e.g. files
+in a file system, or entries in a hash-table) without collisions, on average.
+On the other hand, on a worldwide scale, having 128-bit hashes is clearly not
+enough considering the number of existing digital devices and the number of
+diverse binary objects (e.g. files and records in databases) on each of them.
+
+A similarly efficient streamed version of `komihash` is, however, doable given
+a serious interest in one.
+
 ## Other ##
 
 This function is named the way it is named is to honor Komi Republic
