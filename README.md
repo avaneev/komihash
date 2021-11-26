@@ -24,7 +24,8 @@ variable. Thus `komihash` does not lose differentiation between consecutive
 states while others may. Another important difference in `komihash` is that it
 parses the input message without overlaps. While overlaps allow a function to
 have fewer code branches, they are considered "non-ideal", potentially causing
-collisions and seed value flaws.
+collisions and seed value flaws. Beside that, `komihash` features a superior
+user seed handling, and PerlinNoise hashing.
 
 Note that this function is not cryptographically-secure, and in open systems
 it should only be used with a secret seed, to minimize the chance of a
@@ -33,4 +34,4 @@ collision attack.
 ## Other ##
 
 This function is named the way it is named is to honor Komi Republic
-(Russia), native to the author.
+(in Russia), native to the author.

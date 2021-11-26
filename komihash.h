@@ -1,5 +1,5 @@
 /**
- * komihash.h version 2.3
+ * komihash.h version 2.4
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -34,21 +34,19 @@
 #include <stdint.h>
 #include <string.h>
 
-#if defined( __GNUC__ ) || defined( __clang__ )
+// Macros that apply byte-swapping.
 
-/**
- * A macro that applies byte-swapping.
- */
+#if defined( __GNUC__ ) || defined( __clang__ ) || ( defined( __GNUC__ ) && defined( __ICL ))
 
 #define KOMIHASH_BYTESW32( v ) __builtin_bswap32( v )
 #define KOMIHASH_BYTESW64( v ) __builtin_bswap64( v )
 
-#elif defined( _MSC_VER ) || defined( __INTEL_COMPILER )
+#elif defined( _MSC_VER )
 
 #define KOMIHASH_BYTESW32( v ) _byteswap_ulong( v )
 #define KOMIHASH_BYTESW64( v ) _byteswap_uint64( v )
 
-#else // defined( _MSC_VER ) || defined( __INTEL_COMPILER )
+#else // defined( _MSC_VER )
 
 #define KOMIHASH_BYTESW32( v ) ( \
 	( v & 0xFF000000 ) >> 24 | \
@@ -66,13 +64,11 @@
 	( v & 0x000000000000FF00 ) << 40 | \
 	( v & 0x00000000000000FF ) << 56 )
 
-#endif // defined( _MSC_VER ) || defined( __INTEL_COMPILER )
+#endif // defined( _MSC_VER )
+
+// Macros that apply byte-swapping, used for endianness-correction.
 
 #if defined( _WIN32 ) || defined( __LITTLE_ENDIAN__ ) || ( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ )
-
-	/**
-	 * A macro that applies byte-swapping used for endianness-correction.
-	 */
 
 	#define KOMIHASH_EC32( v ) ( v )
 	#define KOMIHASH_EC64( v ) ( v )
@@ -90,15 +86,16 @@
 
 #endif // endianness check
 
-// Likely/unlikely macros that work as manual profiling, efficient with GNUC.
+// Likelihood macros that are used for manually-guided optimization
+// (inefficient in clang).
 
 #if defined( __GNUC__ )
 	#define KOMIHASH_LIKELY( x )  __builtin_expect( x, 1 )
 	#define KOMIHASH_UNLIKELY( x )  __builtin_expect( x, 0 )
-#else // defined( __GNUC__ )
+#else // likelihood macros
 	#define KOMIHASH_LIKELY( x ) ( x )
 	#define KOMIHASH_UNLIKELY( x ) ( x )
-#endif // defined( __GNUC__ )
+#endif // likelihood macros
 
 /**
  * An auxiliary function that returns an unsigned 32-bit value created out of
