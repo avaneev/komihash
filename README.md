@@ -135,6 +135,17 @@ diverse binary objects (e.g. files and records in databases) on each of them.
 A similarly efficient streamed version of `komihash` is doable given a serious
 interest in one is expressed.
 
+An opinion on the "bulk" performance of "fast" hash functions: in most
+practical situations, when processor's total memory bandwidth is limited to
+e.g. 41 GB/s, a hashing performance on the order of 30 GB/s is excessive
+considering memory bandwidth has to be spread over multiple cores. So,
+practically, such "fast" hash function working on a high-load 8-core server
+rarely receives more than 8 GB/s of bandwidth. Another factor worth mentioning
+is that a server rarely has more than 10 Gb/s network connectivity thus
+further reducing practical hashing performance of incoming data. The same
+can be said about disk system's throughput, if on-disk data is not already in
+a cache.
+
 ## Other ##
 
 This function is named the way it is named is to honor Komi Republic
