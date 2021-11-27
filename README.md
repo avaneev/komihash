@@ -36,7 +36,7 @@ attack.
 This is the performance comparison made and used by the author during the
 development of `komihash`.
 
-### LLVM 8.0 64-bit, Windows 10, Ryzen 3700X (Zen2) ###
+### LLVM 8.0 64-bit, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz ###
 
 Compiler options: `/O2 /arch:sse2`.
 
@@ -46,25 +46,35 @@ Compiler options: `/O2 /arch:sse2`.
 |wyhash_final3  |13.3           |17.9           |30.0           |
 |XXH3_64 0.8.0  |17.5           |21.0           |29.1           |
 
-### GCC 8.5 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake) ###
+### GCC 8.5.0 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 3.7 GHz ###
 
 Compiler options: `-O3 -msse2`.
 
 |Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----           |----           |----           |----           |
-|komihash 2.8   |15.1           |18.5           |28.0           |
-|wyhash_final3  |12.3           |15.9           |33.8           |
-|XXH3_64 0.8.0  |13.9           |18.5           |30.2           |
+|komihash 2.8   |15.1           |18.5           |24.7           |
+|wyhash_final3  |12.3           |15.9           |29.8           |
+|XXH3_64 0.8.0  |13.9           |18.5           |26.6           |
 
-### GCC 8.5 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake) ###
+### GCC 8.5.0 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 3.7 GHz ###
 
 Compiler options: `-O3 -mavx2`.
 
 |Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----           |----           |----           |----           |
-|komihash 2.8   |13.6           |17.5           |28.0           |
-|wyhash_final3  |12.3           |15.8           |34.2           |
-|XXH3_64 0.8.0  |15.5           |19.3           |43.1           |
+|komihash 2.8   |13.6           |17.5           |24.7           |
+|wyhash_final3  |12.3           |15.8           |30.1           |
+|XXH3_64 0.8.0  |15.5           |19.3           |38.0           |
+
+### Apple clang 12.0.0 64-bit, macOS 12.0.1, Apple M1, 3.5 GHz ###
+
+Compiler options: `-O3`.
+
+|Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
+|----           |----           |----           |----           |
+|komihash 2.8   |10.1           |11.4           |23.5           |
+|wyhash_final3  |7.9            |8.1            |26.1           |
+|XXH3_64 0.8.0  |8.2            |8.2            |30.5           |
 
 Notes: `XXH3` is unseeded. `GB/s` should not be misinterpreted as `GiB/s`.
 `cycles/h` means `processor clock ticks per hash value`, includes about 1.8
@@ -95,7 +105,7 @@ values:
 	}
 
 	printf( "%016llx\n", v );
-	printf( "%.5f\n", CSystem :: getClockDiffSec( t1 ) * 4.2e9 / // 3.7e9 on Xeon
+	printf( "%.5f\n", CSystem :: getClockDiffSec( t1 ) * 4.2e9 / // 3.7 on Xeon, 3.5 on M1
 		( rc * ( maxl - minl + 1 )));
 ```
 
