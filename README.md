@@ -36,7 +36,7 @@ attack.
 This is the performance comparison made and used by the author during the
 development of `komihash`.
 
-### LLVM 8.0 64-bit, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz ###
+### LLVM clang-cl 8.0.1 64-bit, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz ###
 
 Compiler options: `/Ox /arch:sse2`.
 
