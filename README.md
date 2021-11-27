@@ -46,25 +46,25 @@ Compiler options: `/Ox /arch:sse2`; overhead: `1.8 cycles`.
 |wyhash_final3  |13.4           |17.8           |29.7           |
 |XXH3_64 0.8.0  |17.5           |21.1           |29.0           |
 
-### GCC 8.5.0 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 3.7 GHz ###
+### GCC 8.5.0 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 4.5 GHz ###
 
-Compiler options: `-O3 -msse2`; overhead: `4.7 cycles` (seems a bit high).
-
-|Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
-|----           |----           |----           |----           |
-|komihash 2.8   |15.1           |18.5           |24.7           |
-|wyhash_final3  |12.3           |15.9           |29.8           |
-|XXH3_64 0.8.0  |13.9           |18.5           |26.6           |
-
-### GCC 8.5.0 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 3.7 GHz ###
-
-Compiler options: `-O3 -mavx2`; overhead: `4.7 cycles` (seems a bit high).
+Compiler options: `-O3 -msse2`; overhead: `5.8 cycles`.
 
 |Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----           |----           |----           |----           |
-|komihash 2.8   |13.6           |17.5           |24.7           |
-|wyhash_final3  |12.3           |15.8           |30.1           |
-|XXH3_64 0.8.0  |15.5           |19.3           |38.0           |
+|komihash 2.8   |18.5           |22.4           |24.7           |
+|wyhash_final3  |14.9           |19.5           |29.8           |
+|XXH3_64 0.8.0  |16.9           |22.3           |26.6           |
+
+### GCC 8.5.0 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 4.5 GHz ###
+
+Compiler options: `-O3 -mavx2`; overhead: `5.8 cycles`.
+
+|Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
+|----           |----           |----           |----           |
+|komihash 2.8   |16.6           |21.2           |24.7           |
+|wyhash_final3  |15.4           |19.0           |30.1           |
+|XXH3_64 0.8.0  |18.8           |23.4           |38.0           |
 
 ### Apple clang 12.0.0 64-bit, macOS 12.0.1, Apple M1, 3.5 GHz ###
 
@@ -106,7 +106,7 @@ The following methodology was used to obtain the `cycles/h` values:
 	}
 
 	printf( "%016llx\n", v );
-	printf( "%.5f\n", CSystem :: getClockDiffSec( t1 ) * 4.2e9 / // 3.7 on Xeon, 3.5 on M1
+	printf( "%.5f\n", CSystem :: getClockDiffSec( t1 ) * 4.2e9 / // 4.5 on Xeon, 3.5 on M1
 		( rc * ( maxl - minl + 1 )));
 ```
 
