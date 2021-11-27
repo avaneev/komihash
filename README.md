@@ -7,7 +7,7 @@ fast 64-bit hash function, mainly designed for hash-table uses; produces
 identical hashes on both big- and little-endian systems. Function's code is
 portable, scalar.
 
-This function features both a high large-block hashing performance (27.5 GB/s
+This function features both a high large-block hashing performance (27.7 GB/s
 on Ryzen 3700X) and a high hashing throughput for small messages (about 12
 cycles/hash for 0-15-byte messages). Performance on 32-bit systems is,
 however, quite low. Also, large-block hashing performance on big-endian
@@ -38,13 +38,13 @@ development of `komihash`.
 
 ### LLVM 8.0 64-bit, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz ###
 
-Compiler options: `/O2 /arch:sse2`.
+Compiler options: `/Ox /arch:sse2`.
 
 |Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----           |----           |----           |----           |
-|komihash 2.8   |11.2           |17.4           |27.5           |
-|wyhash_final3  |13.3           |17.9           |30.0           |
-|XXH3_64 0.8.0  |17.5           |21.0           |29.1           |
+|komihash 2.8   |11.3           |17.4           |27.7           |
+|wyhash_final3  |13.4           |17.8           |29.7           |
+|XXH3_64 0.8.0  |17.5           |21.1           |29.0           |
 
 ### GCC 8.5.0 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 3.7 GHz ###
 
@@ -76,10 +76,10 @@ Compiler options: `-O3`.
 |wyhash_final3  |7.9            |8.1            |26.1           |
 |XXH3_64 0.8.0  |8.2            |8.2            |30.5           |
 
-Notes: `XXH3` is unseeded. `GB/s` should not be misinterpreted as `GiB/s`.
-`cycles/h` means `processor clock ticks per hash value`, includes about 1.8
-cycles overhead. The following methodology was used to obtain `cycles/h`
-values:
+Notes: `XXH3` is unseeded. `bulk` is 256000 bytes. `GB/s` should not be
+misinterpreted as `GiB/s`. `cycles/h` means `processor clock ticks per hash
+value`, includes about 1.8 cycles overhead. The following methodology was used
+to obtain `cycles/h` values:
 
 ```
 	const uint64_t rc = 1ULL << 26;
