@@ -67,7 +67,7 @@ Compiler options: `-O3 -mavx2`.
 |XXH3_64 0.8.0  |15.5           |19.3           |43.1           |
 
 Notes: `XXH3` is unseeded. `GB/s` should not be misinterpreted as `GiB/s`.
-`cycles/h` means `processor clock ticks per hash value`, includes about 1-2
+`cycles/h` means `processor clock ticks per hash value`, includes about 1.8
 cycles overhead. The following methodology was used to obtain `cycles/h`
 values:
 
@@ -89,6 +89,7 @@ values:
 			v ^= komihash( (uint8_t*) &msg, msgl, sd );
 //			v ^= wyhash( (uint8_t*) &msg, msgl, sd, _wyp );
 //			v ^= XXH3_64bits( (uint8_t*) &msg, msgl );
+//			v ^= msg[ 0 ];
 			msg[ 0 ]++;
 		}
 	}
