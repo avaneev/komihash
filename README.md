@@ -94,7 +94,7 @@ values:
 	}
 
 	printf( "%016llx\n", v );
-	printf( "%.5f\n", CSystem :: getClockDiffSec( t1 ) * 4.2e9 /
+	printf( "%.5f\n", CSystem :: getClockDiffSec( t1 ) * 4.2e9 / // 3.7e9 on Xeon
 		( rc * ( maxl - minl + 1 )));
 ```
 
