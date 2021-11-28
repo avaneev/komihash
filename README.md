@@ -113,6 +113,15 @@ Notes: `XXH3_64` is unseeded. `bulk` is 256000 bytes. `GB/s` should not be
 misinterpreted as `GiB/s`. `cycles/h` means `processor clock ticks per hash
 value`, including overhead. Measurement error is approximately 3%.
 
+### Averages over all measurements (overhead excluded) ###
+
+|Hash function  |0-15b, cycles/h|8-28b, cycles/h|
+|----           |----           |----           |
+|komihash 2.8   |11.3           |15.7           |
+|wyhash_final3  |10.3           |14.1           |
+|XXH3_64 0.8.0  |12.9           |17.9           |
+|prvhash64m 4.1 |17.7           |22.8           |
+
 The following methodology was used to obtain the `cycles/h` values:
 
 ```
