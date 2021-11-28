@@ -38,33 +38,65 @@ development of `komihash`.
 
 ### LLVM clang-cl 8.0.1 64-bit, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz ###
 
-Compiler options: `/Ox /arch:sse2`; overhead: `1.8 cycles`.
+Compiler options: `/Ox /arch:sse2`; overhead: `1.8` cycles/h.
 
 |Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----           |----           |----           |----           |
 |komihash 2.8   |11.3           |17.4           |27.7           |
 |wyhash_final3  |13.4           |17.8           |29.7           |
 |XXH3_64 0.8.0  |17.5           |21.1           |29.0           |
+|prvhash64m 4.1 |19.9           |26.1           |4.1            |
+
+Compiler options: `/Ox -mavx2`; overhead: `1.8` cycles/h.
+
+|Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
+|----           |----           |----           |----           |
+|komihash 2.8   |11.1           |17.7           |27.8           |
+|wyhash_final3  |13.4           |17.7           |29.8           |
+|XXH3_64 0.8.0  |17.7           |21.3           |61.0           |
+|prvhash64m 4.1 |20.0           |26.2           |4.1            |
 
 ### GCC 8.5.0 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 4.5 GHz ###
 
-Compiler options: `-O3 -msse2`; overhead: `5.8 cycles`.
+Compiler options: `-O3 -msse2`; overhead: `5.8` cycles/h.
 
 |Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----           |----           |----           |----           |
 |komihash 2.8   |18.5           |22.4           |24.7           |
 |wyhash_final3  |14.9           |19.5           |29.8           |
 |XXH3_64 0.8.0  |16.9           |22.3           |26.6           |
+|prvhash64m 4.1 |23.2           |27.8           |4.3            |
 
-### GCC 8.5.0 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 4.5 GHz ###
-
-Compiler options: `-O3 -mavx2`; overhead: `5.8 cycles`.
+Compiler options: `-O3 -mavx2`; overhead: `5.8` cycles/h.
 
 |Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----           |----           |----           |----           |
 |komihash 2.8   |16.6           |21.2           |24.7           |
 |wyhash_final3  |15.4           |19.0           |30.1           |
 |XXH3_64 0.8.0  |18.8           |23.4           |38.0           |
+|prvhash64m 4.1 |21.7           |27.1           |4.4            |
+
+### LLVM clang 12.0.1 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 4.5 GHz ###
+
+Compiler options: `-O3 -mavx2`; overhead: `5.3` cycles/h.
+
+|Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
+|----           |----           |----           |----           |
+|komihash 2.8   |18.1           |22.3           |23.5           |
+|wyhash_final3  |14.0           |18.7           |28.4           |
+|XXH3_64 0.8.0  |18.0           |29.3           |51.0           |
+|prvhash64m 4.1 |27.0           |29.9           |4.3            |
+
+### ICC 19.0 64-bit, Windows 10, Core i7-7700K, 4.5 GHz ###
+
+Compiler options: `/O3 /QxSSE2`; overhead: `5.9` cycles/h.
+
+|Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
+|----           |----           |----           |----           |
+|komihash 2.8   |20.1           |23.6           |18.4           |
+|wyhash_final3  |19.2           |24.5           |20.0           |
+|XXH3_64 0.8.0  |19.9           |25.8           |28.0           |
+|prvhash64m 4.1 |25.5           |32.4           |3.2            |
 
 ### Apple clang 12.0.0 64-bit, macOS 12.0.1, Apple M1, 3.5 GHz ###
 
@@ -75,10 +107,11 @@ Compiler options: `-O3`; overhead: `unestimatable`.
 |komihash 2.8   |10.1           |11.4           |23.5           |
 |wyhash_final3  |7.9            |8.1            |26.1           |
 |XXH3_64 0.8.0  |8.2            |8.2            |30.5           |
+|prvhash64m 4.1 |12.9           |16.8           |3.5            |
 
 Notes: `XXH3_64` is unseeded. `bulk` is 256000 bytes. `GB/s` should not be
 misinterpreted as `GiB/s`. `cycles/h` means `processor clock ticks per hash
-value`, includes overhead.
+value`, including overhead. Measurement error is approximately 3%.
 
 The following methodology was used to obtain the `cycles/h` values:
 
@@ -106,8 +139,8 @@ The following methodology was used to obtain the `cycles/h` values:
 	}
 
 	printf( "%016llx\n", v );
-	printf( "%.5f\n", CSystem :: getClockDiffSec( t1 ) * 4.2e9 / // 4.5 on Xeon, 3.5 on M1
-		( rc * ( maxl - minl + 1 )));
+	printf( "%.1f\n", CSystem :: getClockDiffSec( t1 ) * 4.2e9 /
+		( rc * ( maxl - minl + 1 ))); // 4.5 on Xeon, 4.5 on i7700K, 3.5 on M1
 ```
 
 ## Discussion ##
@@ -121,17 +154,18 @@ simple "state XORing" collision attacks, in practice it offers no protection
 if one considers how powerful [SAT solvers](https://github.com/pysathq/pysat)
 are: in a matter of seconds they can "forge" a preimage that produces a
 required hash value. It is also important to note that in such "fast" hash
-functions like `komihash` the input message has a complete control over the
+functions like `komihash` the input message has complete control over the
 state variables.
 
-Is 128-bit version of this hash function planned? Most probably, not. While
-such version may be reasonable for data structure compatibility reasons, there
-is no much practical sense to use 128-bit hashes at a local level: a reliable
-64-bit hash allows one to have 4.2 billion diverse binary objects (e.g. files
-in a file system, or entries in a hash-table) without collisions, on average.
-On the other hand, on a worldwide scale, having 128-bit hashes is clearly not
-enough considering the number of existing digital devices and the number of
-diverse binary objects (e.g. files and records in databases) on each of them.
+Is 128-bit version of this hash function planned? Most probably, it is not.
+While such version may be reasonable for data structure compatibility reasons,
+there is no much practical sense to use 128-bit hashes at a local level: a
+reliable 64-bit hash allows one to have 4.2 billion diverse binary objects
+(e.g. files in a file system, or entries in a hash-table) without collisions,
+on average. On the other hand, on a worldwide scale, having 128-bit hashes is
+clearly not enough considering the number of existing digital devices and the
+number of diverse binary objects (e.g. files, and records in databases) on
+each of them.
 
 A similarly efficient streamed version of `komihash` is doable given a serious
 interest in one is expressed.
