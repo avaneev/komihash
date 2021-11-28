@@ -87,7 +87,7 @@ Compiler options: `-O3 -mavx2`; overhead: `5.3` cycles/h.
 |XXH3_64 0.8.0  |18.0           |29.3           |51.0           |
 |prvhash64m 4.1 |27.0           |29.9           |4.3            |
 
-### ICC 19.0 64-bit, Windows 10, Core i7-7700K, 4.5 GHz ###
+### ICC 19.0 64-bit, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz ###
 
 Compiler options: `/O3 /QxSSE2`; overhead: `5.9` cycles/h.
 
