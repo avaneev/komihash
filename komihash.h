@@ -1,5 +1,5 @@
 /**
- * komihash.h version 2.8
+ * komihash.h version 2.8.1
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -36,7 +36,8 @@
 
 // Macros that apply byte-swapping.
 
-#if defined( __GNUC__ ) || defined( __clang__ ) || ( defined( __GNUC__ ) && defined( __ICL ))
+#if defined( __GNUC__ ) || defined( __clang__ ) || \
+	( defined( __GNUC__ ) && defined( __ICL ))
 
 #define KOMIHASH_BYTESW32( v ) __builtin_bswap32( v )
 #define KOMIHASH_BYTESW64( v ) __builtin_bswap64( v )
@@ -66,35 +67,56 @@
 
 #endif // defined( _MSC_VER )
 
+// Endianness-definition macro, can be defined externally (e.g. =1, if
+// endianness-correction is unnecessary in any case).
+
+#if !defined( KOMIHASH_LITTLE_ENDIAN )
+	#if defined( _WIN32 ) || defined( __LITTLE_ENDIAN__ ) || \
+		( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ )
+
+		#define KOMIHASH_LITTLE_ENDIAN 1
+
+	#elif defined( __BIG_ENDIAN__ ) || \
+		( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ )
+
+		#define KOMIHASH_LITTLE_ENDIAN 0
+
+	#else // defined( __BIG_ENDIAN__ )
+
+		#warning KOMIHASH: cannot determine endianness, assuming little-endian.
+
+		#define KOMIHASH_LITTLE_ENDIAN 1
+
+	#endif // defined( __BIG_ENDIAN__ )
+#endif // !defined( KOMIHASH_LITTLE_ENDIAN )
+
 // Macros that apply byte-swapping, used for endianness-correction.
 
-#if defined( _WIN32 ) || defined( __LITTLE_ENDIAN__ ) || ( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ )
+#if KOMIHASH_LITTLE_ENDIAN
 
 	#define KOMIHASH_EC32( v ) ( v )
 	#define KOMIHASH_EC64( v ) ( v )
 
-#elif defined( __BIG_ENDIAN__ ) || ( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ )
+#else // KOMIHASH_LITTLE_ENDIAN
 
 	#define KOMIHASH_EC32( v ) KOMIHASH_BYTESW32( v )
 	#define KOMIHASH_EC64( v ) KOMIHASH_BYTESW64( v )
 
-#else // endianness check
-
-	#warning KOMIHASH: cannot determine endianness, assuming little-endian.
-	#define KOMIHASH_EC32( v ) ( v )
-	#define KOMIHASH_EC64( v ) ( v )
-
-#endif // endianness check
+#endif // KOMIHASH_LITTLE_ENDIAN
 
 // Likelihood macros that are used for manually-guided optimization
 // (inefficient in clang).
 
 #if defined( __GNUC__ ) || ( defined( __GNUC__ ) && defined( __ICL ))
+
 	#define KOMIHASH_LIKELY( x )  __builtin_expect( x, 1 )
 	#define KOMIHASH_UNLIKELY( x )  __builtin_expect( x, 0 )
+
 #else // likelihood macros
+
 	#define KOMIHASH_LIKELY( x ) ( x )
 	#define KOMIHASH_UNLIKELY( x ) ( x )
+
 #endif // likelihood macros
 
 /**
@@ -188,6 +210,15 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
 
 #if defined( __SIZEOF_INT128__ )
 
+	/**
+	 * 64-bit by 64-bit unsigned multiplication.
+	 *
+	 * @param m1 Multiplier 1.
+	 * @param m1 Multiplier 2.
+	 * @param[out] ra Lower half of 128-bit result.
+	 * @param[out] rb Higher half of 128-bit result.
+	 */
+
 	static inline void kh_m128( const uint64_t m1, const uint64_t m2,
 		uint64_t* const ra, uint64_t* const rb )
 	{
@@ -242,7 +273,7 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
  * message. Designed for 64-bit hash-table uses. Produces identical hashes on
  * both big- and little-endian systems.
  *
- * @param Msg The message to produce hash from. The alignment of the message
+ * @param Msg0 The message to produce hash from. The alignment of the message
  * is unimportant.
  * @param MsgLen Message's length, in bytes.
  * @param UseSeed Optional value, to use instead of the default seed. To use
@@ -252,9 +283,11 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
  * little-endian systems.
  */
 
-static inline uint64_t komihash( const uint8_t* Msg, const size_t MsgLen,
+static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
 	const uint64_t UseSeed )
 {
+	const uint8_t* Msg = (const uint8_t*) Msg0;
+
 	// Seeds are initialized to the first mantissa bits of PI.
 
 	uint64_t Seed1 = 0x243F6A8885A308D3 ^ ( UseSeed & 0x5555555555555555 );
