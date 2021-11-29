@@ -109,9 +109,11 @@ Compiler options: `-O3`; overhead: `unestimatable`.
 |XXH3_64 0.8.0  |8.2            |8.2            |30.5           |
 |prvhash64m 4.1 |12.9           |16.8           |3.5            |
 
-Notes: `XXH3_64` is unseeded. `bulk` is 256000 bytes. `GB/s` should not be
-misinterpreted as `GiB/s`. `cycles/h` means `processor clock ticks per hash
-value`, including overhead. Measurement error is approximately 3%.
+Notes: `XXH3_64` is unseeded (seeded variant is 1 cycle/h higher). `bulk` is
+256000 bytes (this means it is mainly a cache-bound performance). `GB/s`
+should not be misinterpreted as `GiB/s`. `cycles/h` means `processor clock
+ticks per hash value`, including overhead. Measurement error is approximately
+3%.
 
 ### Averages over all measurements (overhead excluded) ###
 
