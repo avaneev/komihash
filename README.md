@@ -169,7 +169,7 @@ state variables.
 Is 128-bit version of this hash function planned? Most probably, it is not.
 While such version may be reasonable for data structure compatibility reasons,
 there is no much practical sense to use 128-bit hashes at a local level: a
-reliable 64-bit hash allows one to have 4.2 billion diverse binary objects
+reliable 64-bit hash allows one to have 2.1 billion diverse binary objects
 (e.g. files in a file system, or entries in a hash-table) without collisions,
 on average. On the other hand, on a worldwide scale, having 128-bit hashes is
 clearly not enough considering the number of existing digital devices and the
