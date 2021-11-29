@@ -1,5 +1,5 @@
 /**
- * komihash.h version 2.8.1
+ * komihash.h version 2.8.2
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -39,31 +39,31 @@
 #if defined( __GNUC__ ) || defined( __clang__ ) || \
 	( defined( __GNUC__ ) && defined( __ICL ))
 
-#define KOMIHASH_BYTESW32( v ) __builtin_bswap32( v )
-#define KOMIHASH_BYTESW64( v ) __builtin_bswap64( v )
+	#define KOMIHASH_BYTESW32( v ) __builtin_bswap32( v )
+	#define KOMIHASH_BYTESW64( v ) __builtin_bswap64( v )
 
 #elif defined( _MSC_VER )
 
-#define KOMIHASH_BYTESW32( v ) _byteswap_ulong( v )
-#define KOMIHASH_BYTESW64( v ) _byteswap_uint64( v )
+	#define KOMIHASH_BYTESW32( v ) _byteswap_ulong( v )
+	#define KOMIHASH_BYTESW64( v ) _byteswap_uint64( v )
 
 #else // defined( _MSC_VER )
 
-#define KOMIHASH_BYTESW32( v ) ( \
-	( v & 0xFF000000 ) >> 24 | \
-	( v & 0x00FF0000 ) >> 8 | \
-	( v & 0x0000FF00 ) << 8 | \
-	( v & 0x000000FF ) << 24 )
+	#define KOMIHASH_BYTESW32( v ) ( \
+		( v & 0xFF000000 ) >> 24 | \
+		( v & 0x00FF0000 ) >> 8 | \
+		( v & 0x0000FF00 ) << 8 | \
+		( v & 0x000000FF ) << 24 )
 
-#define KOMIHASH_BYTESW64( v ) ( \
-	( v & 0xFF00000000000000 ) >> 56 | \
-	( v & 0x00FF000000000000 ) >> 40 | \
-	( v & 0x0000FF0000000000 ) >> 24 | \
-	( v & 0x000000FF00000000 ) >> 8 | \
-	( v & 0x00000000FF000000 ) << 8 | \
-	( v & 0x0000000000FF0000 ) << 24 | \
-	( v & 0x000000000000FF00 ) << 40 | \
-	( v & 0x00000000000000FF ) << 56 )
+	#define KOMIHASH_BYTESW64( v ) ( \
+		( v & 0xFF00000000000000 ) >> 56 | \
+		( v & 0x00FF000000000000 ) >> 40 | \
+		( v & 0x0000FF0000000000 ) >> 24 | \
+		( v & 0x000000FF00000000 ) >> 8 | \
+		( v & 0x00000000FF000000 ) << 8 | \
+		( v & 0x0000000000FF0000 ) << 24 | \
+		( v & 0x000000000000FF00 ) << 40 | \
+		( v & 0x00000000000000FF ) << 56 )
 
 #endif // defined( _MSC_VER )
 
@@ -214,18 +214,18 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
 	 * 64-bit by 64-bit unsigned multiplication.
 	 *
 	 * @param m1 Multiplier 1.
-	 * @param m1 Multiplier 2.
-	 * @param[out] ra Lower half of 128-bit result.
-	 * @param[out] rb Higher half of 128-bit result.
+	 * @param m2 Multiplier 2.
+	 * @param[out] rl Lower half of 128-bit result.
+	 * @param[out] rh Higher half of 128-bit result.
 	 */
 
 	static inline void kh_m128( const uint64_t m1, const uint64_t m2,
-		uint64_t* const ra, uint64_t* const rb )
+		uint64_t* const rl, uint64_t* const rh )
 	{
 		const __uint128_t r = (__uint128_t) m1 * m2;
 
-		*ra = (uint64_t) r;
-		*rb = (uint64_t) ( r >> 64 );
+		*rl = (uint64_t) r;
+		*rh = (uint64_t) ( r >> 64 );
 	}
 
 #elif defined( _MSC_VER ) && defined( _M_X64 )
@@ -233,9 +233,9 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
 	#include <intrin.h>
 
 	static inline void kh_m128( const uint64_t m1, const uint64_t m2,
-		uint64_t* const ra, uint64_t* const rb )
+		uint64_t* const rl, uint64_t* const rh )
 	{
-		*ra = _umul128( m1, m2, rb );
+		*rl = _umul128( m1, m2, rh );
 	}
 
 #else // defined( _MSC_VER )
@@ -250,7 +250,7 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
 	}
 
 	static inline void kh_m128( const uint64_t ab, const uint64_t cd,
-		uint64_t* const ra, uint64_t* const rb )
+		uint64_t* const rl, uint64_t* const rh )
 	{
 		uint64_t ad = kh__emulu( (uint32_t) ( ab >> 32 ), (uint32_t) cd );
 		uint64_t bd = kh__emulu( (uint32_t) ab, (uint32_t) cd );
@@ -260,10 +260,10 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
 		uint64_t adbc_carry = !!( adbc < ad );
 		uint64_t lo = bd + ( adbc << 32 );
 
-		*rb = kh__emulu( (uint32_t) ( ab >> 32 ), (uint32_t) ( cd >> 32 )) +
+		*rh = kh__emulu( (uint32_t) ( ab >> 32 ), (uint32_t) ( cd >> 32 )) +
 			( adbc >> 32 ) + ( adbc_carry << 32 ) + !!( lo < bd );
 
-		*ra = lo;
+		*rl = lo;
 	}
 
 #endif // defined( _MSC_VER )
@@ -292,37 +292,37 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
 
 	uint64_t Seed1 = 0x243F6A8885A308D3 ^ ( UseSeed & 0x5555555555555555 );
 	uint64_t Seed5 = 0x452821E638D01377 ^ ( UseSeed & 0xAAAAAAAAAAAAAAAA );
-	uint64_t r1a, r1b, r2a, r2b;
+	uint64_t r1l, r1h, r2l, r2h;
 
-	kh_m128( Seed1, Seed5, &r2a, &r2b ); // Required for PerlinNoise.
-	Seed5 += r2b;
-	Seed1 = Seed5 ^ r2a;
+	kh_m128( Seed1, Seed5, &r2l, &r2h ); // Required for PerlinNoise.
+	Seed5 += r2h;
+	Seed1 = Seed5 ^ r2l;
 
 	const uint8_t* const MsgEnd = Msg + MsgLen;
 
 	if( KOMIHASH_LIKELY( MsgLen < 16 ))
 	{
-		r2a = Seed1;
-		r2b = Seed5;
+		r2l = Seed1;
+		r2h = Seed5;
 
 		if( KOMIHASH_LIKELY( MsgLen > 7 ))
 		{
-			r2a ^= kh_lu64ec( Msg );
-			r2b ^= kh_lpu64ec( Msg + 8, MsgEnd, 1 << ( MsgEnd[ -1 ] >> 7 ));
+			r2l ^= kh_lu64ec( Msg );
+			r2h ^= kh_lpu64ec( Msg + 8, MsgEnd, 1 << ( MsgEnd[ -1 ] >> 7 ));
 		}
 		else
 		if( KOMIHASH_LIKELY( MsgLen != 0 ))
 		{
-			r2a ^= kh_lpu64ec( Msg, MsgEnd, 1 << ( MsgEnd[ -1 ] >> 7 ));
+			r2l ^= kh_lpu64ec( Msg, MsgEnd, 1 << ( MsgEnd[ -1 ] >> 7 ));
 		}
 
-		kh_m128( r2a, r2b, &r1a, &r1b );
-		Seed5 += r1b;
-		Seed1 = Seed5 ^ r1a;
+		kh_m128( r2l, r2h, &r1l, &r1h );
+		Seed5 += r1h;
+		Seed1 = Seed5 ^ r1l;
 
-		kh_m128( Seed1, Seed5, &r2a, &r2b );
-		Seed5 += r2b;
-		Seed1 = Seed5 ^ r2a;
+		kh_m128( Seed1, Seed5, &r2l, &r2h );
+		Seed5 += r2h;
+		Seed1 = Seed5 ^ r2l;
 
 		return( Seed1 );
 	}
@@ -336,21 +336,21 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
 		uint64_t Seed6 = 0xBE5466CF34E90C6C ^ Seed5;
 		uint64_t Seed7 = 0xC0AC29B7C97C50DD ^ Seed5;
 		uint64_t Seed8 = 0x3F84D5B5B5470917 ^ Seed5;
-		uint64_t r3a, r3b, r4a, r4b;
+		uint64_t r3l, r3h, r4l, r4h;
 
 		do
 		{
 			kh_m128( Seed1 ^ kh_lu64ec( Msg ),
-				Seed5 ^ kh_lu64ec( Msg + 8 ), &r1a, &r1b );
+				Seed5 ^ kh_lu64ec( Msg + 8 ), &r1l, &r1h );
 
 			kh_m128( Seed2 ^ kh_lu64ec( Msg + 16 ),
-				Seed6 ^ kh_lu64ec( Msg + 24 ), &r2a, &r2b );
+				Seed6 ^ kh_lu64ec( Msg + 24 ), &r2l, &r2h );
 
 			kh_m128( Seed3 ^ kh_lu64ec( Msg + 32 ),
-				Seed7 ^ kh_lu64ec( Msg + 40 ), &r3a, &r3b );
+				Seed7 ^ kh_lu64ec( Msg + 40 ), &r3l, &r3h );
 
 			kh_m128( Seed4 ^ kh_lu64ec( Msg + 48 ),
-				Seed8 ^ kh_lu64ec( Msg + 56 ), &r4a, &r4b );
+				Seed8 ^ kh_lu64ec( Msg + 56 ), &r4l, &r4h );
 
 			Msg += 8 * 8;
 
@@ -358,27 +358,27 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
 			// beyond 2^64, but reduces a chance of any occassional
 			// synchronization between PRNG lanes happening.
 
-			Seed5 += r1b;
-			Seed6 += r2b;
-			Seed7 += r3b;
-			Seed8 += r4b;
-			Seed2 = Seed5 ^ r2a;
-			Seed3 = Seed6 ^ r3a;
-			Seed4 = Seed7 ^ r4a;
-			Seed1 = Seed8 ^ r1a;
+			Seed5 += r1h;
+			Seed6 += r2h;
+			Seed7 += r3h;
+			Seed8 += r4h;
+			Seed2 = Seed5 ^ r2l;
+			Seed3 = Seed6 ^ r3l;
+			Seed4 = Seed7 ^ r4l;
+			Seed1 = Seed8 ^ r1l;
 
 		} while( KOMIHASH_LIKELY( Msg < MsgEnd - 63 ));
 
-		kh_m128( Seed2, Seed6, &r2a, &r2b );
-		kh_m128( Seed3, Seed7, &r3a, &r3b );
-		kh_m128( Seed4, Seed8, &r4a, &r4b );
+		kh_m128( Seed2, Seed6, &r2l, &r2h );
+		kh_m128( Seed3, Seed7, &r3l, &r3h );
+		kh_m128( Seed4, Seed8, &r4l, &r4h );
 
-		Seed6 += r2b;
-		Seed7 += r3b;
-		Seed8 += r4b;
-		Seed2 = Seed5 ^ r2a;
-		Seed3 = Seed6 ^ r3a;
-		Seed4 = Seed7 ^ r4a;
+		Seed6 += r2h;
+		Seed7 += r3h;
+		Seed8 += r4h;
+		Seed2 = Seed5 ^ r2l;
+		Seed3 = Seed6 ^ r3l;
+		Seed4 = Seed7 ^ r4l;
 		Seed5 = Seed8;
 
 		Seed2 ^= Seed3 ^ Seed4;
@@ -387,34 +387,34 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
 	while( KOMIHASH_LIKELY( Msg < MsgEnd - 15 ))
 	{
 		kh_m128( Seed1 ^ kh_lu64ec( Msg ),
-			Seed5 ^ kh_lu64ec( Msg + 8 ), &r1a, &r1b );
+			Seed5 ^ kh_lu64ec( Msg + 8 ), &r1l, &r1h );
 
 		Msg += 8 * 2;
 
-		Seed5 += r1b;
-		Seed1 = Seed5 ^ r1a;
+		Seed5 += r1h;
+		Seed1 = Seed5 ^ r1l;
 	}
 
 	const uint64_t fb = 1 << ( MsgEnd[ -1 ] >> 7 );
 
 	if( KOMIHASH_LIKELY( Msg < MsgEnd - 7 ))
 	{
-		r2a = Seed1 ^ kh_lu64ec( Msg );
-		r2b = Seed5 ^ kh_lpu64ec( Msg + 8, MsgEnd, fb );
+		r2l = Seed1 ^ kh_lu64ec( Msg );
+		r2h = Seed5 ^ kh_lpu64ec( Msg + 8, MsgEnd, fb );
 	}
 	else
 	{
-		r2a = Seed1 ^ kh_lpu64ec( Msg, MsgEnd, fb );
-		r2b = Seed5;
+		r2l = Seed1 ^ kh_lpu64ec( Msg, MsgEnd, fb );
+		r2h = Seed5;
 	}
 
-	kh_m128( r2a, r2b, &r1a, &r1b );
-	Seed5 += r1b;
-	Seed1 = Seed5 ^ r1a;
+	kh_m128( r2l, r2h, &r1l, &r1h );
+	Seed5 += r1h;
+	Seed1 = Seed5 ^ r1l;
 
-	kh_m128( Seed1, Seed5, &r2a, &r2b );
-	Seed5 += r2b;
-	Seed1 = Seed5 ^ r2a;
+	kh_m128( Seed1, Seed5, &r2l, &r2h );
+	Seed5 += r2h;
+	Seed1 = Seed5 ^ r2l;
 
 	return( Seed1 ^ Seed2 );
 }

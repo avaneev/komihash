@@ -17,7 +17,7 @@ It passes all [SMHasher](https://github.com/rurban/smhasher) tests.
 Performance estimates on that page may be unreliable.
 
 Technically, `komihash` is close to the class of hash functions like `wyhash`
-and `CircleHash`, that are, in turn, close to the `lehmer64` PRNG. However,
+and `CircleHash`, which are, in turn, close to the `lehmer64` PRNG. However,
 `komihash` is structurally different to them in that it accumulates the full
 128-bit multiplication result without "compression" into a single 64-bit state
 variable. Thus `komihash` does not lose differentiation between consecutive
@@ -159,7 +159,7 @@ instruction at some place in the code? The main reason is that due to the way
 `komihash` parses the input message such instruction is not necessary. Another
 reason is that for a non-cryptographic hash function such instruction provides
 no additional security: while it may seem that such instruction protects from
-simple "state XORing" collision attacks, in practice it offers no protection
+simple "state XORing" collision attacks, in practice it offers no protection,
 if one considers how powerful [SAT solvers](https://github.com/pysathq/pysat)
 are: in a matter of seconds they can "forge" a preimage that produces a
 required hash value. It is also important to note that in such "fast" hash
