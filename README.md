@@ -19,13 +19,13 @@ Performance estimates on that page may be unreliable.
 Technically, `komihash` is close to the class of hash functions like `wyhash`
 and `CircleHash`, which are, in turn, close to the `lehmer64` PRNG. However,
 `komihash` is structurally different to them in that it accumulates the full
-128-bit multiplication result without "compression" into a single 64-bit state
-variable. Thus `komihash` does not lose differentiation between consecutive
-states while others may. Another important difference in `komihash` is that it
-parses the input message without overlaps. While overlaps allow a function to
-have fewer code branches, they are considered "non-ideal", potentially causing
-collisions and seed value flaws. Beside that, `komihash` features a superior
-seed value handling and PerlinNoise hashing.
+128-bit multiplication result, without "compression" into a single 64-bit
+state variable. Thus `komihash` does not lose differentiation between
+consecutive states while others may. Another important difference in
+`komihash` is that it parses the input message without overlaps. While
+overlaps allow a function to have fewer code branches, they are considered
+"non-ideal", potentially causing collisions and seed value flaws. Beside that,
+`komihash` features a superior seed value handling and PerlinNoise hashing.
 
 Note that this function is not cryptographically-secure: in open systems it
 should only be used with a secret seed, to minimize the chance of a collision
@@ -56,6 +56,31 @@ Compiler options: `/Ox -mavx2`; overhead: `1.8` cycles/h.
 |XXH3_64 0.8.0  |17.7           |21.3           |61.0           |
 |prvhash64m 4.1 |20.0           |26.2           |4.1            |
 
+### LLVM clang 12.0.1 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 4.5 GHz ###
+
+Compiler options: `-O3 -mavx2`; overhead: `5.3` cycles/h.
+
+|Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
+|----           |----           |----           |----           |
+|komihash 2.8   |18.1           |22.3           |23.5           |
+|wyhash_final3  |14.0           |18.7           |28.4           |
+|XXH3_64 0.8.0  |18.0           |29.3           |51.0           |
+|prvhash64m 4.1 |27.0           |29.9           |4.3            |
+
+### ICC 19.0 64-bit, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz ###
+
+Compiler options: `/O3 /QxSSE2`; overhead: `2.0` cycles/h.
+
+|Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
+|----           |----           |----           |----           |
+|komihash 2.8   |21.3           |25.6           |16.2           |
+|wyhash_final3  |24.1           |32.0           |12.6           |
+|XXH3_64 0.8.0  |21.8           |27.2           |29.6           |
+|prvhash64m 4.1 |29.9           |39.1           |3.2            |
+
+(this is likely a worst-case scenario when compiler is not optimized for a
+competing processor architecture)
+
 ### GCC 8.5.0 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 4.5 GHz ###
 
 Compiler options: `-O3 -msse2`; overhead: `5.8` cycles/h.
@@ -75,17 +100,6 @@ Compiler options: `-O3 -mavx2`; overhead: `5.8` cycles/h.
 |wyhash_final3  |15.4           |19.0           |30.1           |
 |XXH3_64 0.8.0  |18.8           |23.4           |38.0           |
 |prvhash64m 4.1 |21.7           |27.1           |4.4            |
-
-### LLVM clang 12.0.1 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 4.5 GHz ###
-
-Compiler options: `-O3 -mavx2`; overhead: `5.3` cycles/h.
-
-|Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
-|----           |----           |----           |----           |
-|komihash 2.8   |18.1           |22.3           |23.5           |
-|wyhash_final3  |14.0           |18.7           |28.4           |
-|XXH3_64 0.8.0  |18.0           |29.3           |51.0           |
-|prvhash64m 4.1 |27.0           |29.9           |4.3            |
 
 ### ICC 19.0 64-bit, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz ###
 
@@ -119,10 +133,10 @@ ticks per hash value`, including overhead. Measurement error is approximately
 
 |Hash function  |0-15b, cycles/h|8-28b, cycles/h|
 |----           |----           |----           |
-|komihash 2.8   |11.3           |15.7           |
-|wyhash_final3  |10.3           |14.1           |
-|XXH3_64 0.8.0  |12.9           |17.9           |
-|prvhash64m 4.1 |17.7           |22.8           |
+|komihash 2.8   |12.3           |16.7           |
+|wyhash_final3  |11.7           |16.1           |
+|XXH3_64 0.8.0  |13.8           |18.8           |
+|prvhash64m 4.1 |19.0           |24.6           |
 
 The following methodology was used to obtain the `cycles/h` values:
 
@@ -168,15 +182,15 @@ required hash value. It is also important to note that in such "fast" hash
 functions like `komihash` the input message has complete control over the
 state variables.
 
-Is 128-bit version of this hash function planned? Most probably, it is not.
-While such version may be reasonable for data structure compatibility reasons,
-there is no much practical sense to use 128-bit hashes at a local level: a
-reliable 64-bit hash allows one to have 2.1 billion diverse binary objects
-(e.g. files in a file system, or entries in a hash-table) without collisions,
-on average. On the other hand, on a worldwide scale, having 128-bit hashes is
-clearly not enough considering the number of existing digital devices and the
-number of diverse binary objects (e.g. files, and records in databases) on
-each of them.
+Is 128-bit version of this hash function planned? Most probably, no, it is
+not. While such version may be reasonable for data structure compatibility
+reasons, there is no much practical sense to use 128-bit hashes at a local
+level: a reliable 64-bit hash allows one to have 2.1 billion diverse binary
+objects (e.g. files in a file system, or entries in a hash-table) without
+collisions, on average. On the other hand, on a worldwide scale, having
+128-bit hashes is clearly not enough considering the number of existing
+digital devices and the number of diverse binary objects (e.g. files, records
+in databases) on each of them.
 
 A similarly efficient streamed version of `komihash` is doable given a serious
 interest in one is expressed.
