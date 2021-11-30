@@ -1,5 +1,5 @@
 /**
- * komihash.h version 2.8.3
+ * komihash.h version 2.8.4
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -289,11 +289,16 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
 {
 	const uint8_t* Msg = (const uint8_t*) Msg0;
 
-	// Seeds are initialized to the first mantissa bits of PI.
+	// The seeds are initialized to the first mantissa bits of PI.
 
 	uint64_t Seed1 = 0x243F6A8885A308D3 ^ ( UseSeed & 0x5555555555555555 );
 	uint64_t Seed5 = 0x452821E638D01377 ^ ( UseSeed & 0xAAAAAAAAAAAAAAAA );
 	uint64_t r1l, r1h, r2l, r2h;
+
+	// The following three instructions represent the simplest constant-less
+	// PRNG, scalable to any even-sized state variables, with the `Seed1`
+	// being the PRNG output (2^64 period). It passes `PractRand` tests with
+	// rare non-systematic "unusual" evaluations.
 
 	kh_m128( Seed1, Seed5, &r2l, &r2h ); // Required for PerlinNoise.
 	Seed5 += r2h;
@@ -308,6 +313,10 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
 
 		if( KOMIHASH_LIKELY( MsgLen > 7 ))
 		{
+			// The following two XOR instructions are equivalent to mixing a
+			// message with a cryptographical one-time-pad. Message's
+			// statistics and distribution are thus unimportant.
+
 			r2l ^= kh_lu64ec( Msg );
 			r2h ^= kh_lpu64ec( Msg + 8, MsgEnd, 1 << ( MsgEnd[ -1 ] >> 7 ));
 		}
