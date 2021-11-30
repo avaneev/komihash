@@ -78,8 +78,8 @@ Compiler options: `/O3 /QxSSE2`; overhead: `2.0` cycles/h.
 |XXH3_64 0.8.0  |21.8           |27.2           |29.6           |
 |prvhash64m 4.1 |29.9           |39.1           |3.2            |
 
-(this is likely a worst-case scenario, when compiler is not cross-tuned for a
-competing processor architecture)
+(this is likely a worst-case scenario, when a compiler was not cross-tuned
+to a competing processor architecture)
 
 ### GCC 8.5.0 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 4.5 GHz ###
 
@@ -209,5 +209,5 @@ is not already in memory.
 ## Other ##
 
 This function is named the way it is named is to honor
-[Komi Republic](https://en.wikipedia.org/wiki/Komi_Republic) (located in
+the [Komi Republic](https://en.wikipedia.org/wiki/Komi_Republic) (located in
 Russia), native to the author.
