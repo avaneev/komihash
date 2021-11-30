@@ -208,5 +208,6 @@ is not already in memory.
 
 ## Other ##
 
-This function is named the way it is named is to honor Komi Republic
-(located in Russia), native to the author.
+This function is named the way it is named is to honor
+[Komi Republic](https://en.wikipedia.org/wiki/Komi_Republic) (located in
+Russia), native to the author.
