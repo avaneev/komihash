@@ -1,5 +1,5 @@
 /**
- * komihash.h version 2.8.7
+ * komihash.h version 2.8.8
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -302,12 +302,12 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
 	// rare non-systematic "unusual" evaluations.
 	//
 	// To make it reliable, self-starting, and eliminate a risk of stopping,
-	// the following variant can be used. However, for hashing, when the input
-	// entropy is available in abundance, this is not required, and may reduce
-	// the quality of hashing. The PRNG is available as the komirand()
-	// function.
+	// the following variant can be used. The PRNG is available as the
+	// komirand(). Not required for hashing (but works) since the input
+	// entropy is available in abundance.
 	//
-	// Seed5 += r2h ^ 0x5555555555555555;
+	// Seed5 += r2h + 0x1000000000;
+	// Seed1 = ( Seed5 ^ r2l ) + 0x100000000;
 
 	kh_m128( Seed1, Seed5, &r2l, &r2h ); // Required for PerlinNoise.
 	Seed5 += r2h;
@@ -455,8 +455,8 @@ static inline uint64_t komirand( uint64_t* const Seed1, uint64_t* const Seed2 )
 	uint64_t r1l, r1h;
 
 	kh_m128( *Seed1, *Seed2, &r1l, &r1h );
-	*Seed2 += r1h ^ 0x5555555555555555;
-	*Seed1 = *Seed2 ^ r1l;
+	*Seed2 += r1h + 0x1000000000;
+	*Seed1 = ( *Seed2 ^ r1l ) + 0x100000000;
 
 	return( *Seed1 );
 }
