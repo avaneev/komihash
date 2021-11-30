@@ -79,7 +79,8 @@ Compiler options: `/O3 /QxSSE2`; overhead: `2.0` cycles/h.
 |prvhash64m 4.1 |29.9           |39.1           |3.2            |
 
 (this is likely a worst-case scenario, when a compiler was not cross-tuned
-to a competing processor architecture)
+to a competing processor architecture; also, ICC for Windows does not support
+the `__builtin_expect()` intrinsic)
 
 ### GCC 8.5.0 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 4.5 GHz ###
 
