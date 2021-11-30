@@ -1,5 +1,5 @@
 /**
- * komihash.h version 2.8.4
+ * komihash.h version 2.8.5
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -37,7 +37,7 @@
 // Macros that apply byte-swapping.
 
 #if defined( __GNUC__ ) || defined( __clang__ ) || \
-	( defined( __GNUC__ ) && defined( __ICL ))
+	( defined( __GNUC__ ) && defined( __INTEL_COMPILER ))
 
 	#define KOMIHASH_BYTESW32( v ) __builtin_bswap32( v )
 	#define KOMIHASH_BYTESW64( v ) __builtin_bswap64( v )
@@ -107,7 +107,8 @@
 // Likelihood macros that are used for manually-guided optimization
 // (inefficient in clang).
 
-#if defined( __GNUC__ ) || ( defined( __GNUC__ ) && defined( __ICL ))
+#if defined( __GNUC__ ) || \
+	( defined( __GNUC__ ) && defined( __INTEL_COMPILER ))
 
 	#define KOMIHASH_LIKELY( x )  __builtin_expect( x, 1 )
 	#define KOMIHASH_UNLIKELY( x )  __builtin_expect( x, 0 )
