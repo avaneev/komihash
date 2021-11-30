@@ -1,5 +1,5 @@
 /**
- * komihash.h version 2.8.2
+ * komihash.h version 2.8.3
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -240,9 +240,10 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
 
 #else // defined( _MSC_VER )
 
-	// _umul128() code for 32-bit systems from
-	// https://github.com/simdjson/simdjson, licensed under Apache-2.0
-	// license.
+	// _umul128() code for 32-bit systems, from
+	// https://github.com/simdjson/simdjson
+	// (from file: /include/simdjson/generic/jsoncharutils.h).
+	// Licensed under Apache-2.0 license.
 
 	static inline uint64_t kh__emulu( const uint32_t x, const uint32_t y )
 	{
@@ -354,9 +355,11 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
 
 			Msg += 8 * 8;
 
-			// Such "shifting" arrangement does not increase PRNG's period
-			// beyond 2^64, but reduces a chance of any occassional
-			// synchronization between PRNG lanes happening.
+			// Such "shifting" arrangement does not increase individual
+			// SeedN's PRNG period beyond 2^64, but reduces a chance of any
+			// occassional synchronization between PRNG lanes happening.
+			// Practically, Seed1-4 together become a "fused" 256-bit PRNG
+			// value, having a summary PRNG period of 2^66.
 
 			Seed5 += r1h;
 			Seed6 += r2h;
