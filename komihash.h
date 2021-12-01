@@ -1,5 +1,5 @@
 /**
- * komihash.h version 2.8.8
+ * komihash.h version 2.8.9
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -303,11 +303,10 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
 	//
 	// To make it reliable, self-starting, and eliminate a risk of stopping,
 	// the following variant can be used. The PRNG is available as the
-	// komirand(). Not required for hashing (but works) since the input
-	// entropy is available in abundance.
+	// komirand() function. Not required for hashing (but works) since the
+	// input entropy is available in abundance.
 	//
-	// Seed5 += r2h + 0x1000000000;
-	// Seed1 = ( Seed5 ^ r2l ) + 0x100000000;
+	// Seed5 += r2h + ( 1ULL << 37 ); // Arbitrary shift > 32.
 
 	kh_m128( Seed1, Seed5, &r2l, &r2h ); // Required for PerlinNoise.
 	Seed5 += r2h;
@@ -442,7 +441,7 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
 
 /**
  * Simple, reliable, self-starting yet efficient PRNG, with 2^64 period.
- * 0.87 cycles/byte performance. Self-starts in 4 iterations, which is a
+ * 0.73 cycles/byte performance. Self-starts in 4 iterations, which is a
  * suggested "warming up" initialization before using its output.
  *
  * @param[in,out] Seed1 Seed value 1. Can be initialized to any value (even 0).
@@ -455,8 +454,8 @@ static inline uint64_t komirand( uint64_t* const Seed1, uint64_t* const Seed2 )
 	uint64_t r1l, r1h;
 
 	kh_m128( *Seed1, *Seed2, &r1l, &r1h );
-	*Seed2 += r1h + 0x1000000000;
-	*Seed1 = ( *Seed2 ^ r1l ) + 0x100000000;
+	*Seed2 += r1h + ( 1ULL << 37 );
+	*Seed1 = *Seed2 ^ r1l;
 
 	return( *Seed1 );
 }
