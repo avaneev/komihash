@@ -1,5 +1,5 @@
 /**
- * komihash.h version 2.8.9
+ * komihash.h version 2.8.10
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -302,11 +302,12 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
 	// rare non-systematic "unusual" evaluations.
 	//
 	// To make it reliable, self-starting, and eliminate a risk of stopping,
-	// the following variant can be used. The PRNG is available as the
-	// komirand() function. Not required for hashing (but works) since the
-	// input entropy is available in abundance.
+	// the following variant can be used, which is a "register
+	// checker-board", a source of raw entropy. The PRNG is available as the
+	// komirand() function. Not required for hashing (but works for it) since
+	// the input entropy is usually available in abundance during hashing.
 	//
-	// Seed5 += r2h + ( 1ULL << 37 ); // Arbitrary shift > 32.
+	// Seed5 += r2h + 0x5555555555555555; // Should match register's size.
 
 	kh_m128( Seed1, Seed5, &r2l, &r2h ); // Required for PerlinNoise.
 	Seed5 += r2h;
@@ -444,8 +445,10 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
  * 0.73 cycles/byte performance. Self-starts in 4 iterations, which is a
  * suggested "warming up" initialization before using its output.
  *
- * @param[in,out] Seed1 Seed value 1. Can be initialized to any value (even 0).
- * @param[in,out] Seed2 Seed value 2. Can be initialized to any value (even 0).
+ * @param[in,out] Seed1 Seed value 1. Can be initialized to any value (even 0),
+ * this is the usual "PRNG seed" value.
+ * @param[in,out] Seed2 Seed value 2, a supporting variable, best initialized
+ * to the same value as Seed1.
  * @return The next uniformly-random 64-bit value.
  */
 
@@ -454,10 +457,10 @@ static inline uint64_t komirand( uint64_t* const Seed1, uint64_t* const Seed2 )
 	uint64_t r1l, r1h;
 
 	kh_m128( *Seed1, *Seed2, &r1l, &r1h );
-	*Seed2 += r1h + ( 1ULL << 37 );
-	*Seed1 = *Seed2 ^ r1l;
+	*Seed1 += r1h + 0x5555555555555555;
+	*Seed2 = *Seed1 ^ r1l;
 
-	return( *Seed1 );
+	return( *Seed2 );
 }
 
 #endif // KOMIHASH_INCLUDED
