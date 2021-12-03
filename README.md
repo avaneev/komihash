@@ -8,7 +8,7 @@ identical hashes on both big- and little-endian systems. Function's code is
 portable, scalar.
 
 This function features both a high large-block hashing performance (27.7 GB/s
-on Ryzen 3700X) and a high hashing throughput of small messages (about 12
+on Ryzen 3700X) and a high hashing throughput for small messages (about 12
 cycles/hash for 0-15-byte messages). Performance on 32-bit systems is,
 however, quite low. Also, large-block hashing performance on big-endian
 systems may be lower due to the need of byte-swapping.
