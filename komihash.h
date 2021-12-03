@@ -1,5 +1,5 @@
 /**
- * komihash.h version 2.8.12
+ * komihash.h version 2.8.11
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -166,10 +166,11 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
 	const uint8_t* const MsgEnd, const uint64_t fb )
 {
 	const int l = (int) ( MsgEnd - Msg );
+	uint64_t r = fb << ( l << 3 );
 
 	if( l > 3 )
 	{
-		uint64_t r = fb << ( l << 3 ) | (uint64_t) kh_lu32ec( Msg );
+		r |= (uint64_t) kh_lu32ec( Msg );
 		Msg += 4;
 
 		if( Msg < MsgEnd )
@@ -190,11 +191,9 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
 		return( r );
 	}
 
-	uint64_t r = fb;
-
 	if( l != 0 )
 	{
-		r = r << ( l << 3 ) | *Msg;
+		r |= *Msg;
 
 		if( ++Msg < MsgEnd )
 		{
