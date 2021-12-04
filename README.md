@@ -7,7 +7,7 @@ fast 64-bit hash function, mainly designed for hash-table uses; produces
 identical hashes on both big- and little-endian systems. Function's code is
 portable, scalar.
 
-This function features both a high large-block hashing performance (27.7 GB/s
+This function features both a high large-block hashing performance (27 GB/s
 on Ryzen 3700X) and a high hashing throughput for small messages (about 12
 cycles/hash for 0-15-byte messages). Performance on 32-bit systems is,
 however, quite low. Also, large-block hashing performance on big-endian
@@ -139,13 +139,17 @@ ticks per hash value`, including overhead. Measurement error is approximately
 |XXH3_64 0.8.0  |13.8           |18.8           |
 |prvhash64m 4.1 |19.0           |24.6           |
 
-The following methodology was used to obtain the `cycles/h` values. Note that
-this method measures a "raw" throughput. Practical performance depends on the
-actual statistics of messages (strings) being hashed, including memory access
-patterns. Also, particular hash functions may "over-favor" some specific
-message lengths. In this respect, `komihash` is a "fixed execution time"
-hash function as its throughput corresponds to the message's length almost
-linearly.
+The following method was used to obtain the `cycles/h` values. Note that this
+method measures a "raw" throughput, when processor's branch predictor tunes to
+a specific message length and a specific memory address. Practical performance
+depends on actual statistics of messages (strings) being hashed, including
+memory access patterns. Also, particular hash functions may "over-favor"
+specific message lengths. In this respect, `komihash` is a "fixed execution
+time" hash function as its throughput corresponds to message's length almost
+linearly. Throughput aside, hashing quality is also an important factor as
+it drives both the creation and access of a hash-map. This and many other
+synthetic hash function tests should be taken with a grain of salt. Only
+an actual use case may tell which hash function is preferrable.
 
 ```
 	const uint64_t rc = 1ULL << 26;

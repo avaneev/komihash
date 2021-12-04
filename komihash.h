@@ -1,5 +1,5 @@
 /**
- * komihash.h version 2.8.12
+ * komihash.h version 2.9
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -153,60 +153,89 @@ static inline uint64_t kh_lu64ec( const uint8_t* const p )
 }
 
 /**
- * Function loads 64-bit message word and pads it with the "final byte". This
- * function should only be called if there is less than 8 bytes left to read.
+ * Function loads 32-bit message word and pads it with the "final byte". This
+ * function should only be called if there is less than 4 bytes left to read.
  *
- * @param Msg Message pointer, alignment is unimportant. Should be below or
- * equal to MsgEnd.
- * @param MsgEnd Message's end pointer.
+ * @param Msg Message pointer, alignment is unimportant.
+ * @param MsgLen Message's remaining length, in bytes.
  * @param fb Final byte used for padding.
  */
 
-static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
-	const uint8_t* const MsgEnd, const uint64_t fb )
+static inline uint64_t kh_lpu32ec( const uint8_t* Msg, const size_t MsgLen,
+	uint64_t fb )
 {
-	const int l = (int) ( MsgEnd - Msg );
-	uint64_t r = fb << ( l << 3 );
-
-	if( l > 3 )
+	if( MsgLen != 0 )
 	{
-		r |= (uint64_t) kh_lu32ec( Msg );
-		Msg += 4;
+		fb = fb << ( MsgLen << 3 ) | *Msg;
 
-		if( Msg < MsgEnd )
+		if( MsgLen > 1 )
 		{
-			r |= (uint64_t) *Msg << 32;
+			fb |= (uint64_t) Msg[ 1 ] << 8;
 
-			if( ++Msg < MsgEnd )
+			if( MsgLen > 2 )
 			{
-				r |= (uint64_t) *Msg << 40;
-
-				if( ++Msg < MsgEnd )
-				{
-					r |= (uint64_t) *Msg << 48;
-				}
-			}
-		}
-
-		return( r );
-	}
-
-	if( l != 0 )
-	{
-		r |= *Msg;
-
-		if( ++Msg < MsgEnd )
-		{
-			r |= (uint64_t) *Msg << 8;
-
-			if( ++Msg < MsgEnd )
-			{
-				r |= (uint64_t) *Msg << 16;
+				fb |= (uint64_t) Msg[ 2 ] << 16;
 			}
 		}
 	}
 
-	return( r );
+	return( fb );
+}
+
+/**
+ * Function loads 64-bit message word and pads it with the "final byte". This
+ * function should only be called if there is less than 8 bytes left to read.
+ *
+ * @param Msg Message pointer, alignment is unimportant.
+ * @param MsgLen Message's remaining length, in bytes.
+ * @param fb Final byte used for padding.
+ */
+
+static inline uint64_t kh_lpu64ec( const uint8_t* Msg, const size_t MsgLen,
+	uint64_t fb )
+{
+	if( MsgLen == 0 )
+	{
+		return( fb );
+	}
+
+	fb <<= ( MsgLen << 3 );
+
+	if( MsgLen < 4 )
+	{
+		fb |= *Msg;
+
+		if( MsgLen > 1 )
+		{
+			fb |= (uint64_t) Msg[ 1 ] << 8;
+
+			if( MsgLen > 2 )
+			{
+				fb |= (uint64_t) Msg[ 2 ] << 16;
+			}
+		}
+
+		return( fb );
+	}
+
+	fb |= kh_lu32ec( Msg );
+
+	if( MsgLen > 4 )
+	{
+		fb |= (uint64_t) Msg[ 4 ] << 32;
+
+		if( MsgLen > 5 )
+		{
+			fb |= (uint64_t) Msg[ 5 ] << 40;
+
+			if( MsgLen > 6 )
+			{
+				fb |= (uint64_t) Msg[ 6 ] << 48;
+			}
+		}
+	}
+
+	return( fb );
 }
 
 #if defined( __SIZEOF_INT128__ )
@@ -285,7 +314,7 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg,
  * little-endian systems.
  */
 
-static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
+static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 	const uint64_t UseSeed )
 {
 	const uint8_t* Msg = (const uint8_t*) Msg0;
@@ -313,30 +342,36 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
 	// it is a replication of the `10` bit-pair; it is not an arbitrary
 	// constant).
 
-	kh_m128( Seed1, Seed5, &r2l, &r2h ); // Required for PerlinNoise.
-	Seed5 += r2h;
-	Seed1 = Seed5 ^ r2l;
-
-	const uint8_t* const MsgEnd = Msg + MsgLen;
+	kh_m128( Seed1, Seed5, &r1l, &r1h ); // Required for PerlinNoise.
+	Seed5 += r1h;
+	Seed1 = Seed5 ^ r1l;
 
 	if( KOMIHASH_LIKELY( MsgLen < 16 ))
 	{
 		r2l = Seed1;
 		r2h = Seed5;
 
-		if( KOMIHASH_LIKELY( MsgLen > 7 ))
+		if( KOMIHASH_UNLIKELY( MsgLen > 11 ))
 		{
 			// The following two XOR instructions are equivalent to mixing a
 			// message with a cryptographical one-time-pad. Message's
 			// statistics and distribution are thus unimportant.
 
 			r2l ^= kh_lu64ec( Msg );
-			r2h ^= kh_lpu64ec( Msg + 8, MsgEnd, 1 << ( MsgEnd[ -1 ] >> 7 ));
+			r2h ^= kh_lu32ec( Msg + 8 ) | kh_lpu32ec( Msg + 12, MsgLen - 12,
+				1 << ( Msg[ MsgLen - 1 ] >> 7 )) << 32;
+		}
+		else
+		if( KOMIHASH_UNLIKELY( MsgLen > 7 ))
+		{
+			r2l ^= kh_lu64ec( Msg );
+			r2h ^= kh_lpu32ec( Msg + 8, MsgLen - 8,
+				1 << ( Msg[ MsgLen - 1 ] >> 7 ));
 		}
 		else
 		if( KOMIHASH_LIKELY( MsgLen != 0 ))
 		{
-			r2l ^= kh_lpu64ec( Msg, MsgEnd, 1 << ( MsgEnd[ -1 ] >> 7 ));
+			r2l ^= kh_lpu64ec( Msg, MsgLen, 1 << ( Msg[ MsgLen - 1 ] >> 7 ));
 		}
 
 		kh_m128( r2l, r2h, &r1l, &r1h );
@@ -352,7 +387,7 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
 
 	uint64_t Seed2 = 0x13198A2E03707344 ^ Seed1;
 
-	if( MsgLen > 63 )
+	if( KOMIHASH_LIKELY( MsgLen > 63 ))
 	{
 		uint64_t Seed3 = 0xA4093822299F31D0 ^ Seed1;
 		uint64_t Seed4 = 0x082EFA98EC4E6C89 ^ Seed1;
@@ -376,6 +411,7 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
 				Seed8 ^ kh_lu64ec( Msg + 56 ), &r4l, &r4h );
 
 			Msg += 8 * 8;
+			MsgLen -= 8 * 8;
 
 			// Such "shifting" arrangement does not increase individual
 			// SeedN's PRNG period beyond 2^64, but reduces a chance of any
@@ -392,7 +428,7 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
 			Seed4 = Seed7 ^ r4l;
 			Seed1 = Seed8 ^ r1l;
 
-		} while( KOMIHASH_LIKELY( Msg < MsgEnd - 63 ));
+		} while( KOMIHASH_LIKELY( MsgLen > 63 ));
 
 		kh_m128( Seed2, Seed6, &r2l, &r2h );
 		kh_m128( Seed3, Seed7, &r3l, &r3h );
@@ -409,27 +445,28 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
 		Seed2 ^= Seed3 ^ Seed4;
 	}
 
-	while( KOMIHASH_LIKELY( Msg < MsgEnd - 15 ))
+	while( KOMIHASH_LIKELY( MsgLen > 15 ))
 	{
 		kh_m128( Seed1 ^ kh_lu64ec( Msg ),
 			Seed5 ^ kh_lu64ec( Msg + 8 ), &r1l, &r1h );
 
 		Msg += 8 * 2;
+		MsgLen -= 8 * 2;
 
 		Seed5 += r1h;
 		Seed1 = Seed5 ^ r1l;
 	}
 
-	const uint64_t fb = 1 << ( MsgEnd[ -1 ] >> 7 );
+	const uint64_t fb = 1 << ( Msg[ MsgLen - 1 ] >> 7 );
 
-	if( KOMIHASH_LIKELY( Msg < MsgEnd - 7 ))
+	if( KOMIHASH_LIKELY( MsgLen > 7 ))
 	{
 		r2l = Seed1 ^ kh_lu64ec( Msg );
-		r2h = Seed5 ^ kh_lpu64ec( Msg + 8, MsgEnd, fb );
+		r2h = Seed5 ^ kh_lpu64ec( Msg + 8, MsgLen - 8, fb );
 	}
 	else
 	{
-		r2l = Seed1 ^ kh_lpu64ec( Msg, MsgEnd, fb );
+		r2l = Seed1 ^ kh_lpu64ec( Msg, MsgLen, fb );
 		r2h = Seed5;
 	}
 
@@ -449,8 +486,8 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
  * 0.73 cycles/byte performance. Self-starts in 4 iterations, which is a
  * suggested "warming up" initialization before using its output.
  *
- * @param[in,out] Seed1 Seed value 1. Can be initialized to any value (even 0),
- * this is the usual "PRNG seed" value.
+ * @param[in,out] Seed1 Seed value 1. Can be initialized to any value
+ * (even 0). This is the usual "PRNG seed" value.
  * @param[in,out] Seed2 Seed value 2, a supporting variable, best initialized
  * to the same value as Seed1.
  * @return The next uniformly-random 64-bit value.
