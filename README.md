@@ -40,47 +40,47 @@ development of `komihash`.
 
 Compiler options: `/Ox /arch:sse2`; overhead: `1.8` cycles/h.
 
-|Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
-|----           |----           |----           |----           |
+|Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
+|----            |----           |----           |----           |
 |**komihash 3.0**|10.9           |16.4           |27.0           |
-|komihash 2.8   |11.3           |17.4           |27.7           |
-|wyhash_final3  |13.4           |17.8           |29.7           |
-|XXH3_64 0.8.0  |17.5           |21.1           |29.0           |
-|prvhash64m 4.1 |19.9           |26.1           |4.1            |
+|komihash 2.8    |11.3           |17.4           |27.7           |
+|wyhash_final3   |13.4           |17.8           |29.7           |
+|XXH3_64 0.8.0   |17.5           |21.1           |29.0           |
+|prvhash64m 4.1  |19.9           |26.1           |4.1            |
 
 Compiler options: `/Ox -mavx2`; overhead: `1.8` cycles/h.
 
-|Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
-|----           |----           |----           |----           |
+|Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
+|----            |----           |----           |----           |
 |**komihash 3.0**|10.9           |16.8           |27.0           |
-|komihash 2.8   |11.1           |17.7           |27.8           |
-|wyhash_final3  |13.4           |17.7           |29.8           |
-|XXH3_64 0.8.0  |17.7           |21.3           |61.0           |
-|prvhash64m 4.1 |20.0           |26.2           |4.1            |
+|komihash 2.8    |11.1           |17.7           |27.8           |
+|wyhash_final3   |13.4           |17.7           |29.8           |
+|XXH3_64 0.8.0   |17.7           |21.3           |61.0           |
+|prvhash64m 4.1  |20.0           |26.2           |4.1            |
 
 ### LLVM clang 12.0.1 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 4.5 GHz ###
 
 Compiler options: `-O3 -mavx2`; overhead: `5.3` cycles/h.
 
-|Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
-|----           |----           |----           |----           |
+|Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
+|----            |----           |----           |----           |
 |**komihash 3.0**|16.3           |19.6           |22.3           |
-|komihash 2.8   |18.1           |22.3           |23.5           |
-|wyhash_final3  |14.0           |18.7           |28.4           |
-|XXH3_64 0.8.0  |18.0           |29.3           |51.0           |
-|prvhash64m 4.1 |27.0           |29.9           |4.3            |
+|komihash 2.8    |18.1           |22.3           |23.5           |
+|wyhash_final3   |14.0           |18.7           |28.4           |
+|XXH3_64 0.8.0   |18.0           |29.3           |51.0           |
+|prvhash64m 4.1  |27.0           |29.9           |4.3            |
 
 ### ICC 19.0 64-bit, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz ###
 
 Compiler options: `/O3 /QxSSE2`; overhead: `2.0` cycles/h.
 
-|Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
-|----           |----           |----           |----           |
+|Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
+|----            |----           |----           |----           |
 |**komihash 3.0**|19.8           |24.0           |16.6           |
-|komihash 2.8   |21.3           |25.6           |16.2           |
-|wyhash_final3  |24.1           |32.0           |12.6           |
-|XXH3_64 0.8.0  |21.8           |27.2           |29.6           |
-|prvhash64m 4.1 |29.9           |39.1           |3.2            |
+|komihash 2.8    |21.3           |25.6           |16.2           |
+|wyhash_final3   |24.1           |32.0           |12.6           |
+|XXH3_64 0.8.0   |21.8           |27.2           |29.6           |
+|prvhash64m 4.1  |29.9           |39.1           |3.2            |
 
 (this is likely a worst-case scenario, when a compiler was not cross-tuned
 to a competing processor architecture; also, ICC for Windows does not support
@@ -90,46 +90,47 @@ the `__builtin_expect()` intrinsic)
 
 Compiler options: `-O3 -msse2`; overhead: `5.8` cycles/h.
 
-|Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
-|----           |----           |----           |----           |
+|Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
+|----            |----           |----           |----           |
 |**komihash 3.0**|19.2           |20.0           |24.7           |
-|komihash 2.8   |18.5           |22.4           |24.7           |
-|wyhash_final3  |14.9           |19.5           |29.8           |
-|XXH3_64 0.8.0  |16.9           |22.3           |26.6           |
-|prvhash64m 4.1 |23.2           |27.8           |4.3            |
+|komihash 2.8    |18.5           |22.4           |24.7           |
+|wyhash_final3   |14.9           |19.5           |29.8           |
+|XXH3_64 0.8.0   |16.9           |22.3           |26.6           |
+|prvhash64m 4.1  |23.2           |27.8           |4.3            |
 
 Compiler options: `-O3 -mavx2`; overhead: `5.8` cycles/h.
 
-|Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
-|----           |----           |----           |----           |
+|Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
+|----            |----           |----           |----           |
 |**komihash 3.0**|16.1           |19.1           |24.4           |
-|komihash 2.8   |16.6           |21.2           |24.7           |
-|wyhash_final3  |15.4           |19.0           |30.1           |
-|XXH3_64 0.8.0  |18.8           |23.4           |38.0           |
-|prvhash64m 4.1 |21.7           |27.1           |4.4            |
+|komihash 2.8    |16.6           |21.2           |24.7           |
+|wyhash_final3   |15.4           |19.0           |30.1           |
+|XXH3_64 0.8.0   |18.8           |23.4           |38.0           |
+|prvhash64m 4.1  |21.7           |27.1           |4.4            |
 
 ### ICC 19.0 64-bit, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz ###
 
 Compiler options: `/O3 /QxSSE2`; overhead: `5.9` cycles/h.
 
-|Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
-|----           |----           |----           |----           |
-|komihash 2.8   |20.1           |23.6           |18.4           |
-|wyhash_final3  |19.2           |24.5           |20.0           |
-|XXH3_64 0.8.0  |19.9           |25.8           |28.0           |
-|prvhash64m 4.1 |25.5           |32.4           |3.2            |
+|Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
+|----            |----           |----           |----           |
+|**komihash 3.0**|19.5           |22.8           |18.2           |
+|komihash 2.8    |20.1           |23.6           |18.4           |
+|wyhash_final3   |19.2           |24.5           |20.0           |
+|XXH3_64 0.8.0   |19.9           |25.8           |28.0           |
+|prvhash64m 4.1  |25.5           |32.4           |3.2            |
 
 ### Apple clang 12.0.0 64-bit, macOS 12.0.1, Apple M1, 3.5 GHz ###
 
 Compiler options: `-O3`; overhead: `unestimatable`.
 
-|Hash function  |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
-|----           |----           |----           |----           |
+|Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
+|----            |----           |----           |----           |
 |**komihash 3.0**|8.5            |11.0           |23.5           |
-|komihash 2.8   |10.1           |11.4           |23.5           |
-|wyhash_final3  |7.9            |8.1            |26.1           |
-|XXH3_64 0.8.0  |8.2            |8.2            |30.5           |
-|prvhash64m 4.1 |12.9           |16.8           |3.5            |
+|komihash 2.8    |10.1           |11.4           |23.5           |
+|wyhash_final3   |7.9            |8.1            |26.1           |
+|XXH3_64 0.8.0   |8.2            |8.2            |30.5           |
+|prvhash64m 4.1  |12.9           |16.8           |3.5            |
 
 Notes: `XXH3_64` is unseeded (seeded variant is 1 cycle/h higher). `bulk` is
 256000 bytes (this means it is mainly a cache-bound performance). `GB/s`
@@ -139,12 +140,13 @@ ticks per hash value`, including overhead. Measurement error is approximately
 
 ### Averages over all measurements (overhead excluded) ###
 
-|Hash function  |0-15b, cycles/h|8-28b, cycles/h|
-|----           |----           |----           |
-|komihash 2.8   |12.3           |16.7           |
-|wyhash_final3  |11.7           |16.1           |
-|XXH3_64 0.8.0  |13.8           |18.8           |
-|prvhash64m 4.1 |19.0           |24.6           |
+|Hash function   |0-15b, cycles/h|8-28b, cycles/h|
+|----            |----           |----           |
+|**komihash 3.0**|**11.6**       |**15.2**       |
+|komihash 2.8    |12.3           |16.7           |
+|wyhash_final3   |11.7           |16.1           |
+|XXH3_64 0.8.0   |13.8           |18.8           |
+|prvhash64m 4.1  |19.0           |24.6           |
 
 The following method was used to obtain the `cycles/h` values. Note that this
 method measures a "raw" throughput, when processor's branch predictor tunes to
