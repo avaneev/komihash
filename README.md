@@ -139,7 +139,13 @@ ticks per hash value`, including overhead. Measurement error is approximately
 |XXH3_64 0.8.0  |13.8           |18.8           |
 |prvhash64m 4.1 |19.0           |24.6           |
 
-The following methodology was used to obtain the `cycles/h` values:
+The following methodology was used to obtain the `cycles/h` values. Note that
+this method measures a "raw" throughput. Practical performance depends on the
+actual statistics of messages (strings) being hashed, including memory access
+patterns. Also, particular hash functions may "over-favor" some specific
+message lengths. In this respect, `komihash` is a "fixed execution time"
+hash function as its throughput corresponds to the message's length almost
+linearly.
 
 ```
 	const uint64_t rc = 1ULL << 26;

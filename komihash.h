@@ -1,5 +1,5 @@
 /**
- * komihash.h version 2.8.11
+ * komihash.h version 2.8.12
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -308,6 +308,10 @@ static inline uint64_t komihash( const void* const Msg0, const size_t MsgLen,
 	// the input entropy is usually available in abundance during hashing.
 	//
 	// Seed5 += r2h + 0xAAAAAAAAAAAAAAAA; // Should match register's size.
+	//
+	// (the `0xAAAA...` constant should match register's size; essentially,
+	// it is a replication of the `10` bit-pair; it is not an arbitrary
+	// constant).
 
 	kh_m128( Seed1, Seed5, &r2l, &r2h ); // Required for PerlinNoise.
 	Seed5 += r2h;
