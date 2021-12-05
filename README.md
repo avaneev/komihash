@@ -13,9 +13,6 @@ cycles/hash for 0-15-byte messages). Performance on 32-bit systems is,
 however, quite low. Also, large-block hashing performance on big-endian
 systems may be lower due to the need of byte-swapping.
 
-It passes all [SMHasher](https://github.com/rurban/smhasher) tests.
-Performance estimates on that page may be unreliable.
-
 Technically, `komihash` is close to the class of hash functions like `wyhash`
 and `CircleHash`, which are, in turn, close to the `lehmer64` PRNG. However,
 `komihash` is structurally different to them in that it accumulates the full
@@ -25,11 +22,13 @@ consecutive states while others may. Another important difference in
 `komihash` is that it parses the input message without overlaps. While
 overlaps allow a function to have fewer code branches, they are considered
 "non-ideal", potentially causing collisions and seed value flaws. Beside that,
-`komihash` features a superior seed value handling and PerlinNoise hashing.
+`komihash` features superior seed value handling and PerlinNoise hashing.
 
 Note that this function is not cryptographically-secure: in open systems it
 should only be used with a secret seed, to minimize the chance of a collision
 attack.
+
+This function passes all [SMHasher](https://github.com/rurban/smhasher) tests.
 
 ## Comparisons ##
 
@@ -156,9 +155,9 @@ memory access patterns. Also, particular hash functions may "over-favor"
 specific message lengths. In this respect, `komihash` is a "fixed execution
 time" hash function as its throughput corresponds to message's length almost
 linearly. Throughput aside, hashing quality is also an important factor as
-it drives both the creation and access of a hash-map. This and many other
+it drives a hash-map's creation and a subsequent access. This, and many other
 synthetic hash function tests should be taken with a grain of salt. Only
-an actual use case may tell which hash function is preferrable.
+an actual use case may tell one which hash function is preferrable.
 
 ```
 	const uint64_t rc = 1ULL << 26;
@@ -225,6 +224,13 @@ Another factor worth mentioning is that a server rarely has more than 10 Gb/s
 network connectivity, thus further reducing practical hashing performance of
 incoming data. The same applies to disk system's throughput, if on-disk data
 is not already in memory.
+
+## KOMIRAND ##
+
+The `komirand()` function available in the `komihash.h` file implements a
+simple, but reliable, self-starting, and fast (`0.73` cycles/byte) 64-bit
+PRNG with `2^64` period. It is based on the same mathematical construct as the
+`komihash` hash function. `komirand` passes `PractRand` tests.
 
 ## Other ##
 
