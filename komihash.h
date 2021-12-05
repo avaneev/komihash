@@ -1,5 +1,5 @@
 /**
- * komihash.h version 3.0
+ * komihash.h version 3.1
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -119,6 +119,19 @@
 	#define KOMIHASH_UNLIKELY( x ) ( x )
 
 #endif // likelihood macros
+
+// In-memory data prefetch macro.
+
+#if defined( __GNUC__ ) || defined( __clang__ ) || \
+	( defined( __GNUC__ ) && defined( __INTEL_COMPILER ))
+
+	#define KOMIHASH_PREFETCH( addr ) __builtin_prefetch( addr, 0, 0 )
+
+#else // prefetch macro
+
+	#define KOMIHASH_PREFETCH( addr )
+
+#endif // prefetch macro
 
 /**
  * An auxiliary function that returns an unsigned 32-bit value created out of
@@ -398,7 +411,7 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 	uint64_t Seed2 = 0x13198A2E03707344 ^ Seed1;
 
-	if( MsgLen > 63 )
+	if( KOMIHASH_UNLIKELY( MsgLen > 63 ))
 	{
 		uint64_t Seed3 = 0xA4093822299F31D0 ^ Seed1;
 		uint64_t Seed4 = 0x082EFA98EC4E6C89 ^ Seed1;
@@ -409,6 +422,8 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 		do
 		{
+			KOMIHASH_PREFETCH( Msg );
+
 			kh_m128( Seed1 ^ kh_lu64ec( Msg ),
 				Seed5 ^ kh_lu64ec( Msg + 8 ), &r1l, &r1h );
 
@@ -441,17 +456,19 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 		} while( KOMIHASH_LIKELY( MsgLen > 63 ));
 
+		kh_m128( Seed1, Seed5, &r1l, &r1h );
 		kh_m128( Seed2, Seed6, &r2l, &r2h );
 		kh_m128( Seed3, Seed7, &r3l, &r3h );
 		kh_m128( Seed4, Seed8, &r4l, &r4h );
 
+		Seed5 += r1h;
 		Seed6 += r2h;
 		Seed7 += r3h;
 		Seed8 += r4h;
 		Seed2 = Seed5 ^ r2l;
 		Seed3 = Seed6 ^ r3l;
 		Seed4 = Seed7 ^ r4l;
-		Seed5 = Seed8;
+		Seed1 = Seed8 ^ r1l;
 
 		Seed2 ^= Seed3 ^ Seed4;
 	}
