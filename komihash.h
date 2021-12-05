@@ -1,5 +1,5 @@
 /**
- * komihash.h version 3.1
+ * komihash.h version 3.2
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -472,6 +472,8 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 		Seed2 ^= Seed3 ^ Seed4;
 	}
+
+	KOMIHASH_PREFETCH( Msg );
 
 	while( KOMIHASH_LIKELY( MsgLen > 15 ))
 	{
