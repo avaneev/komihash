@@ -1,5 +1,5 @@
 /**
- * komihash.h version 3.3
+ * komihash.h version 3.4
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -346,9 +346,10 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 			// message with a cryptographical one-time-pad. Message's
 			// statistics and distribution are thus unimportant.
 
-			r2l ^= kh_lu64ec( Msg );
 			r2h ^= kh_lpu64ec_nz( Msg + 8, MsgLen - 8,
 				1 << ( Msg[ MsgLen - 1 ] >> 7 ));
+
+			r2l ^= kh_lu64ec( Msg );
 		}
 		else
 		if( KOMIHASH_LIKELY( MsgLen != 0 ))
