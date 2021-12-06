@@ -120,12 +120,13 @@
 
 #endif // likelihood macros
 
-// In-memory data prefetch macro.
+// In-memory data prefetch macro (temporal locality=1, in case a collision
+// resolution will be necessary).
 
 #if defined( __GNUC__ ) || defined( __clang__ ) || \
 	( defined( __GNUC__ ) && defined( __INTEL_COMPILER ))
 
-	#define KOMIHASH_PREFETCH( addr ) __builtin_prefetch( addr, 0, 0 )
+	#define KOMIHASH_PREFETCH( addr ) __builtin_prefetch( addr, 0, 1 )
 
 #else // prefetch macro
 
