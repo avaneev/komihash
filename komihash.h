@@ -1,5 +1,5 @@
 /**
- * komihash.h version 3.4
+ * komihash.h version 3.5
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -163,6 +163,47 @@ static inline uint64_t kh_lu64ec( const uint8_t* const p )
 	memcpy( &v, p, 8 );
 
 	return( KOMIHASH_EC64( v ));
+}
+
+/**
+ * Function loads 64-bit message word and pads it with the "final byte". This
+ * function should only be called if there is less than 8 bytes left to read.
+ * Can be used on "short" messages.
+ *
+ * @param Msg Message pointer, alignment is unimportant.
+ * @param MsgLen Message's remaining length, in bytes; can be 0.
+ * @param fb Final byte used for padding.
+ */
+
+static inline uint64_t kh_lpu64ec( const uint8_t* Msg, const size_t MsgLen,
+	uint64_t fb )
+{
+	if( KOMIHASH_UNLIKELY( MsgLen == 0 ))
+	{
+		return( fb );
+	}
+
+	if( KOMIHASH_LIKELY( MsgLen < 4 ))
+	{
+		fb = fb << ( MsgLen << 3 ) | Msg[ 0 ];
+
+		if( MsgLen > 1 )
+		{
+			fb |= (uint64_t) Msg[ 1 ] << 8;
+
+			if( MsgLen > 2 )
+			{
+				fb |= (uint64_t) Msg[ 2 ] << 16;
+			}
+		}
+
+		return( fb );
+	}
+
+	const int ml8 = (int) ( MsgLen << 3 );
+
+	return( fb << ml8 | kh_lu32ec( Msg ) |
+		( (uint64_t) kh_lu32ec( Msg + MsgLen - 4 ) >> ( 64 - ml8 )) << 32 );
 }
 
 /**
@@ -346,7 +387,7 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 			// message with a cryptographical one-time-pad. Message's
 			// statistics and distribution are thus unimportant.
 
-			r2h ^= kh_lpu64ec_nz( Msg + 8, MsgLen - 8,
+			r2h ^= kh_lpu64ec( Msg + 8, MsgLen - 8,
 				1 << ( Msg[ MsgLen - 1 ] >> 7 ));
 
 			r2l ^= kh_lu64ec( Msg );
