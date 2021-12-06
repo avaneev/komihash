@@ -1,5 +1,5 @@
 /**
- * komihash.h version 3.5
+ * komihash.h version 3.6
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -178,13 +178,13 @@ static inline uint64_t kh_lu64ec( const uint8_t* const p )
 static inline uint64_t kh_lpu64ec( const uint8_t* Msg, const size_t MsgLen,
 	uint64_t fb )
 {
-	if( KOMIHASH_UNLIKELY( MsgLen == 0 ))
+	if( MsgLen < 4 )
 	{
-		return( fb );
-	}
+		if( KOMIHASH_UNLIKELY( MsgLen == 0 ))
+		{
+			return( fb );
+		}
 
-	if( KOMIHASH_LIKELY( MsgLen < 4 ))
-	{
 		fb = fb << ( MsgLen << 3 ) | Msg[ 0 ];
 
 		if( MsgLen > 1 )
@@ -366,7 +366,7 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 	// komirand() function. Not required for hashing (but works for it) since
 	// the input entropy is usually available in abundance during hashing.
 	//
-	// Seed5 += r2h + 0xAAAAAAAAAAAAAAAA; // Should match register's size.
+	// Seed5 += r2h + 0xAAAAAAAAAAAAAAAA;
 	//
 	// (the `0xAAAA...` constant should match register's size; essentially,
 	// it is a replication of the `10` bit-pair; it is not an arbitrary
@@ -457,19 +457,24 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 		} while( KOMIHASH_LIKELY( MsgLen > 63 ));
 
-		kh_m128( Seed1, Seed5, &r1l, &r1h );
+		// Such "cropped" large-block finalization may look counter-intuitive
+		// (it does not look similar to the set of instructions above), but it
+		// was tested in PractRand, and it does produce a correct continuation
+		// of PRNG in Seed1/Seed5. Such finalization is even preferrable as
+		// it shows a considerably lower biases in the "Zeroes" and
+		// "Avalanche" tests of SMHasher.
+
 		kh_m128( Seed2, Seed6, &r2l, &r2h );
 		kh_m128( Seed3, Seed7, &r3l, &r3h );
 		kh_m128( Seed4, Seed8, &r4l, &r4h );
 
-		Seed5 += r1h;
 		Seed6 += r2h;
 		Seed7 += r3h;
 		Seed8 += r4h;
 		Seed2 = Seed5 ^ r2l;
 		Seed3 = Seed6 ^ r3l;
 		Seed4 = Seed7 ^ r4l;
-		Seed1 = Seed8 ^ r1l;
+		Seed5 = Seed8;
 
 		Seed2 ^= Seed3 ^ Seed4;
 	}
