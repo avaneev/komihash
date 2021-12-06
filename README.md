@@ -7,7 +7,7 @@ fast 64-bit hash function, mainly designed for hash-table uses; produces
 identical hashes on both big- and little-endian systems. Function's code is
 portable, scalar.
 
-This function features both a high large-block hashing performance (27.7 GB/s
+This function features both a high large-block hashing performance (27.5 GB/s
 on Ryzen 3700X) and a high hashing throughput for small messages (about 12
 cycles/hash for 0-15-byte messages). Performance on 32-bit systems is,
 however, quite low. Also, large-block hashing performance on big-endian
@@ -41,7 +41,7 @@ Compiler options: `/Ox /arch:sse2`; overhead: `1.8` cycles/h.
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----            |----           |----           |----           |
-|**komihash 3.3**|10.9           |16.4           |27.7           |
+|**komihash 3.6**|11.1           |16.9           |27.5           |
 |komihash 2.8    |11.3           |17.4           |27.7           |
 |wyhash_final3   |13.4           |17.8           |29.7           |
 |XXH3_64 0.8.0   |17.5           |21.1           |29.0           |
@@ -51,7 +51,7 @@ Compiler options: `/Ox -mavx2`; overhead: `1.8` cycles/h.
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----            |----           |----           |----           |
-|**komihash 3.3**|10.9           |16.6           |27.7           |
+|**komihash 3.6**|11.0           |16.3           |27.5           |
 |komihash 2.8    |11.1           |17.7           |27.8           |
 |wyhash_final3   |13.4           |17.7           |29.8           |
 |XXH3_64 0.8.0   |17.7           |21.3           |61.0           |
@@ -63,7 +63,7 @@ Compiler options: `-O3 -mavx2`; overhead: `5.3` cycles/h.
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----            |----           |----           |----           |
-|**komihash 3.3**|16.0           |20.0           |22.4           |
+|**komihash 3.6**|16.0           |19.0           |22.3           |
 |komihash 2.8    |18.1           |22.3           |23.5           |
 |wyhash_final3   |14.0           |18.7           |28.4           |
 |XXH3_64 0.8.0   |18.0           |29.3           |51.0           |
@@ -75,7 +75,7 @@ Compiler options: `/O3 /QxSSE2`; overhead: `2.0` cycles/h.
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----            |----           |----           |----           |
-|**komihash 3.3**|20.0           |24.1           |16.5           |
+|**komihash 3.6**|20.1           |24.0           |16.3           |
 |komihash 2.8    |21.3           |25.6           |16.2           |
 |wyhash_final3   |24.1           |32.0           |12.6           |
 |XXH3_64 0.8.0   |21.8           |27.2           |29.6           |
@@ -91,7 +91,7 @@ Compiler options: `-O3 -msse2`; overhead: `5.8` cycles/h.
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----            |----           |----           |----           |
-|**komihash 3.3**|15.2           |20.4           |24.7           |
+|**komihash 3.6**|16.4           |20.3           |24.7           |
 |komihash 2.8    |18.5           |22.4           |24.7           |
 |wyhash_final3   |14.9           |19.5           |29.8           |
 |XXH3_64 0.8.0   |16.9           |22.3           |26.6           |
@@ -101,7 +101,7 @@ Compiler options: `-O3 -mavx2`; overhead: `5.8` cycles/h.
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----            |----           |----           |----           |
-|**komihash 3.3**|15.0           |19.3           |24.7           |
+|**komihash 3.6**|15.8           |20.1           |24.7           |
 |komihash 2.8    |16.6           |21.2           |24.7           |
 |wyhash_final3   |15.4           |19.0           |30.1           |
 |XXH3_64 0.8.0   |18.8           |23.4           |38.0           |
@@ -113,7 +113,7 @@ Compiler options: `/O3 /QxSSE2`; overhead: `5.9` cycles/h.
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----            |----           |----           |----           |
-|**komihash 3.3**|19.5           |23.2           |18.0           |
+|**komihash 3.6**|19.5           |23.1           |18.1           |
 |komihash 2.8    |20.1           |23.6           |18.4           |
 |wyhash_final3   |19.2           |24.5           |20.0           |
 |XXH3_64 0.8.0   |19.9           |25.8           |28.0           |
@@ -125,7 +125,7 @@ Compiler options: `-O3`; overhead: `unestimatable`.
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----            |----           |----           |----           |
-|**komihash 3.3**|8.4            |10.7           |23.6           |
+|**komihash 3.6**|8.5            |10.7           |23.6           |
 |komihash 2.8    |10.1           |11.4           |23.5           |
 |wyhash_final3   |7.9            |8.1            |26.1           |
 |XXH3_64 0.8.0   |8.2            |8.2            |30.5           |
@@ -141,7 +141,7 @@ ticks per hash value`, including overhead. Measurement error is approximately
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|
 |----            |----           |----           |
-|**komihash 3.3**|**10.9**       |**15.3**       |
+|**komihash 3.6**|**11.3**       |**15.3**       |
 |komihash 2.8    |12.3           |16.7           |
 |wyhash_final3   |11.7           |16.1           |
 |XXH3_64 0.8.0   |13.8           |18.8           |
