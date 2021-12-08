@@ -3,9 +3,9 @@
 ## Introduction ##
 
 The `komihash()` function available in the `komihash.h` file implements a very
-fast 64-bit hash function, mainly designed for hash-table uses; produces
-identical hashes on both big- and little-endian systems. Function's code is
-portable, scalar.
+fast 64-bit hash function, mainly designed for hash-table and hash-map uses;
+produces identical hashes on both big- and little-endian systems. Function's
+code is portable, scalar.
 
 This function features both a high large-block hashing performance (27.5 GB/s
 on Ryzen 3700X) and a high hashing throughput for small messages (about 12
@@ -153,10 +153,10 @@ a specific message length and a specific memory address. Practical performance
 depends on actual statistics of messages (strings) being hashed, including
 memory access patterns. Note that particular hash functions may "over-favor"
 specific message lengths. In this respect, `komihash` is a "fixed execution
-time" hash function as its throughput corresponds to message's length almost
-linearly. Throughput aside, hashing quality is also an important factor as
-it drives a hash-map's creation and subsequent accesses. This, and many other
-synthetic hash function tests should be taken with a grain of salt. Only
+time" hash function since its throughput corresponds to message's length
+almost linearly. Throughput aside, hashing quality is also an important factor
+as it drives a hash-map's creation and subsequent accesses. This, and many
+other synthetic hash function tests should be taken with a grain of salt. Only
 an actual use case can reveal which hash function is preferrable.
 
 ```
@@ -196,7 +196,7 @@ reason is that for a non-cryptographic hash function such instruction provides
 no additional security: while it may seem that such instruction protects from
 simple "state XORing" collision attacks, in practice it offers no protection,
 if one considers how powerful [SAT solvers](https://github.com/pysathq/pysat)
-are: in a matter of seconds they can "forge" a preimage that produces a
+are: in less than a second they can "forge" a preimage which produces a
 required hash value. It is also important to note that in such "fast" hash
 functions like `komihash` the input message has complete control over the
 state variables.
@@ -205,7 +205,7 @@ Is 128-bit version of this hash function planned? Most probably, no, it is
 not. While such version may be reasonable for data structure compatibility
 reasons, there is no much practical sense to use 128-bit hashes at a local
 level: a reliable 64-bit hash allows one to have 2.1 billion diverse binary
-objects (e.g. files in a file system, or entries in a hash-table) without
+objects (e.g. files in a file system, or entries in a hash-map) without
 collisions, on average. On the other hand, on a worldwide scale, having
 128-bit hashes is clearly not enough considering the number of existing
 digital devices and the number of diverse binary objects (e.g. files, records
@@ -223,7 +223,7 @@ high-load 8-core server, rarely receives more than 8 GB/s of bandwidth.
 Another factor worth mentioning is that a server rarely has more than 10 Gb/s
 network connectivity, thus further reducing practical hashing performance of
 incoming data. The same applies to disk system's throughput, if on-disk data
-is not already in memory.
+is not yet in memory.
 
 ## KOMIRAND ##
 

@@ -1,5 +1,5 @@
 /**
- * komihash.h version 3.6
+ * komihash.h version 3.6.1
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -68,7 +68,8 @@
 #endif // defined( _MSC_VER )
 
 // Endianness-definition macro, can be defined externally (e.g. =1, if
-// endianness-correction is unnecessary in any case).
+// endianness-correction is unnecessary in any case, to reduce its associated
+// overhead).
 
 #if !defined( KOMIHASH_LITTLE_ENDIAN )
 	#if defined( _WIN32 ) || defined( __LITTLE_ENDIAN__ ) || \
@@ -104,8 +105,8 @@
 
 #endif // KOMIHASH_LITTLE_ENDIAN
 
-// Likelihood macros that are used for manually-guided optimization
-// (inefficient in clang).
+// Likelihood macros that are used for manually-guided micro-optimization
+// (not enabled in LLVM clang due to inefficiency).
 
 #if defined( __GNUC__ ) || \
 	( defined( __GNUC__ ) && defined( __INTEL_COMPILER ))
@@ -121,7 +122,7 @@
 #endif // likelihood macros
 
 // In-memory data prefetch macro (temporal locality=1, in case a collision
-// resolution will be necessary).
+// resolution would be necessary).
 
 #if defined( __GNUC__ ) || defined( __clang__ ) || \
 	( defined( __GNUC__ ) && defined( __INTEL_COMPILER ))
@@ -176,8 +177,8 @@ static inline uint64_t kh_lu64ec( const uint8_t* const p )
  * @param fb Final byte used for padding.
  */
 
-static inline uint64_t kh_lpu64ec( const uint8_t* Msg, const size_t MsgLen,
-	uint64_t fb )
+static inline uint64_t kh_lpu64ec( const uint8_t* const Msg,
+	const size_t MsgLen, uint64_t fb )
 {
 	if( MsgLen < 4 )
 	{
@@ -217,8 +218,8 @@ static inline uint64_t kh_lpu64ec( const uint8_t* Msg, const size_t MsgLen,
  * @param fb Final byte used for padding.
  */
 
-static inline uint64_t kh_lpu64ec_nz( const uint8_t* Msg, const size_t MsgLen,
-	uint64_t fb )
+static inline uint64_t kh_lpu64ec_nz( const uint8_t* const Msg,
+	const size_t MsgLen, uint64_t fb )
 {
 	if( KOMIHASH_LIKELY( MsgLen < 4 ))
 	{
@@ -246,15 +247,15 @@ static inline uint64_t kh_lpu64ec_nz( const uint8_t* Msg, const size_t MsgLen,
 /**
  * Function loads 64-bit message word and pads it with the "final byte". This
  * function should only be called if there is less than 8 bytes left to read.
- * The message should be "long", allowing Msg[ -4 ] reads.
+ * The message should be "long", permitting Msg[ -4 ] reads.
  *
  * @param Msg Message pointer, alignment is unimportant.
  * @param MsgLen Message's remaining length, in bytes; can be 0.
  * @param fb Final byte used for padding.
  */
 
-static inline uint64_t kh_lpu64ec_l( const uint8_t* Msg, const size_t MsgLen,
-	uint64_t fb )
+static inline uint64_t kh_lpu64ec_l( const uint8_t* const Msg,
+	const size_t MsgLen, uint64_t fb )
 {
 	const int ml8 = (int) ( MsgLen << 3 );
 
@@ -276,8 +277,8 @@ static inline uint64_t kh_lpu64ec_l( const uint8_t* Msg, const size_t MsgLen,
 	 *
 	 * @param m1 Multiplier 1.
 	 * @param m2 Multiplier 2.
-	 * @param[out] rl Lower half of 128-bit result.
-	 * @param[out] rh Higher half of 128-bit result.
+	 * @param[out] rl The lower half of the 128-bit result.
+	 * @param[out] rh The higher half of the 128-bit result.
 	 */
 
 	static inline void kh_m128( const uint64_t m1, const uint64_t m2,
@@ -331,12 +332,13 @@ static inline uint64_t kh_lpu64ec_l( const uint8_t* Msg, const size_t MsgLen,
 #endif // defined( _MSC_VER )
 
 /**
- * KOMIHASH hash function. Produces and returns 64-bit hash of the specified
- * message. Designed for 64-bit hash-table uses. Produces identical hashes on
- * both big- and little-endian systems.
+ * KOMIHASH hash function. Produces and returns a 64-bit hash of the specified
+ * message, string, or binary data block. Designed for 64-bit hash-table and
+ * hash-map uses. Produces identical hashes on both big- and little-endian
+ * systems.
  *
- * @param Msg0 The message to produce hash from. The alignment of the message
- * is unimportant.
+ * @param Msg0 The message to produce a hash from. The alignment of this
+ * pointer is unimportant.
  * @param MsgLen Message's length, in bytes.
  * @param UseSeed Optional value, to use instead of the default seed. To use
  * the default seed, set to 0. The UseSeed value can have any bit length and
@@ -438,14 +440,15 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 			kh_m128( Seed4 ^ kh_lu64ec( Msg + 48 ),
 				Seed8 ^ kh_lu64ec( Msg + 56 ), &r4l, &r4h );
 
-			Msg += 8 * 8;
-			MsgLen -= 8 * 8;
+			Msg += 64;
+			MsgLen -= 64;
 
-			// Such "shifting" arrangement does not increase individual
-			// SeedN's PRNG period beyond 2^64, but reduces a chance of any
-			// occassional synchronization between PRNG lanes happening.
-			// Practically, Seed1-4 together become a "fused" 256-bit PRNG
-			// value, having a summary PRNG period of 2^66.
+			// Such "shifting" arrangement (below) does not increase
+			// individual SeedN's PRNG period beyond 2^64, but reduces a
+			// chance of any occassional synchronization between PRNG lanes
+			// happening. Practically, Seed1-4 together become a single
+			// "fused" 256-bit PRNG value, having a summary PRNG period of
+			// 2^66.
 
 			Seed5 += r1h;
 			Seed6 += r2h;
@@ -458,12 +461,12 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 		} while( KOMIHASH_LIKELY( MsgLen > 63 ));
 
-		// Such "cropped" large-block finalization may look counter-intuitive
-		// (it does not look similar to the set of instructions above), but it
-		// was tested in PractRand, and it does produce a correct continuation
-		// of PRNG in Seed1/Seed5. Such finalization is even preferrable as
-		// it shows a considerably lower biases in the "Zeroes" and
-		// "Avalanche" tests of SMHasher.
+		// Such "cropped" large-block hashing finalization (below) may look
+		// counter-intuitive (it does not look similar to the set of
+		// instructions above), but it was tested in PractRand, and it does
+		// produce a correct continuation of PRNG in Seed1/Seed5. Such
+		// finalization is even preferrable since it yields a considerably
+		// lower biases in the "Zeroes" and "Avalanche" tests of SMHasher.
 
 		kh_m128( Seed2, Seed6, &r2l, &r2h );
 		kh_m128( Seed3, Seed7, &r3l, &r3h );
@@ -487,8 +490,8 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 		kh_m128( Seed1 ^ kh_lu64ec( Msg ),
 			Seed5 ^ kh_lu64ec( Msg + 8 ), &r1l, &r1h );
 
-		Msg += 8 * 2;
-		MsgLen -= 8 * 2;
+		Msg += 16;
+		MsgLen -= 16;
 
 		Seed5 += r1h;
 		Seed1 = Seed5 ^ r1l;
@@ -525,7 +528,7 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
  *
  * @param[in,out] Seed1 Seed value 1. Can be initialized to any value
  * (even 0). This is the usual "PRNG seed" value.
- * @param[in,out] Seed2 Seed value 2, a supporting variable, best initialized
+ * @param[in,out] Seed2 Seed value 2, a supporting variable. Best initialized
  * to the same value as Seed1.
  * @return The next uniformly-random 64-bit value.
  */
@@ -535,10 +538,10 @@ static inline uint64_t komirand( uint64_t* const Seed1, uint64_t* const Seed2 )
 	uint64_t r1l, r1h;
 
 	kh_m128( *Seed1, *Seed2, &r1l, &r1h );
-	*Seed1 += r1h + 0xAAAAAAAAAAAAAAAA;
-	*Seed2 = *Seed1 ^ r1l;
+	*Seed2 += r1h + 0xAAAAAAAAAAAAAAAA;
+	*Seed1 = *Seed2 ^ r1l;
 
-	return( *Seed2 );
+	return( *Seed1 );
 }
 
 #endif // KOMIHASH_INCLUDED
