@@ -1,5 +1,5 @@
 /**
- * komihash.h version 4.0
+ * komihash.h version 4.1
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -170,23 +170,48 @@ static inline uint64_t kh_lu64ec( const uint8_t* const p )
 /**
  * Function loads 64-bit message word and pads it with the "final byte". This
  * function should only be called if there is less than 8 bytes left to read.
- * Can be used on "short" messages.
+ * The message should be "long", permitting Msg[ -3 ] reads.
  *
  * @param Msg Message pointer, alignment is unimportant.
  * @param MsgLen Message's remaining length, in bytes; can be 0.
  * @param fb Final byte used for padding.
  */
 
-static inline uint64_t kh_lpu64ec( const uint8_t* const Msg,
+static inline uint64_t kh_lpu64ec_l3( const uint8_t* const Msg,
 	const size_t MsgLen, uint64_t fb )
 {
 	if( MsgLen < 4 )
 	{
-		if( KOMIHASH_UNLIKELY( MsgLen == 0 ))
-		{
-			return( fb );
-		}
+		const uint8_t* const Msg3 = Msg + MsgLen - 3;
+		const int ml8 = (int) ( MsgLen << 3 );
+		const uint64_t m = (uint64_t) Msg3[ 0 ] | (uint64_t) Msg3[ 1 ] << 8 |
+			(uint64_t) Msg3[ 2 ] << 16;
 
+		return( fb << ml8 | m >> ( 24 - ml8 ));
+	}
+
+	const int ml8 = (int) ( MsgLen << 3 );
+	const uint64_t mh = kh_lu32ec( Msg + MsgLen - 4 );
+	const uint64_t ml = kh_lu32ec( Msg );
+
+	return( fb << ml8 | ml | ( mh >> ( 64 - ml8 )) << 32 );
+}
+
+/**
+ * Function loads 64-bit message word and pads it with the "final byte". This
+ * function should only be called if there is less than 8 bytes left to read.
+ * Can be used on "short" messages, but MsgLen should be greater than 0.
+ *
+ * @param Msg Message pointer, alignment is unimportant.
+ * @param MsgLen Message's remaining length, in bytes; cannot be 0.
+ * @param fb Final byte used for padding.
+ */
+
+static inline uint64_t kh_lpu64ec_nz( const uint8_t* const Msg,
+	const size_t MsgLen, uint64_t fb )
+{
+	if( MsgLen < 4 )
+	{
 		fb <<= ( MsgLen << 3 );
 		uint64_t m = Msg[ 0 ];
 
@@ -213,43 +238,6 @@ static inline uint64_t kh_lpu64ec( const uint8_t* const Msg,
 /**
  * Function loads 64-bit message word and pads it with the "final byte". This
  * function should only be called if there is less than 8 bytes left to read.
- * Can be used on "short" messages, but MsgLen should be greater than 0.
- *
- * @param Msg Message pointer, alignment is unimportant.
- * @param MsgLen Message's remaining length, in bytes; cannot be 0.
- * @param fb Final byte used for padding.
- */
-
-static inline uint64_t kh_lpu64ec_nz( const uint8_t* const Msg,
-	const size_t MsgLen, uint64_t fb )
-{
-	if( MsgLen < 4 )
-	{
-		uint64_t m = Msg[ 0 ];
-		fb <<= ( MsgLen << 3 );
-
-		if( MsgLen > 1 )
-		{
-			m |= (uint64_t) Msg[ 1 ] << 8;
-
-			if( MsgLen > 2 )
-			{
-				m |= (uint64_t) Msg[ 2 ] << 16;
-			}
-		}
-
-		return( fb | m );
-	}
-
-	const int ml8 = (int) ( MsgLen << 3 );
-
-	return( fb << ml8 | kh_lu32ec( Msg ) |
-		( (uint64_t) kh_lu32ec( Msg + MsgLen - 4 ) >> ( 64 - ml8 )) << 32 );
-}
-
-/**
- * Function loads 64-bit message word and pads it with the "final byte". This
- * function should only be called if there is less than 8 bytes left to read.
  * The message should be "long", permitting Msg[ -4 ] reads.
  *
  * @param Msg Message pointer, alignment is unimportant.
@@ -257,7 +245,7 @@ static inline uint64_t kh_lpu64ec_nz( const uint8_t* const Msg,
  * @param fb Final byte used for padding.
  */
 
-static inline uint64_t kh_lpu64ec_l( const uint8_t* const Msg,
+static inline uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 	const size_t MsgLen, uint64_t fb )
 {
 	if( MsgLen < 4 )
@@ -421,7 +409,7 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 			// message with a cryptographical one-time-pad. Message's
 			// statistics and distribution are thus unimportant.
 
-			r2h ^= kh_lpu64ec( Msg + 8, MsgLen - 8,
+			r2h ^= kh_lpu64ec_l3( Msg + 8, MsgLen - 8,
 				1 << ( Msg[ MsgLen - 1 ] >> 7 ));
 
 			r2l ^= kh_lu64ec( Msg );
@@ -446,12 +434,12 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 		if( MsgLen > 23 )
 		{
-			r2h = Seed5 ^ kh_lpu64ec_l( Msg + 24, MsgLen - 24, fb );
+			r2h = Seed5 ^ kh_lpu64ec_l4( Msg + 24, MsgLen - 24, fb );
 			r2l = Seed1 ^ kh_lu64ec( Msg + 16 );
 		}
 		else
 		{
-			r2l = Seed1 ^ kh_lpu64ec_l( Msg + 16, MsgLen - 16, fb );
+			r2l = Seed1 ^ kh_lpu64ec_l4( Msg + 16, MsgLen - 16, fb );
 			r2h = Seed5;
 		}
 
@@ -551,12 +539,12 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 	if( MsgLen > 7 )
 	{
-		r2h = Seed5 ^ kh_lpu64ec_l( Msg + 8, MsgLen - 8, fb );
+		r2h = Seed5 ^ kh_lpu64ec_l4( Msg + 8, MsgLen - 8, fb );
 		r2l = Seed1 ^ kh_lu64ec( Msg );
 	}
 	else
 	{
-		r2l = Seed1 ^ kh_lpu64ec_l( Msg, MsgLen, fb );
+		r2l = Seed1 ^ kh_lpu64ec_l4( Msg, MsgLen, fb );
 		r2h = Seed5;
 	}
 
