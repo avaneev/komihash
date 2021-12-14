@@ -184,7 +184,7 @@ measurement method actually measures hash function's "latencied throughput",
 or sequential hashing, due to the use of the "volatile" variable specifiers
 and result accumulation.
 
-![TP plot](https://github.com/avaneev/komihash/blob/master/hash_comparison.png)
+![TP plot](https://github.com/avaneev/komihash/blob/main/hash_comparison.png)
 
 The following method was used to obtain the `cycles/h` values. Note that this
 method measures a "raw" throughput, when processor's branch predictor tunes to
