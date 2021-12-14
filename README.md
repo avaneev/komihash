@@ -179,6 +179,13 @@ overhead. Measurement error is approximately 3%.
 |XXH64 0.8.0     |10.9           |15.8           |
 |prvhash64m 4.1  |18.8           |24.6           |
 
+This is the throughput comparison of hash functions on Ryzen 3700X. The used
+measurement method actually measures hash function's "latencied throughput",
+or sequential hashing, due to the use of the "volatile" variable specifiers
+and result accumulation.
+
+![TP plot](https://github.com/avaneev/komihash/blob/master/hash_comparison.png)
+
 The following method was used to obtain the `cycles/h` values. Note that this
 method measures a "raw" throughput, when processor's branch predictor tunes to
 a specific message length and a specific memory address. Practical performance
