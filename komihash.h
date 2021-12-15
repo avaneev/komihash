@@ -1,5 +1,5 @@
 /**
- * komihash.h version 4.1
+ * komihash.h version 4.2
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -248,7 +248,7 @@ static inline uint64_t kh_lpu64ec_nz( const uint8_t* const Msg,
 static inline uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 	const size_t MsgLen, uint64_t fb )
 {
-	if( MsgLen < 4 )
+	if( MsgLen < 5 )
 	{
 		const int ml8 = (int) ( MsgLen << 3 );
 
