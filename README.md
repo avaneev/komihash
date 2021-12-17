@@ -22,7 +22,7 @@ consecutive states while others may. Another important difference in
 `komihash` is that it parses the input message without overlaps. While
 overlaps allow a function to have fewer code branches, they are considered
 "non-ideal", potentially causing collisions and seed value flaws. Beside that,
-`komihash` features superior seed value handling and PerlinNoise hashing.
+`komihash` features superior seed value handling and Perlin Noise hashing.
 
 Note that this function is not cryptographically-secure: in open systems it
 should only be used with a secret seed, to minimize the chance of a collision
@@ -32,7 +32,7 @@ This function passes all [SMHasher](https://github.com/rurban/smhasher) tests.
 
 ## Ports ##
 
-[Cython, by x13a](https://github.com/x13a/pyc-komihash)
+[Python/Cython, by x13a](https://github.com/x13a/pyc-komihash)
 
 ## Comparisons ##
 
