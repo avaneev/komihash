@@ -1,5 +1,5 @@
 /**
- * komihash.h version 4.2
+ * komihash.h version 4.3
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -105,10 +105,9 @@
 
 #endif // KOMIHASH_LITTLE_ENDIAN
 
-// Likelihood macros that are used for manually-guided micro-optimization
-// (not enabled in LLVM clang due to inefficiency).
+// Likelihood macros that are used for manually-guided micro-optimization.
 
-#if defined( __GNUC__ ) || \
+#if defined( __GNUC__ ) || defined( __clang__ ) || \
 	( defined( __GNUC__ ) && defined( __INTEL_COMPILER ))
 
 	#define KOMIHASH_LIKELY( x )  __builtin_expect( x, 1 )
@@ -137,10 +136,11 @@
 
 /**
  * An auxiliary function that returns an unsigned 32-bit value created out of
- * individual bytes in a buffer. This function is used to convert endianness
- * of supplied 32-bit unsigned values, and to avoid unaligned memory accesses.
+ * a sequence of bytes in memory. This function is used to convert endianness
+ * of in-memory 32-bit unsigned values, and to avoid unaligned memory
+ * accesses.
  *
- * @param p 4-byte buffer. Alignment is unimportant.
+ * @param p Pointer to 4 bytes in memory. Alignment is unimportant.
  */
 
 static inline uint32_t kh_lu32ec( const uint8_t* const p )
@@ -153,10 +153,11 @@ static inline uint32_t kh_lu32ec( const uint8_t* const p )
 
 /**
  * An auxiliary function that returns an unsigned 64-bit value created out of
- * individual bytes in a buffer. This function is used to convert endianness
- * of supplied 64-bit unsigned values, and to avoid unaligned memory accesses.
+ * a sequence of bytes in memory. This function is used to convert endianness
+ * of in-memory 64-bit unsigned values, and to avoid unaligned memory
+ * accesses.
  *
- * @param p 8-byte buffer. Alignment is unimportant.
+ * @param p Pointer to 8 bytes in memory. Alignment is unimportant.
  */
 
 static inline uint64_t kh_lu64ec( const uint8_t* const p )
@@ -168,9 +169,10 @@ static inline uint64_t kh_lu64ec( const uint8_t* const p )
 }
 
 /**
- * Function loads 64-bit message word and pads it with the "final byte". This
- * function should only be called if there is less than 8 bytes left to read.
- * The message should be "long", permitting Msg[ -3 ] reads.
+ * Function builds an unsigned 64-bit value out of remaining bytes in a
+ * message, and pads it with the "final byte". This function can only be
+ * called if less than 8 bytes are left to read. The message should be "long",
+ * permitting Msg[ -3 ] reads.
  *
  * @param Msg Message pointer, alignment is unimportant.
  * @param MsgLen Message's remaining length, in bytes; can be 0.
@@ -198,9 +200,10 @@ static inline uint64_t kh_lpu64ec_l3( const uint8_t* const Msg,
 }
 
 /**
- * Function loads 64-bit message word and pads it with the "final byte". This
- * function should only be called if there is less than 8 bytes left to read.
- * Can be used on "short" messages, but MsgLen should be greater than 0.
+ * Function builds an unsigned 64-bit value out of remaining bytes in a
+ * message, and pads it with the "final byte". This function can only be
+ * called if less than 8 bytes are left to read. Can be used on "short"
+ * messages, but MsgLen should be greater than 0.
  *
  * @param Msg Message pointer, alignment is unimportant.
  * @param MsgLen Message's remaining length, in bytes; cannot be 0.
@@ -236,9 +239,10 @@ static inline uint64_t kh_lpu64ec_nz( const uint8_t* const Msg,
 }
 
 /**
- * Function loads 64-bit message word and pads it with the "final byte". This
- * function should only be called if there is less than 8 bytes left to read.
- * The message should be "long", permitting Msg[ -4 ] reads.
+ * Function builds an unsigned 64-bit value out of remaining bytes in a
+ * message, and pads it with the "final byte". This function can only be
+ * called if less than 8 bytes are left to read. The message should be "long",
+ * permitting Msg[ -4 ] reads.
  *
  * @param Msg Message pointer, alignment is unimportant.
  * @param MsgLen Message's remaining length, in bytes; can be 0.
@@ -324,8 +328,8 @@ static inline uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 
 #endif // defined( _MSC_VER )
 
-// Common 16-byte hashing block, using the "r1l" and "r1h" temporary
-// variables.
+// Common hashing round with 16-byte input, using the "r1l" and "r1h"
+// temporary variables.
 
 #define KOMIHASH_HASH16( m ) \
 	kh_m128( Seed1 ^ kh_lu64ec( m ), \
@@ -341,8 +345,8 @@ static inline uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 	Seed5 += r2h; \
 	Seed1 = Seed5 ^ r2l;
 
-// Common hashing finalization block, with the final hashing input in the
-// "r2l" and "r2h" temporary variables.
+// Common hashing finalization round, with the final hashing input expected in
+// the "r2l" and "r2h" temporary variables.
 
 #define KOMIHASH_HASHFIN() \
 	kh_m128( r2l, r2h, &r1l, &r1h ); \
@@ -351,10 +355,10 @@ static inline uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 	KOMIHASH_HASHROUND();
 
 /**
- * KOMIHASH hash function. Produces and returns a 64-bit hash of the specified
- * message, string, or binary data block. Designed for 64-bit hash-table and
- * hash-map uses. Produces identical hashes on both big- and little-endian
- * systems.
+ * KOMIHASH hash function. Produces and returns a 64-bit hash value of the
+ * specified message, string, or binary data block. Designed for 64-bit
+ * hash-table and hash-map uses. Produces identical hashes on both big- and
+ * little-endian systems.
  *
  * @param Msg0 The message to produce a hash from. The alignment of this
  * pointer is unimportant.
@@ -377,13 +381,14 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 	uint64_t Seed5 = 0x452821E638D01377 ^ ( UseSeed & 0xAAAAAAAAAAAAAAAA );
 	uint64_t r1l, r1h, r2l, r2h;
 
-	// The following three instructions represent the simplest constant-less
-	// PRNG, scalable to any even-sized state variables, with the `Seed1`
-	// being the PRNG output (2^64 period). It passes `PractRand` tests with
-	// rare non-systematic "unusual" evaluations.
+	// The three instructions in the "KOMIHASH_HASHROUND" macro represent the
+	// simplest constant-less PRNG, scalable to any even-sized state
+	// variables, with the `Seed1` being the PRNG output (2^64 PRNG period).
+	// It passes `PractRand` tests with rare non-systematic "unusual"
+	// evaluations.
 	//
-	// To make it reliable, self-starting, and eliminate a risk of stopping,
-	// the following variant can be used, which is a "register
+	// To make this PRNG reliable, self-starting, and eliminate a risk of
+	// stopping, the following variant can be used, which is a "register
 	// checker-board", a source of raw entropy. The PRNG is available as the
 	// komirand() function. Not required for hashing (but works for it) since
 	// the input entropy is usually available in abundance during hashing.
@@ -396,18 +401,19 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 	KOMIHASH_HASHROUND(); // Required for PerlinNoise.
 
-	KOMIHASH_PREFETCH( Msg );
-
 	if( KOMIHASH_LIKELY( MsgLen < 16 ))
 	{
+		KOMIHASH_PREFETCH( Msg );
+
 		r2l = Seed1;
 		r2h = Seed5;
 
-		if( KOMIHASH_LIKELY( MsgLen > 7 ))
+		if( MsgLen > 7 )
 		{
 			// The following two XOR instructions are equivalent to mixing a
-			// message with a cryptographical one-time-pad. Message's
-			// statistics and distribution are thus unimportant.
+			// message with a cryptographic one-time-pad (bitwise modulo 2
+			// addition). Message's statistics and distribution are thus
+			// unimportant.
 
 			r2h ^= kh_lpu64ec_l3( Msg + 8, MsgLen - 8,
 				1 << ( Msg[ MsgLen - 1 ] >> 7 ));
@@ -428,6 +434,8 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 	if( KOMIHASH_LIKELY( MsgLen < 32 ))
 	{
+		KOMIHASH_PREFETCH( Msg );
+
 		KOMIHASH_HASH16( Msg );
 
 		const uint64_t fb = 1 << ( Msg[ MsgLen - 1 ] >> 7 );
@@ -448,10 +456,9 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 		return( Seed1 );
 	}
 
-	uint64_t Seed2 = 0x13198A2E03707344 ^ Seed1;
-
-	if( KOMIHASH_UNLIKELY( MsgLen > 63 ))
+	if( MsgLen > 63 )
 	{
+		uint64_t Seed2 = 0x13198A2E03707344 ^ Seed1;
 		uint64_t Seed3 = 0xA4093822299F31D0 ^ Seed1;
 		uint64_t Seed4 = 0x082EFA98EC4E6C89 ^ Seed1;
 		uint64_t Seed6 = 0xBE5466CF34E90C6C ^ Seed5;
@@ -496,27 +503,11 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 		} while( KOMIHASH_LIKELY( MsgLen > 63 ));
 
-		// Such "cropped" large-block hashing finalization (below) may look
-		// counter-intuitive (it does not look similar to the set of
-		// instructions above), but it was tested in PractRand, and it does
-		// produce a correct continuation of PRNG in Seed1/Seed5. Such
-		// finalization is even preferrable since it yields a considerably
-		// lower biases in the "Zeroes" and "Avalanche" tests of SMHasher.
-
-		kh_m128( Seed2, Seed6, &r2l, &r2h );
-		kh_m128( Seed3, Seed7, &r3l, &r3h );
-		kh_m128( Seed4, Seed8, &r4l, &r4h );
-
-		Seed6 += r2h;
-		Seed7 += r3h;
-		Seed8 += r4h;
-		Seed2 = Seed5 ^ r2l;
-		Seed3 = Seed6 ^ r3l;
-		Seed4 = Seed7 ^ r4l;
-		Seed5 = Seed8;
-
-		Seed2 ^= Seed3 ^ Seed4;
+		Seed5 ^= Seed6 ^ Seed7 ^ Seed8;
+		Seed1 ^= Seed2 ^ Seed3 ^ Seed4;
 	}
+
+	KOMIHASH_PREFETCH( Msg );
 
 	if( KOMIHASH_LIKELY( MsgLen > 31 ))
 	{
@@ -550,7 +541,7 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 	KOMIHASH_HASHFIN();
 
-	return( Seed1 ^ Seed2 );
+	return( Seed1 );
 }
 
 /**
