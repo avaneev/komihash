@@ -34,6 +34,8 @@ This function passes all [SMHasher](https://github.com/rurban/smhasher) tests.
 
 [Python/Cython, by x13a](https://github.com/x13a/pyc-komihash)
 
+[Lua, by rangercyh](https://github.com/rangercyh/lua-komihash)
+
 ## Comparisons ##
 
 These are the performance comparisons made and used by the author during the
