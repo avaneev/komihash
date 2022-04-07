@@ -32,6 +32,7 @@ This function passes all [SMHasher](https://github.com/rurban/smhasher) tests.
 
 ## Ports ##
 
+[LUA, by rangercyh](https://github.com/rangercyh/lua-komihash)
 [Python/Cython, by x13a](https://github.com/x13a/pyc-komihash)
 
 ## Comparisons ##
