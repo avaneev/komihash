@@ -1,4 +1,4 @@
-# KOMIHASH - Very Fast Hash Function ##
+# KOMIHASH - Very Fast Hash Function #
 
 ## Introduction ##
 
@@ -283,3 +283,78 @@ passes `PractRand` tests.
 This function is named the way it is named is to honor
 the [Komi Republic](https://en.wikipedia.org/wiki/Komi_Republic) (located in
 Russia), native to the author.
+
+## Test Vectors ##
+
+Test vectors for the current version of `komihash`, string-hash pairs (note
+that the parentheses are not included in the calculation). The `bulk` is a
+buffer with increasing 8-bit values; `bulk` hashes are calculated from this
+buffer using various lengths. See the `testvec.c` file for details.
+
+```
+	UseSeed = 0x0000000000000000:
+	"This is a 32-byte tester string." = 0x8e92e061278366d2
+	"The cat is out of the bag" = 0xd15723521d3c37b1
+	"A 16-byte string" = 0x467caa28ea3da7a6
+	"The new string" = 0xf18e67bc90c43233
+	"7 bytes" = 0xe72e558f5eaf2554
+	bulk(6) = 0xa56469564c2ea0ff
+	bulk(12) = 0x64c2ad96013f70fe
+	bulk(20) = 0x7a3888bc95545364
+	bulk(31) = 0xc77e02ed4b201b9a
+	bulk(32) = 0x256d74350303a1ba
+	bulk(40) = 0x59609c71697bb9df
+	bulk(47) = 0x36eb9e6a4c2c5e4b
+	bulk(48) = 0x8dd56c332850baa6
+	bulk(56) = 0xcbb722192b353999
+	bulk(64) = 0x5cf87bcba93e6a5b
+	bulk(72) = 0x6c79a1d9474f003f
+	bulk(80) = 0x88684fa67b351c33
+	bulk(112) = 0xdc481a2af36a87dd
+	bulk(132) = 0xe172275e13a1c938
+	bulk(256) = 0xa9d9cde10342d965
+
+	UseSeed = 0x0123456789abcdef:
+	"This is a 32-byte tester string." = 0x6455c9cfdd577ebd
+	"The cat is out of the bag" = 0x5b1da0b43545d196
+	"A 16-byte string" = 0x26af914213d0c915
+	"The new string" = 0x62d9ca1b73250cb5
+	"7 bytes" = 0x2bf17dbb71d92897
+	bulk(6) = 0xaceebc32a3c0d9e4
+	bulk(12) = 0xec8eb3ef4af380b4
+	bulk(20) = 0x07045bd31abba34c
+	bulk(31) = 0xd5f619fb2e62c4ae
+	bulk(32) = 0x5a336fd2c4c39abe
+	bulk(40) = 0x0e870b4623eea8ec
+	bulk(47) = 0xe552edd6bf419d1d
+	bulk(48) = 0x37d170ddcb1223e6
+	bulk(56) = 0x1cd89e708e5098b6
+	bulk(64) = 0x4da1005904c8d804
+	bulk(72) = 0xc8b03f196b2551ee
+	bulk(80) = 0x2d4d58743755344d
+	bulk(112) = 0x0e77e5c92f929bdd
+	bulk(132) = 0x0b3b216a1fc3234e
+	bulk(256) = 0xeb726377f8d072e8
+
+	UseSeed = 0x0000000000000100:
+	"This is a 32-byte tester string." = 0x60ed46218532462a
+	"The cat is out of the bag" = 0xa761280322bb7698
+	"A 16-byte string" = 0x11c31ccabaa524f1
+	"The new string" = 0x3a43b7f58281c229
+	"7 bytes" = 0x3c8a980831b70dc8
+	bulk(6) = 0xea606e43d1976ccf
+	bulk(12) = 0xacbec1886cd23275
+	bulk(20) = 0x57c3affd1b71fcdb
+	bulk(31) = 0x7ef6ba49a3b068c3
+	bulk(32) = 0x49dbca62ed5a1ddf
+	bulk(40) = 0x192848484481e8c0
+	bulk(47) = 0x420b43a5edba1bd7
+	bulk(48) = 0xd6e8400a9de24ce3
+	bulk(56) = 0xbea291b225ff384d
+	bulk(64) = 0xf237bc1d85f12b52
+	bulk(72) = 0x577a4d993f26cd52
+	bulk(80) = 0xace499103def982d
+	bulk(112) = 0x200c46677408d850
+	bulk(132) = 0x6b003f62eba47761
+	bulk(256) = 0xa8a3bd0ecf908b92
+```
