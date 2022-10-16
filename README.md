@@ -292,7 +292,7 @@ buffer with increasing 8-bit values; `bulk` hashes are calculated from this
 buffer using various lengths. See the `testvec.c` file for details.
 
 ```
-	UseSeed = 0x0000000000000000:
+	komihash UseSeed = 0x0000000000000000:
 	"This is a 32-byte tester string." = 0x8e92e061278366d2
 	"The cat is out of the bag" = 0xd15723521d3c37b1
 	"A 16-byte string" = 0x467caa28ea3da7a6
@@ -314,7 +314,7 @@ buffer using various lengths. See the `testvec.c` file for details.
 	bulk(132) = 0xe172275e13a1c938
 	bulk(256) = 0xa9d9cde10342d965
 
-	UseSeed = 0x0123456789abcdef:
+	komihash UseSeed = 0x0123456789abcdef:
 	"This is a 32-byte tester string." = 0x6455c9cfdd577ebd
 	"The cat is out of the bag" = 0x5b1da0b43545d196
 	"A 16-byte string" = 0x26af914213d0c915
@@ -336,7 +336,7 @@ buffer using various lengths. See the `testvec.c` file for details.
 	bulk(132) = 0x0b3b216a1fc3234e
 	bulk(256) = 0xeb726377f8d072e8
 
-	UseSeed = 0x0000000000000100:
+	komihash UseSeed = 0x0000000000000100:
 	"This is a 32-byte tester string." = 0x60ed46218532462a
 	"The cat is out of the bag" = 0xa761280322bb7698
 	"A 16-byte string" = 0x11c31ccabaa524f1
@@ -357,4 +357,48 @@ buffer using various lengths. See the `testvec.c` file for details.
 	bulk(112) = 0x200c46677408d850
 	bulk(132) = 0x6b003f62eba47761
 	bulk(256) = 0xa8a3bd0ecf908b92
+```
+
+```
+	komirand Seed1/Seed2 = 0x0000000000000000:
+	0xaaaaaaaaaaaaaaaa
+	0xfffffffffffffffe
+	0x4924924924924910
+	0xbaebaebaebaeba00
+	0x400c62cc4727496b
+	0x35a969173e8f925b
+	0xdb47f6bae9a247ad
+	0x98e0f6cece6711fe
+	0x97ffa2397fda534b
+	0x11834262360df918
+	0x34e53df5399f2252
+	0xecaeb74a81d648ed
+
+	komirand Seed1/Seed2 = 0x0123456789abcdef:
+	0x776ad9718078ca64
+	0x737aa5d5221633d0
+	0x685046cca30f6f44
+	0xfb725cb01b30c1ba
+	0xc501cc999ede619f
+	0x8427298e525db507
+	0xd9baf3c54781f75e
+	0x7f5a4e5b97b37c7b
+	0xde8a0afe8e03b8c1
+	0xb6ed3e72b69fc3d6
+	0xa68727902f7628d0
+	0x44162b63af484587
+
+	komirand Seed1/Seed2 = 0x0000000000000100:
+	0xaaaaaaaaaaababaa
+	0xfffffffff8fcf8fe
+	0xdb6dba1e4dbb1134
+	0xf5b7d3aec37f4cb1
+	0x66a571da7ded7051
+	0x2d59ec9245bf03d9
+	0x5c06a41bd510aed8
+	0xea5e7ea9d2bd07a2
+	0xe395015ddce7756f
+	0xc07981aaeaae3b38
+	0x2e120ebfee59a5a2
+	0x9001eee495244dba
 ```

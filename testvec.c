@@ -1,8 +1,8 @@
 /**
- * testvec.c version 4.3
+ * testvec.c version 4.3.1
  *
  * The program that lists test vectors and their hash values, for the current
- * version of komihash.
+ * version of komihash. Also prints initial outputs of `komirand` PRNG.
  *
  * Description is available at https://github.com/avaneev/komihash
  *
@@ -62,7 +62,7 @@ int main()
 
 	for( j = 0; j < seedc; j++ )
 	{
-		printf( "\tUseSeed = 0x%016llx:\n", seeds[ j ]);
+		printf( "\tkomihash UseSeed = 0x%016llx:\n", seeds[ j ]);
 
 		for( i = 0; i < strc; i++ )
 		{
@@ -77,6 +77,21 @@ int main()
 		{
 			printf( "\tbulk(%i) = 0x%016llx\n", bulks[ i ],
 				komihash( bulkbuf, bulks[ i ], seeds[ j ]));
+		}
+
+		printf( "\n" );
+	}
+
+	for( j = 0; j < seedc; j++ )
+	{
+		printf( "\tkomirand Seed1/Seed2 = 0x%016llx:\n", seeds[ j ]);
+
+		uint64_t Seed1 = seeds[ j ];
+		uint64_t Seed2 = seeds[ j ];
+
+		for( i = 0; i < 12; i++ )
+		{
+			printf( "\t0x%016llx\n", komirand( &Seed1, &Seed2 ));
 		}
 
 		printf( "\n" );
