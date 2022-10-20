@@ -26,7 +26,8 @@ overlaps allow a function to have fewer code branches, they are considered
 
 Note that this function is not cryptographically-secure: in open systems it
 should only be used with a secret seed, to minimize the chance of a collision
-attack.
+attack. However, when the default seed is used (0), this further reduces
+function's overhead by 1-2 cycles/hash (compiler-dependent).
 
 This function passes all [SMHasher](https://github.com/rurban/smhasher) tests.
 
