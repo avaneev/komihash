@@ -35,8 +35,12 @@ This function passes all [SMHasher](https://github.com/rurban/smhasher) tests.
 
 A correct way to hash an array of independent values, and which does not
 require pre-buffering, is to pass previous hash value as a seed value. This
-method may be as fast or faster than pre-buffering, especially if a summary
-length of values being hashed is varying and is not small.
+method may be as fast or faster than pre-buffering, especially if lengthes
+of values in the array are not small. An additional 1-2 cycles/hash advantage
+is obtained if fixed-size values are being hashed incrementally (due to
+compiler's branching optimization). In most cases incremental hashing of even
+a few 2-8-byte values may be faster than using pre-buffering if the overall
+input length is not known in advance.
 
 ```
 	uint64_t HashVal = komihash( &val1, sizeof( val1 ), Seed );
