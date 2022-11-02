@@ -31,6 +31,27 @@ function's overhead by 1-2 cycles/hash (compiler-dependent).
 
 This function passes all [SMHasher](https://github.com/rurban/smhasher) tests.
 
+## Sequential-Incremental Hashing ##
+
+A correct way to hash an array of independent values, and which does not
+require pre-buffering, is to pass previous hash value as a seed value. This
+method may be as fast or faster than pre-buffering, especially if a summary
+length of values being hashed is varying and is not small.
+
+```
+	uint64_t HashVal = komihash( &val1, sizeof( val1 ), Seed );
+	HashVal = komihash( &val2, sizeof( val2 ), HashVal );
+	...
+	HashVal = komihash( &valN, sizeof( valN ), HashVal );
+```
+
+The same incremental approach can be used for file hashing, at a given read
+block size.
+
+Also, for file hashing you may consider using [PRVHASH64S](https://github.com/avaneev/prvhash)
+which provides 8.4 GB/s hashing throughput on Ryzen 3700X, and is able to
+produce a hash value of any required bit-size.
+
 ## Ports ##
 
 * [LUA, by rangercyh](https://github.com/rangercyh/lua-komihash)
@@ -256,9 +277,6 @@ collisions, on average. On the other hand, on a worldwide scale, having
 128-bit hashes is clearly not enough considering the number of existing
 digital devices and the number of diverse binary objects (e.g. files, records
 in databases) on each of them.
-
-A similarly efficient streamed version of `komihash` is doable given a serious
-interest in one is expressed.
 
 An opinion on the "bulk" performance of "fast" hash functions: in most
 practical situations, when processor's total memory bandwidth is limited to
