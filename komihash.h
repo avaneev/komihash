@@ -1,5 +1,5 @@
 /**
- * komihash.h version 4.3.1
+ * komihash.h version 4.4
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -173,27 +173,27 @@ static inline uint64_t kh_lu64ec( const uint8_t* const p )
  *
  * @param Msg Message pointer, alignment is unimportant.
  * @param MsgLen Message's remaining length, in bytes; can be 0.
- * @param fb Final byte used for padding.
  */
 
 static inline uint64_t kh_lpu64ec_l3( const uint8_t* const Msg,
-	const size_t MsgLen, uint64_t fb )
+	const size_t MsgLen )
 {
 	if( MsgLen < 4 )
 	{
 		const uint8_t* const Msg3 = Msg + MsgLen - 3;
-		const int ml8 = (int) ( MsgLen << 3 );
+		const int ml8 = -(int) ( MsgLen * 8 );
 		const uint64_t m = (uint64_t) Msg3[ 0 ] | (uint64_t) Msg3[ 1 ] << 8 |
 			(uint64_t) Msg3[ 2 ] << 16;
 
-		return( fb << ml8 | m >> ( 24 - ml8 ));
+		return( 1ULL << (( Msg3[ 2 ] >> 7 ) - ml8 ) | m >> ( 24 + ml8 ));
 	}
 
-	const int ml8 = (int) ( MsgLen << 3 );
+	const int ml8 = -(int) ( MsgLen * 8 );
 	const uint64_t mh = kh_lu32ec( Msg + MsgLen - 4 );
 	const uint64_t ml = kh_lu32ec( Msg );
 
-	return( fb << ml8 | ml | ( mh >> ( 64 - ml8 )) << 32 );
+	return( 1ULL << ( (int) ( mh >> 31 ) - ml8 ) |
+		ml | ( mh >> ( 64 + ml8 )) << 32 );
 }
 
 /**
@@ -204,16 +204,17 @@ static inline uint64_t kh_lpu64ec_l3( const uint8_t* const Msg,
  *
  * @param Msg Message pointer, alignment is unimportant.
  * @param MsgLen Message's remaining length, in bytes; cannot be 0.
- * @param fb Final byte used for padding.
  */
 
 static inline uint64_t kh_lpu64ec_nz( const uint8_t* const Msg,
-	const size_t MsgLen, uint64_t fb )
+	const size_t MsgLen )
 {
+	const int ml8 = -(int) ( MsgLen * 8 );
+
 	if( MsgLen < 4 )
 	{
-		fb <<= ( MsgLen << 3 );
 		uint64_t m = Msg[ 0 ];
+		const uint8_t* const MsgE = Msg + MsgLen - 1;
 
 		if( MsgLen > 1 )
 		{
@@ -221,18 +222,18 @@ static inline uint64_t kh_lpu64ec_nz( const uint8_t* const Msg,
 
 			if( MsgLen > 2 )
 			{
-				m |= (uint64_t) Msg[ 2 ] << 16;
+				m |= (uint64_t) *MsgE << 16;
 			}
 		}
 
-		return( fb | m );
+		return( 1ULL << (( *MsgE >> 7 ) - ml8 ) | m );
 	}
 
-	const int ml8 = (int) ( MsgLen << 3 );
 	const uint64_t mh = kh_lu32ec( Msg + MsgLen - 4 );
 	const uint64_t ml = kh_lu32ec( Msg );
 
-	return( fb << ml8 | ml | ( mh >> ( 64 - ml8 )) << 32 );
+	return( 1ULL << ( (int) ( mh >> 31 ) - ml8 ) |
+		ml | ( mh >> ( 64 + ml8 )) << 32 );
 }
 
 /**
@@ -243,25 +244,23 @@ static inline uint64_t kh_lpu64ec_nz( const uint8_t* const Msg,
  *
  * @param Msg Message pointer, alignment is unimportant.
  * @param MsgLen Message's remaining length, in bytes; can be 0.
- * @param fb Final byte used for padding.
  */
 
 static inline uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
-	const size_t MsgLen, uint64_t fb )
+	const size_t MsgLen )
 {
+	const int ml8 = -(int) ( MsgLen * 8 );
+
 	if( MsgLen < 5 )
 	{
-		const int ml8 = (int) ( MsgLen << 3 );
+		const uint64_t m = kh_lu32ec( Msg + MsgLen - 4 );
 
-		return( fb << ml8 |
-			(uint64_t) kh_lu32ec( Msg + MsgLen - 4 ) >> ( 32 - ml8 ));
+		return( 1ULL << ( (int) ( m >> 31 ) - ml8 ) | m >> ( 32 + ml8 ));
 	}
-	else
-	{
-		const int ml8 = (int) ( MsgLen << 3 );
 
-		return( fb << ml8 | kh_lu64ec( Msg + MsgLen - 8 ) >> ( 64 - ml8 ));
-	}
+	const uint64_t m = kh_lu64ec( Msg + MsgLen - 8 );
+
+	return( 1ULL << ( (int) ( m >> 63 ) - ml8 ) | m >> ( 64 + ml8 ));
 }
 
 #if defined( __SIZEOF_INT128__ )
@@ -323,30 +322,29 @@ static inline uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 
 #endif // defined( _MSC_VER )
 
-// Common hashing round with 16-byte input, using the "r1l" and "r1h"
-// temporary variables.
+// Common hashing round with 16-byte input, using the "r1h" temporary
+// variable.
 
 #define KOMIHASH_HASH16( m ) \
 	kh_m128( Seed1 ^ kh_lu64ec( m ), \
-		Seed5 ^ kh_lu64ec( m + 8 ), &r1l, &r1h ); \
+		Seed5 ^ kh_lu64ec( m + 8 ), &Seed1, &r1h ); \
 	Seed5 += r1h; \
-	Seed1 = Seed5 ^ r1l;
+	Seed1 ^= Seed5;
 
-// Common hashing round without input, using the "r2l" and "r2h" temporary
-// variables.
+// Common hashing round without input, using the "r2h" temporary variable.
 
 #define KOMIHASH_HASHROUND() \
-	kh_m128( Seed1, Seed5, &r2l, &r2h ); \
+	kh_m128( Seed1, Seed5, &Seed1, &r2h ); \
 	Seed5 += r2h; \
-	Seed1 = Seed5 ^ r2l;
+	Seed1 ^= Seed5;
 
 // Common hashing finalization round, with the final hashing input expected in
-// the "r2l" and "r2h" temporary variables.
+// the "r1h" and "r2h" temporary variables.
 
 #define KOMIHASH_HASHFIN() \
-	kh_m128( r2l, r2h, &r1l, &r1h ); \
+	kh_m128( r1h, r2h, &Seed1, &r1h ); \
 	Seed5 += r1h; \
-	Seed1 = Seed5 ^ r1l; \
+	Seed1 ^= Seed5; \
 	KOMIHASH_HASHROUND();
 
 /**
@@ -374,7 +372,7 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 	uint64_t Seed1 = 0x243F6A8885A308D3 ^ ( UseSeed & 0x5555555555555555 );
 	uint64_t Seed5 = 0x452821E638D01377 ^ ( UseSeed & 0xAAAAAAAAAAAAAAAA );
-	uint64_t r1l, r1h, r2l, r2h;
+	uint64_t r1h, r2h;
 
 	// The three instructions in the "KOMIHASH_HASHROUND" macro represent the
 	// simplest constant-less PRNG, scalable to any even-sized state
@@ -398,9 +396,7 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 	if( KOMIHASH_LIKELY( MsgLen < 16 ))
 	{
-		KOMIHASH_PREFETCH( Msg );
-
-		r2l = Seed1;
+		r1h = Seed1;
 		r2h = Seed5;
 
 		if( MsgLen > 7 )
@@ -410,16 +406,13 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 			// addition). Message's statistics and distribution are thus
 			// unimportant.
 
-			r2h ^= kh_lpu64ec_l3( Msg + 8, MsgLen - 8,
-				1 << ( Msg[ MsgLen - 1 ] >> 7 ));
-
-			r2l ^= kh_lu64ec( Msg );
+			r2h ^= kh_lpu64ec_l3( Msg + 8, MsgLen - 8 );
+			r1h ^= kh_lu64ec( Msg );
 		}
 		else
 		if( KOMIHASH_LIKELY( MsgLen != 0 ))
 		{
-			r2l ^= kh_lpu64ec_nz( Msg, MsgLen,
-				1 << ( Msg[ MsgLen - 1 ] >> 7 ));
+			r1h ^= kh_lpu64ec_nz( Msg, MsgLen );
 		}
 
 		KOMIHASH_HASHFIN();
@@ -433,16 +426,14 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 		KOMIHASH_HASH16( Msg );
 
-		const uint64_t fb = 1 << ( Msg[ MsgLen - 1 ] >> 7 );
-
 		if( MsgLen > 23 )
 		{
-			r2h = Seed5 ^ kh_lpu64ec_l4( Msg + 24, MsgLen - 24, fb );
-			r2l = Seed1 ^ kh_lu64ec( Msg + 16 );
+			r2h = Seed5 ^ kh_lpu64ec_l4( Msg + 24, MsgLen - 24 );
+			r1h = Seed1 ^ kh_lu64ec( Msg + 16 );
 		}
 		else
 		{
-			r2l = Seed1 ^ kh_lpu64ec_l4( Msg + 16, MsgLen - 16, fb );
+			r1h = Seed1 ^ kh_lpu64ec_l4( Msg + 16, MsgLen - 16 );
 			r2h = Seed5;
 		}
 
@@ -459,23 +450,23 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 		uint64_t Seed6 = 0xBE5466CF34E90C6C ^ Seed5;
 		uint64_t Seed7 = 0xC0AC29B7C97C50DD ^ Seed5;
 		uint64_t Seed8 = 0x3F84D5B5B5470917 ^ Seed5;
-		uint64_t r3l, r3h, r4l, r4h;
+		uint64_t r3h, r4h;
 
 		do
 		{
 			KOMIHASH_PREFETCH( Msg );
 
 			kh_m128( Seed1 ^ kh_lu64ec( Msg ),
-				Seed5 ^ kh_lu64ec( Msg + 8 ), &r1l, &r1h );
+				Seed5 ^ kh_lu64ec( Msg + 8 ), &Seed1, &r1h );
 
 			kh_m128( Seed2 ^ kh_lu64ec( Msg + 16 ),
-				Seed6 ^ kh_lu64ec( Msg + 24 ), &r2l, &r2h );
+				Seed6 ^ kh_lu64ec( Msg + 24 ), &Seed2, &r2h );
 
 			kh_m128( Seed3 ^ kh_lu64ec( Msg + 32 ),
-				Seed7 ^ kh_lu64ec( Msg + 40 ), &r3l, &r3h );
+				Seed7 ^ kh_lu64ec( Msg + 40 ), &Seed3, &r3h );
 
 			kh_m128( Seed4 ^ kh_lu64ec( Msg + 48 ),
-				Seed8 ^ kh_lu64ec( Msg + 56 ), &r4l, &r4h );
+				Seed8 ^ kh_lu64ec( Msg + 56 ), &Seed4, &r4h );
 
 			Msg += 64;
 			MsgLen -= 64;
@@ -491,10 +482,10 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 			Seed6 += r2h;
 			Seed7 += r3h;
 			Seed8 += r4h;
-			Seed2 = Seed5 ^ r2l;
-			Seed3 = Seed6 ^ r3l;
-			Seed4 = Seed7 ^ r4l;
-			Seed1 = Seed8 ^ r1l;
+			Seed2 ^= Seed5;
+			Seed3 ^= Seed6;
+			Seed4 ^= Seed7;
+			Seed1 ^= Seed8;
 
 		} while( KOMIHASH_LIKELY( MsgLen > 63 ));
 
@@ -521,16 +512,14 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 		MsgLen -= 16;
 	}
 
-	const uint64_t fb = 1 << ( Msg[ MsgLen - 1 ] >> 7 );
-
 	if( MsgLen > 7 )
 	{
-		r2h = Seed5 ^ kh_lpu64ec_l4( Msg + 8, MsgLen - 8, fb );
-		r2l = Seed1 ^ kh_lu64ec( Msg );
+		r2h = Seed5 ^ kh_lpu64ec_l4( Msg + 8, MsgLen - 8 );
+		r1h = Seed1 ^ kh_lu64ec( Msg );
 	}
 	else
 	{
-		r2l = Seed1 ^ kh_lpu64ec_l4( Msg, MsgLen, fb );
+		r1h = Seed1 ^ kh_lpu64ec_l4( Msg, MsgLen );
 		r2h = Seed5;
 	}
 
@@ -553,11 +542,11 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 static inline uint64_t komirand( uint64_t* const Seed1, uint64_t* const Seed2 )
 {
-	uint64_t r1l, r1h;
+	uint64_t rh;
 
-	kh_m128( *Seed1, *Seed2, &r1l, &r1h );
-	*Seed2 += r1h + 0xAAAAAAAAAAAAAAAA;
-	*Seed1 = *Seed2 ^ r1l;
+	kh_m128( *Seed1, *Seed2, Seed1, &rh );
+	*Seed2 += rh + 0xAAAAAAAAAAAAAAAA;
+	*Seed1 ^= *Seed2;
 
 	return( *Seed1 );
 }
