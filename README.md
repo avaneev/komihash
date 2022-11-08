@@ -8,10 +8,11 @@ produces identical hashes on both big- and little-endian systems. Function's
 code is portable, scalar.
 
 This function features both a high large-block hashing performance (26 GB/s
-on Ryzen 3700X) and a high hashing throughput for small messages (about 11
+on Ryzen 3700X) and a high hashing throughput for small messages (about 10
 cycles/hash for 0-15-byte messages). Performance on 32-bit systems is,
 however, quite low. Also, large-block hashing performance on big-endian
-systems may be lower due to the need of byte-swapping.
+systems may be lower due to the need of byte-swapping (can be switched off
+with a define).
 
 Technically, `komihash` is close to the class of hash functions like `wyhash`
 and `CircleHash`, which are, in turn, close to the `lehmer64` PRNG. However,
