@@ -1,5 +1,5 @@
 /**
- * komihash.h version 4.4
+ * komihash.h version 4.5
  *
  * The inclusion file for the "komihash" hash function.
  *
@@ -178,17 +178,17 @@ static inline uint64_t kh_lu64ec( const uint8_t* const p )
 static inline uint64_t kh_lpu64ec_l3( const uint8_t* const Msg,
 	const size_t MsgLen )
 {
+	const int ml8 = -(int) ( MsgLen * 8 );
+
 	if( MsgLen < 4 )
 	{
 		const uint8_t* const Msg3 = Msg + MsgLen - 3;
-		const int ml8 = -(int) ( MsgLen * 8 );
 		const uint64_t m = (uint64_t) Msg3[ 0 ] | (uint64_t) Msg3[ 1 ] << 8 |
 			(uint64_t) Msg3[ 2 ] << 16;
 
 		return( 1ULL << (( Msg3[ 2 ] >> 7 ) - ml8 ) | m >> ( 24 + ml8 ));
 	}
 
-	const int ml8 = -(int) ( MsgLen * 8 );
 	const uint64_t mh = kh_lu32ec( Msg + MsgLen - 4 );
 	const uint64_t ml = kh_lu32ec( Msg );
 
@@ -214,7 +214,7 @@ static inline uint64_t kh_lpu64ec_nz( const uint8_t* const Msg,
 	if( MsgLen < 4 )
 	{
 		uint64_t m = Msg[ 0 ];
-		const uint8_t* const MsgE = Msg + MsgLen - 1;
+		const uint8_t mf = Msg[ MsgLen - 1 ];
 
 		if( MsgLen > 1 )
 		{
@@ -222,11 +222,11 @@ static inline uint64_t kh_lpu64ec_nz( const uint8_t* const Msg,
 
 			if( MsgLen > 2 )
 			{
-				m |= (uint64_t) *MsgE << 16;
+				m |= (uint64_t) mf << 16;
 			}
 		}
 
-		return( 1ULL << (( *MsgE >> 7 ) - ml8 ) | m );
+		return( 1ULL << (( mf >> 7 ) - ml8 ) | m );
 	}
 
 	const uint64_t mh = kh_lu32ec( Msg + MsgLen - 4 );
@@ -396,6 +396,8 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 	if( KOMIHASH_LIKELY( MsgLen < 16 ))
 	{
+		KOMIHASH_PREFETCH( Msg );
+
 		r1h = Seed1;
 		r2h = Seed5;
 
