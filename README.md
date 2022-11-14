@@ -96,21 +96,6 @@ Compiler options: `/Ox -mavx2`; overhead: `1.8` cycles/h.
 |XXH64 0.8.0     |12.8           |17.4           |17.1           |
 |prvhash64m 4.1  |20.0           |26.2           |4.1            |
 
-### LLVM clang 12.0.1 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 4.5 GHz ###
-
-Compiler options: `-O3 -mavx2`; overhead: `5.3` cycles/h.
-
-|Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
-|----            |----           |----           |----           |
-|**komihash 4.5**|12.8           |14.4           |22.4           |
-|komihash 4.3    |15.3           |16.3           |22.8           |
-|komihash 3.6    |16.0           |19.0           |22.3           |
-|komihash 2.8    |18.1           |22.3           |23.5           |
-|wyhash_final3   |14.0           |18.7           |28.4           |
-|XXH3_64 0.8.0   |18.0           |29.3           |51.0           |
-|XXH64 0.8.0     |12.5           |16.4           |18.2           |
-|prvhash64m 4.1  |27.0           |29.9           |4.3            |
-
 ### ICC 19.0 64-bit, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz ###
 
 Compiler options: `/O3 /QxSSE2`; overhead: `2.0` cycles/h.
@@ -129,6 +114,21 @@ Compiler options: `/O3 /QxSSE2`; overhead: `2.0` cycles/h.
 (this is likely a worst-case scenario, when a compiler was not cross-tuned
 to a competing processor architecture; also, ICC for Windows does not support
 the `__builtin_expect` and `__builtin_prefetch` intrinsics)
+
+### LLVM clang 12.0.1 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 4.5 GHz ###
+
+Compiler options: `-O3 -mavx2`; overhead: `5.3` cycles/h.
+
+|Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
+|----            |----           |----           |----           |
+|**komihash 4.5**|12.8           |14.4           |22.4           |
+|komihash 4.3    |15.3           |16.3           |22.8           |
+|komihash 3.6    |16.0           |19.0           |22.3           |
+|komihash 2.8    |18.1           |22.3           |23.5           |
+|wyhash_final3   |14.0           |18.7           |28.4           |
+|XXH3_64 0.8.0   |18.0           |29.3           |51.0           |
+|XXH64 0.8.0     |12.5           |16.4           |18.2           |
+|prvhash64m 4.1  |27.0           |29.9           |4.3            |
 
 ### GCC 8.5.0 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 4.5 GHz ###
 
@@ -158,21 +158,6 @@ Compiler options: `-O3 -mavx2`; overhead: `5.8` cycles/h.
 |XXH64 0.8.0     |15.3           |17.9           |18.1           |
 |prvhash64m 4.1  |21.7           |27.1           |4.4            |
 
-### ICC 19.0 64-bit, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz ###
-
-Compiler options: `/O3 /QxSSE2`; overhead: `5.9` cycles/h.
-
-|Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
-|----            |----           |----           |----           |
-|**komihash 4.5**|18.1           |21.1           |17.2           |
-|komihash 4.3    |18.7           |21.5           |18.5           |
-|komihash 3.6    |19.5           |23.1           |18.1           |
-|komihash 2.8    |20.1           |23.6           |18.4           |
-|wyhash_final3   |19.2           |24.5           |20.0           |
-|XXH3_64 0.8.0   |19.9           |25.8           |28.0           |
-|XXH64 0.8.0     |18.8           |24.7           |16.0           |
-|prvhash64m 4.1  |25.5           |32.4           |3.2            |
-
 ### LLVM clang 8.0.0 64-bit, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz ###
 
 Compiler options: `/Ox -mavx2`; overhead: `5.5` cycles/h.
@@ -187,6 +172,21 @@ Compiler options: `/Ox -mavx2`; overhead: `5.5` cycles/h.
 |XXH3_64 0.8.0   |18.4           |23.0           |48.3           |
 |XXH64 0.8.0     |13.2           |17.3           |17.7           |
 |prvhash64m 4.1  |23.2           |29.6           |4.1            |
+
+### ICC 19.0 64-bit, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz ###
+
+Compiler options: `/O3 /QxSSE2`; overhead: `5.9` cycles/h.
+
+|Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
+|----            |----           |----           |----           |
+|**komihash 4.5**|18.1           |21.1           |17.2           |
+|komihash 4.3    |18.7           |21.5           |18.5           |
+|komihash 3.6    |19.5           |23.1           |18.1           |
+|komihash 2.8    |20.1           |23.6           |18.4           |
+|wyhash_final3   |19.2           |24.5           |20.0           |
+|XXH3_64 0.8.0   |19.9           |25.8           |28.0           |
+|XXH64 0.8.0     |18.8           |24.7           |16.0           |
+|prvhash64m 4.1  |25.5           |32.4           |3.2            |
 
 ### Apple clang 12.0.0 64-bit, macOS 12.0.1, Apple M1, 3.5 GHz ###
 
