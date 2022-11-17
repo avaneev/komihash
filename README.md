@@ -1,11 +1,11 @@
-# KOMIHASH - Very Fast Hash Function (C) #
+# KOMIHASH - Very Fast Hash Function (in C) #
 
 ## Introduction ##
 
 The `komihash()` function available in the `komihash.h` file implements a very
 fast 64-bit hash function, mainly designed for hash-table and hash-map uses;
 produces identical hashes on both big- and little-endian systems. Function's
-code is portable, scalar C.
+code is portable, scalar, header-only inlineable C (C++).
 
 This function features both a high large-block hashing performance (26 GB/s
 on Ryzen 3700X) and a high hashing throughput for small strings/messages
@@ -238,7 +238,7 @@ specific message lengths. In this respect, `komihash` does not "favor" any
 specific length, thus it may be more universal. Throughput aside, hashing
 quality is also an important factor as it drives a hash-map's creation and
 subsequent accesses. This, and many other synthetic hash function tests should
-be taken with a grain of salt. Only an actual use case can reveal which hash
+be taken with a grain of salt. Only an actual use-case can reveal which hash
 function is preferrable.
 
 ```
