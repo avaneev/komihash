@@ -1,17 +1,17 @@
-# KOMIHASH - Very Fast Hash Function #
+# KOMIHASH - Very Fast Hash Function (C) #
 
 ## Introduction ##
 
 The `komihash()` function available in the `komihash.h` file implements a very
 fast 64-bit hash function, mainly designed for hash-table and hash-map uses;
 produces identical hashes on both big- and little-endian systems. Function's
-code is portable, scalar.
+code is portable, scalar C.
 
 This function features both a high large-block hashing performance (26 GB/s
-on Ryzen 3700X) and a high hashing throughput for small messages (about 10
-cycles/hash for 0-15-byte messages). Performance on 32-bit systems is,
-however, quite low. Also, large-block hashing performance on big-endian
-systems may be lower due to the need of byte-swapping (can be switched off
+on Ryzen 3700X) and a high hashing throughput for small strings/messages
+(about 10 cycles/hash for 0-15-byte strings). Performance on 32-bit systems
+is, however, quite low. Also, large-block hashing performance on big-endian
+systems may be 20% lower due to the need of byte-swapping (can be switched off
 with a define).
 
 Technically, `komihash` is close to the class of hash functions like `wyhash`
@@ -232,7 +232,7 @@ and result accumulation.
 The following method was used to obtain the `cycles/h` values. Note that this
 method measures a "raw" throughput, when processor's branch predictor tunes to
 a specific message length and a specific memory address. Practical performance
-depends on actual statistics of messages (strings) being hashed, including
+depends on actual statistics of strings (messages) being hashed, including
 memory access patterns. Note that particular hash functions may "over-favor"
 specific message lengths. In this respect, `komihash` does not "favor" any
 specific length, thus it may be more universal. Throughput aside, hashing
