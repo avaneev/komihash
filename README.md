@@ -32,14 +32,14 @@ function's overhead by 1-2 cycles/hash (compiler-dependent).
 
 This function passes all [SMHasher](https://github.com/rurban/smhasher) tests.
 
-## Sequential-Incremental Hashing ##
+## Discrete Incremental Hashing ##
 
 A correct way to hash an array of independent values, and which does not
 require pre-buffering, is to pass previous hash value as a seed value. This
 method may be as fast or faster than pre-buffering, especially if lengthes
 of values in the array are not small. An additional 1-2 cycles/hash advantage
 is obtained if fixed-size values are being hashed incrementally (due to
-compiler's branching optimization). In most cases incremental hashing of even
+compiler's branching optimization). In most cases, incremental hashing of even
 a few 2-8-byte values may be faster than using pre-buffering if the overall
 input length is not known in advance.
 
@@ -50,9 +50,9 @@ input length is not known in advance.
 	HashVal = komihash( &valN, sizeof( valN ), HashVal );
 ```
 
-The same incremental approach can be used for file hashing, at a given read
-block size. Note that this approach is not the same as "streamed" hashing
-since this approach implicitly encodes the length of each individual value.
+The same incremental approach can be used for file or blob hashing, at a given
+read block size. Note that this approach is not the same as "streamed" hashing
+since this approach implicitly encodes the length of each hashed value.
 
 If you need a streamed file hashing that is independent of read block size,
 you may consider using [PRVHASH64S](https://github.com/avaneev/prvhash) which
