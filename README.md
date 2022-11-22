@@ -51,11 +51,13 @@ input length is not known in advance.
 ```
 
 The same incremental approach can be used for file hashing, at a given read
-block size.
+block size. Note that this approach is not the same as "streamed" hashing
+since this approach implicitly encodes the length of each individual value.
 
-Also, for file hashing you may consider using [PRVHASH64S](https://github.com/avaneev/prvhash)
-which provides 8.4 GB/s hashing throughput on Ryzen 3700X, and is able to
-produce a hash value of any required bit-size.
+If you need a streamed file hashing that is independent of read block size,
+you may consider using [PRVHASH64S](https://github.com/avaneev/prvhash) which
+provides 8.4 GB/s hashing throughput on Ryzen 3700X, and is able to produce a
+hash value of any required bit-size.
 
 ## Ports ##
 
