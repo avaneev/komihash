@@ -32,7 +32,7 @@ function's overhead by 1-2 cycles/hash (compiler-dependent).
 
 This function passes all [SMHasher](https://github.com/rurban/smhasher) tests.
 
-## Discrete Incremental Hashing ##
+## Discrete-Incremental Hashing ##
 
 A correct way to hash an array of independent values, and which does not
 require pre-buffering, is to pass previous hash value as a seed value. This
@@ -50,13 +50,33 @@ input length is not known in advance.
 	HashVal = komihash( &valN, sizeof( valN ), HashVal );
 ```
 
-The same incremental approach can be used for file or blob hashing, at a given
-chunk size (which may be e.g., 2048 bytes, except the last chunk). Note that
-this approach is not the same as "streamed" hashing since this approach
-implicitly encodes the length of each independent value.
+Note that this approach is not the same as "streamed" hashing since this
+approach implicitly encodes the length of each independent value. Such kind of
+hashing can be beneficial when a database record is being hashed, when it is
+necessary to separate fields by means of encoding their lengthes.
 
-If you need a streamed file hashing that is independent of chunk (read block)
-size, you may consider using [PRVHASH64S](https://github.com/avaneev/prvhash)
+## Streamed Hashing ##
+
+The `komihash.h` also features a fast streamed (continuous) implementation
+of the `komihash` hash function. Streamed hashing expects any number of
+`update` calls inbetween the `init` and `final` calls:
+
+```
+	komihash_stream_t ctx;
+	komihash_stream_init( &ctx, UseSeed );
+
+	komihash_stream_update( &ctx, &val1, sizeof( val1 ));
+	komihash_stream_update( &ctx, &val2, sizeof( val2 ));
+	...
+	komihash_stream_update( &ctx, &valN, sizeof( valN ));
+
+	uint64_t Hash = komihash_stream_final( &ctx );
+```
+
+The hash value produced via streamed hashing can be used in the
+discrete-incremental hashing outlined above (e.g., for files and blobs).
+
+You may also consider using [PRVHASH64S](https://github.com/avaneev/prvhash)
 which provides 8.4 GB/s hashing throughput on Ryzen 3700X, and is able to
 produce a hash value of any required bit-size.
 
