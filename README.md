@@ -36,9 +36,9 @@ This function passes all [SMHasher](https://github.com/rurban/smhasher) tests.
 
 A correct way to hash an array of independent values, and which does not
 require pre-buffering, is to pass previous hash value as a seed value. This
-method may be as fast or faster than pre-buffering, especially if lengthes
-of values in the array are not small. An additional 1-2 cycles/hash advantage
-is obtained if fixed-size values are being hashed incrementally (due to
+method may be as fast or faster than pre-buffering, especially if lengths of
+values in the array are not small. An additional 1-2 cycles/hash advantage is
+obtained if fixed-size values are being hashed incrementally (due to
 compiler's branching optimization). In most cases, incremental hashing of even
 a few 2-8-byte values may be faster than using pre-buffering if the overall
 input length is not known in advance.
@@ -53,13 +53,13 @@ input length is not known in advance.
 Note that this approach is not the same as "streamed" hashing since this
 approach implicitly encodes the length of each independent value. Such kind of
 hashing can be beneficial when a database record is being hashed, when it is
-necessary to separate fields by means of encoding their lengthes.
+necessary to separate fields by means of encoding their lengths.
 
 ## Streamed Hashing ##
 
-The `komihash.h` also features a fast streamed (continuous) implementation
-of the `komihash` hash function. Streamed hashing expects any number of
-`update` calls inbetween the `init` and `final` calls:
+The `komihash.h` file also features a fast continuously streamed
+implementation of the `komihash` hash function. Streamed hashing expects any
+number of `update` calls inbetween the `init` and `final` calls:
 
 ```
 	komihash_stream_t ctx;
@@ -72,6 +72,10 @@ of the `komihash` hash function. Streamed hashing expects any number of
 
 	uint64_t Hash = komihash_stream_final( &ctx );
 ```
+
+Since the `final` function is non-destructive for the context structure, the
+function can be used to obtain intermediate "incremental" hashes of the data
+stream being hashed, and the hashing can then be resumed.
 
 The hash value produced via streamed hashing can be used in the
 discrete-incremental hashing outlined above (e.g., for files and blobs).
