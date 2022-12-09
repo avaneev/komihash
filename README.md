@@ -55,6 +55,11 @@ approach implicitly encodes the length of each independent value. Such kind of
 hashing can be beneficial when a database record is being hashed, when it is
 necessary to separate fields by means of encoding their lengths.
 
+Discrete-incremental hashing of nested structures requires a "hash value
+stack" where 0 is pushed upon each nesting, and the resulting value is popped
+upon exiting the nesting level, with this hash value hashed at the previous
+stack level.
+
 ## Streamed Hashing ##
 
 The `komihash.h` file also features a fast continuously streamed
