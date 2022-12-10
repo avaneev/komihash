@@ -56,9 +56,9 @@ hashing can be beneficial when a database record is being hashed, when it is
 necessary to separate fields by means of encoding their lengths.
 
 Discrete-incremental hashing of nested structures requires a "hash value
-stack" where 0 is pushed upon each nesting, and the resulting value is popped
-upon exiting the nesting level, with this hash value hashed at the previous
-stack level.
+stack" where the current hash value is pushed into it upon each nesting, the
+nested level starts at hash value 0, and the resulting value is hashed with a
+popped previous hash value upon exiting the nesting level.
 
 ## Streamed Hashing ##
 
