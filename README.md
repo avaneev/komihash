@@ -91,9 +91,10 @@ produce a hash value of any required bit-size.
 
 ## Ports ##
 
-* [LUA, by rangercyh](https://github.com/rangercyh/lua-komihash)
-* [Python/Cython, by x13a](https://github.com/x13a/pyc-komihash)
 * [Java, by Dynatrace](https://github.com/dynatrace-oss/hash4j)
+* [LUA, by rangercyh](https://github.com/rangercyh/lua-komihash)
+* [.NET](https://www.nuget.org/packages/FastHashes/)
+* [Rust](https://crates.io/crates/komihash)
 
 ## Comparisons ##
 
