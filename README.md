@@ -32,6 +32,12 @@ function's overhead by 1-2 cycles/hash (compiler-dependent).
 
 This function passes all [SMHasher](https://github.com/rurban/smhasher) tests.
 
+An aspect worth noting, important to some users, is that `komihash` at its
+base uses a very simple mathematical construct, and uses no author-intended
+nor author-fabricated information. The base state of the function is equal to
+the first mantissa bits of PI, and can be changed to any uniformly-random
+values.
+
 ## Discrete-Incremental Hashing ##
 
 A correct way to hash an array of independent values, and which does not
