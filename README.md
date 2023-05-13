@@ -3,9 +3,9 @@
 ## Introduction ##
 
 The `komihash()` function available in the `komihash.h` file implements a very
-fast 64-bit hash function, mainly designed for hash-table and hash-map uses;
-produces identical hashes on both big- and little-endian systems. Function's
-code is portable, scalar, header-only inlineable C (C++).
+fast 64-bit hash function, mainly designed for hash-table, hash-map, and
+bloom-filter uses; produces identical hashes on both big- and little-endian
+systems. Function's code is portable, scalar, header-only inlineable C (C++).
 
 This function features both a high large-block hashing performance (26 GB/s
 on Ryzen 3700X) and a high hashing throughput for small strings/messages
@@ -25,18 +25,20 @@ overlaps allow a function to have fewer code branches, they are considered
 "non-ideal", potentially causing collisions and seed value flaws. Beside that,
 `komihash` features superior seed value handling and Perlin Noise hashing.
 
+An aspect worth noting, important to some users, is that `komihash` at its
+base uses a simple mathematical construct, and uses no author-intended nor
+author-fabricated information. The base state of the function is equal to the
+first mantissa bits of PI, and can be changed to any uniformly-random values.
+This means that statistical properties (collision resistance) of `komihash`
+are not based on manual fine-tuning, but are a product of the mathematical
+construct.
+
 Note that this function is not cryptographically-secure: in open systems it
 should only be used with a secret seed, to minimize the chance of a collision
 attack. However, when the default seed is used (0), this further reduces
 function's overhead by 1-2 cycles/hash (compiler-dependent).
 
 This function passes all [SMHasher](https://github.com/rurban/smhasher) tests.
-
-An aspect worth noting, important to some users, is that `komihash` at its
-base uses a very simple mathematical construct, and uses no author-intended
-nor author-fabricated information. The base state of the function is equal to
-the first mantissa bits of PI, and can be changed to any uniformly-random
-values.
 
 ## Discrete-Incremental Hashing ##
 
