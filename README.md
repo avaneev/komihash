@@ -39,6 +39,9 @@ attack. However, when the default seed is used (0), this further reduces
 function's overhead by 1-2 cycles/hash (compiler-dependent).
 
 This function passes all [SMHasher](https://github.com/rurban/smhasher) tests.
+The performance (expressed in cycles/byte) of this hash function on various
+platforms is best evaluated at the
+[ECRYPT/eBASH project](https://bench.cr.yp.to/results-hash.html).
 
 ## Discrete-Incremental Hashing ##
 
