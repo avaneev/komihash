@@ -1,5 +1,5 @@
 /**
- * komihash.h version 4.7
+ * komihash.h version 5.0
  *
  * The inclusion file for the "komihash" hash function, "komirand" 64-bit
  * PRNG, and streamed "komihash" implementation.
@@ -8,7 +8,7 @@
  *
  * License
  *
- * Copyright (c) 2021-2022 Aleksey Vaneev
+ * Copyright (c) 2021-2023 Aleksey Vaneev
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -182,7 +182,7 @@ static inline uint64_t kh_lu64ec( const uint8_t* const p )
 static inline uint64_t kh_lpu64ec_l3( const uint8_t* const Msg,
 	const size_t MsgLen )
 {
-	const int ml8 = -(int) ( MsgLen * 8 );
+	const int ml8 = (int) ( MsgLen * 8 );
 
 	if( MsgLen < 4 )
 	{
@@ -190,14 +190,13 @@ static inline uint64_t kh_lpu64ec_l3( const uint8_t* const Msg,
 		const uint64_t m = (uint64_t) Msg3[ 0 ] | (uint64_t) Msg3[ 1 ] << 8 |
 			(uint64_t) Msg3[ 2 ] << 16;
 
-		return( 1ULL << (( Msg3[ 2 ] >> 7 ) - ml8 ) | m >> ( 24 + ml8 ));
+		return( 1ULL << ml8 | m >> ( 24 - ml8 ));
 	}
 
 	const uint64_t mh = kh_lu32ec( Msg + MsgLen - 4 );
 	const uint64_t ml = kh_lu32ec( Msg );
 
-	return( 1ULL << ( (int) ( mh >> 31 ) - ml8 ) |
-		ml | ( mh >> ( 64 + ml8 )) << 32 );
+	return( 1ULL << ml8 | ml | ( mh >> ( 64 - ml8 )) << 32 );
 }
 
 /**
@@ -214,12 +213,11 @@ static inline uint64_t kh_lpu64ec_l3( const uint8_t* const Msg,
 static inline uint64_t kh_lpu64ec_nz( const uint8_t* const Msg,
 	const size_t MsgLen )
 {
-	const int ml8 = -(int) ( MsgLen * 8 );
+	const int ml8 = (int) ( MsgLen * 8 );
 
 	if( MsgLen < 4 )
 	{
 		uint64_t m = Msg[ 0 ];
-		const uint8_t mf = Msg[ MsgLen - 1 ];
 
 		if( MsgLen > 1 )
 		{
@@ -227,18 +225,17 @@ static inline uint64_t kh_lpu64ec_nz( const uint8_t* const Msg,
 
 			if( MsgLen > 2 )
 			{
-				m |= (uint64_t) mf << 16;
+				m |= (uint64_t) Msg[ 2 ] << 16;
 			}
 		}
 
-		return( 1ULL << (( mf >> 7 ) - ml8 ) | m );
+		return( 1ULL << ml8 | m );
 	}
 
 	const uint64_t mh = kh_lu32ec( Msg + MsgLen - 4 );
 	const uint64_t ml = kh_lu32ec( Msg );
 
-	return( 1ULL << ( (int) ( mh >> 31 ) - ml8 ) |
-		ml | ( mh >> ( 64 + ml8 )) << 32 );
+	return( 1ULL << ml8 | ml | ( mh >> ( 64 - ml8 )) << 32 );
 }
 
 /**
@@ -255,18 +252,18 @@ static inline uint64_t kh_lpu64ec_nz( const uint8_t* const Msg,
 static inline uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 	const size_t MsgLen )
 {
-	const int ml8 = -(int) ( MsgLen * 8 );
+	const int ml8 = (int) ( MsgLen * 8 );
 
 	if( MsgLen < 5 )
 	{
 		const uint64_t m = kh_lu32ec( Msg + MsgLen - 4 );
 
-		return( 1ULL << ( (int) ( m >> 31 ) - ml8 ) | m >> ( 32 + ml8 ));
+		return( 1ULL << ml8 | m >> ( 32 - ml8 ));
 	}
 
 	const uint64_t m = kh_lu64ec( Msg + MsgLen - 8 );
 
-	return( 1ULL << ( (int) ( m >> 63 ) - ml8 ) | m >> ( 64 + ml8 ));
+	return( 1ULL << ml8 | m >> ( 64 - ml8 ));
 }
 
 #if defined( __SIZEOF_INT128__ )
@@ -307,7 +304,7 @@ static inline uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 
 	static inline uint64_t kh__emulu( const uint32_t x, const uint32_t y )
 	{
-		return( x * (uint64_t) y );
+		return( (uint64_t) x * y );
 	}
 
 	static inline void kh_m128( const uint64_t u, const uint64_t v,
@@ -321,7 +318,7 @@ static inline uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 		const uint32_t u1 = (uint32_t) ( u >> 32 );
 		const uint32_t v1 = (uint32_t) ( v >> 32 );
 		const uint64_t t = kh__emulu( u1, v0 ) + ( w0 >> 32 );
-		const uint64_t w1 = (uint32_t) t + kh__emulu( u0, v1 );
+		const uint64_t w1 = kh__emulu( u0, v1 ) + (uint32_t) t;
 
 		*rh = kh__emulu( u1, v1 ) + ( w1 >> 32 ) + ( t >> 32 );
 	}
@@ -363,7 +360,8 @@ static inline uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 // The "shifting" arrangement of Seed1-4 (below) does not increase individual
 // SeedN's PRNG period beyond 2^64, but reduces a chance of any occassional
 // synchronization between PRNG lanes happening. Practically, Seed1-4 together
-// become a single "fused" 256-bit PRNG value, having a summary PRNG period.
+// become a single "fused" 256-bit PRNG value, having 2^66 summary PRNG
+// period.
 
 #define KOMIHASH_HASHLOOP64() \
 	do \
@@ -371,15 +369,15 @@ static inline uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 		KOMIHASH_PREFETCH( Msg ); \
 	\
 		kh_m128( Seed1 ^ kh_lu64ec( Msg ), \
-			Seed5 ^ kh_lu64ec( Msg + 8 ), &Seed1, &r1h ); \
+			Seed5 ^ kh_lu64ec( Msg + 32 ), &Seed1, &r1h ); \
 	\
-		kh_m128( Seed2 ^ kh_lu64ec( Msg + 16 ), \
-			Seed6 ^ kh_lu64ec( Msg + 24 ), &Seed2, &r2h ); \
+		kh_m128( Seed2 ^ kh_lu64ec( Msg + 8 ), \
+			Seed6 ^ kh_lu64ec( Msg + 40 ), &Seed2, &r2h ); \
 	\
-		kh_m128( Seed3 ^ kh_lu64ec( Msg + 32 ), \
-			Seed7 ^ kh_lu64ec( Msg + 40 ), &Seed3, &r3h ); \
+		kh_m128( Seed3 ^ kh_lu64ec( Msg + 16 ), \
+			Seed7 ^ kh_lu64ec( Msg + 48 ), &Seed3, &r3h ); \
 	\
-		kh_m128( Seed4 ^ kh_lu64ec( Msg + 48 ), \
+		kh_m128( Seed4 ^ kh_lu64ec( Msg + 24 ), \
 			Seed8 ^ kh_lu64ec( Msg + 56 ), &Seed4, &r4h ); \
 	\
 		Msg += 64; \
@@ -573,13 +571,18 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 static inline uint64_t komirand( uint64_t* const Seed1, uint64_t* const Seed2 )
 {
+	uint64_t s1 = *Seed1;
+	uint64_t s2 = *Seed2;
 	uint64_t rh;
 
-	kh_m128( *Seed1, *Seed2, Seed1, &rh );
-	*Seed2 += rh + 0xAAAAAAAAAAAAAAAA;
-	*Seed1 ^= *Seed2;
+	kh_m128( s1, s2, &s1, &rh );
+	s2 += rh + 0xAAAAAAAAAAAAAAAA;
+	s1 ^= s2;
 
-	return( *Seed1 );
+	*Seed2 = s2;
+	*Seed1 = s1;
+
+	return( s1 );
 }
 
 #if !defined( KOMIHASH_BUFSIZE )
@@ -600,7 +603,7 @@ typedef struct {
 	uint8_t fb[ 8 ]; ///< Stream's final byte (at [7]), array to avoid OOB.
 	uint8_t Buf[ KOMIHASH_BUFSIZE ]; ///< Buffer.
 	uint64_t Seed[ 8 ]; ///< Hashing state variables.
-	size_t BufFill; ///< Buffer-fill length (position).
+	size_t BufFill; ///< Buffer fill count (position), in bytes.
 	size_t IsHashing; ///< 0 or 1, equals 1 if the actual hashing was started.
 } komihash_stream_t;
 
@@ -655,7 +658,7 @@ static inline void komihash_stream_update( komihash_stream_t* const ctx,
 		MsgLen = KOMIHASH_BUFSIZE;
 	}
 	else
-	if( MsgLen < 9 )
+	if( MsgLen < 33 )
 	{
 		// For buffering speed-up.
 
@@ -675,14 +678,16 @@ static inline void komihash_stream_update( komihash_stream_t* const ctx,
 			return;
 		}
 
-		ctx -> BufFill = BufFill + MsgLen;
-		uint8_t* const ope = op + MsgLen;
-
-		while( op != ope )
+		if( MsgLen != 0 )
 		{
-			*op = *Msg;
-			Msg++;
-			op++;
+			ctx -> BufFill = BufFill + MsgLen;
+
+			do
+			{
+				*op = *Msg;
+				Msg++;
+				op++;
+			} while( --MsgLen != 0 );
 		}
 
 		return;
