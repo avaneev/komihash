@@ -1,5 +1,5 @@
 /**
- * komihash.h version 5.0
+ * komihash.h version 5.1
  *
  * The inclusion file for the "komihash" hash function, "komirand" 64-bit
  * PRNG, and streamed "komihash" implementation.
@@ -409,8 +409,6 @@ static inline uint64_t komihash_epi( const uint8_t* Msg, size_t MsgLen,
 {
 	uint64_t r1h, r2h;
 
-	KOMIHASH_PREFETCH( Msg );
-
 	if( KOMIHASH_LIKELY( MsgLen > 31 ))
 	{
 		KOMIHASH_HASH16( Msg );
@@ -450,7 +448,7 @@ static inline uint64_t komihash_epi( const uint8_t* Msg, size_t MsgLen,
  *
  * @param Msg0 The message to produce a hash from. The alignment of this
  * pointer is unimportant. It is valid to pass 0 when MsgLen==0 (assuming that
- * compiler's implementation of the address prefetch is non-failing for any
+ * compiler's implementation of the address prefetch is non-failing for zero
  * address).
  * @param MsgLen Message's length, in bytes, can be zero.
  * @param UseSeed Optional value, to use instead of the default seed. To use
@@ -490,12 +488,12 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 	// it is a replication of the `10` bit-pair; it is not an arbitrary
 	// constant).
 
+	KOMIHASH_PREFETCH( Msg );
+
 	KOMIHASH_HASHROUND(); // Required for PerlinNoise.
 
 	if( KOMIHASH_LIKELY( MsgLen < 16 ))
 	{
-		KOMIHASH_PREFETCH( Msg );
-
 		r1h = Seed1;
 		r2h = Seed5;
 
@@ -520,8 +518,6 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 	if( KOMIHASH_LIKELY( MsgLen < 32 ))
 	{
-		KOMIHASH_PREFETCH( Msg );
-
 		KOMIHASH_HASH16( Msg );
 
 		if( MsgLen > 23 )
