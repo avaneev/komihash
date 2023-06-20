@@ -5,7 +5,8 @@
 The `komihash()` function available in the `komihash.h` file implements a very
 fast 64-bit hash function, mainly designed for hash-table, hash-map, and
 bloom-filter uses; produces identical hashes on both big- and little-endian
-systems. Function's code is portable, scalar, header-only inlineable C (C++).
+systems. Function's code is portable, scalar, zero-allocation, header-only
+inlineable C (C++ compatible).
 
 This function features both a high large-block hashing performance (26.5 GB/s
 on Ryzen 3700X) and a high hashing throughput for small strings/messages
@@ -33,10 +34,11 @@ This means that statistical properties (collision resistance) of `komihash`
 are not based on manual fine-tuning, but are a product of the mathematical
 construct.
 
-Note that this function is not cryptographically-secure: in open systems it
-should only be used with a secret seed, to minimize the chance of a collision
-attack. However, when the default seed is used (0), this further reduces
-function's overhead by 1-2 cycles/hash (compiler-dependent).
+Note that this function is not cryptographically-secure: in open systems, and
+within any server-side internal structures, it should only be used with a
+secret seed, to minimize the chance of a collision attack (hash flooding).
+However, when the default seed is used (0), this further reduces function's
+overhead by 1-2 cycles/hash (compiler-dependent).
 
 This function passes all [SMHasher](https://github.com/rurban/smhasher) tests.
 The performance (expressed in cycles/byte) of this hash function on various
@@ -73,7 +75,7 @@ popped previous hash value upon exiting the nesting level.
 
 ## Streamed Hashing ##
 
-The `komihash.h` file also features a fast continuously streamed
+The `komihash.h` file also features a fast continuously-streamed
 implementation of the `komihash` hash function. Streamed hashing expects any
 number of `update` calls inbetween the `init` and `final` calls:
 
@@ -97,16 +99,16 @@ The hash value produced via streamed hashing can be used in the
 discrete-incremental hashing outlined above (e.g., for files and blobs).
 
 You may also consider using [PRVHASH64S](https://github.com/avaneev/prvhash)
-which provides 8.4 GB/s hashing throughput on Ryzen 3700X, and is able to
+which provides 8.5 GB/s hashing throughput on Ryzen 3700X, and is able to
 produce a hash value of any required bit-size.
 
 ## Ports ##
 
 * [Java, by Dynatrace](https://github.com/dynatrace-oss/hash4j)
 * [LUA, by rangercyh](https://github.com/rangercyh/lua-komihash)
-* [.NET](https://www.nuget.org/packages/FastHashes/)
-* [Rust](https://crates.io/crates/komihash)
-* [Zig](https://github.com/tensorush/zig-komihash)
+* [.NET, by TommasoBelluzzo](https://www.nuget.org/packages/FastHashes/)
+* [Rust, by thynson](https://crates.io/crates/komihash)
+* [Zig, by tensorush](https://github.com/tensorush/zig-komihash)
 
 ## Comparisons ##
 
@@ -291,7 +293,7 @@ depends on actual statistics of strings (messages) being hashed, including
 memory access patterns. Note that particular hash functions may "over-favor"
 specific message lengths. In this respect, `komihash` does not "favor" any
 specific length, thus it may be more universal. Throughput aside, hashing
-quality is also an important factor as it drives a hash-map's creation and
+quality is also an important factor since it drives a hash-map's creation and
 subsequent accesses. This, and many other synthetic hash function tests should
 be taken with a grain of salt. Only an actual use-case can reveal which hash
 function is preferrable.
@@ -330,13 +332,13 @@ You may wonder, why `komihash` does not include a quite common `^MsgLen` XOR
 instruction at some place in the code? The main reason is that due to the way
 `komihash` parses the input message such instruction is not necessary. Another
 reason is that for a non-cryptographic hash function such instruction provides
-no additional security: while it may seem that such instruction protects from
+no additional security: while it may seem like such instruction protects from
 simple "state XORing" collision attacks, in practice it offers no protection,
 if one considers how powerful [SAT solvers](https://github.com/pysathq/pysat)
 are: in less than a second they can "forge" a preimage which produces a
 required hash value. It is also important to note that in such "fast" hash
 functions like `komihash` the input message has complete control over the
-state variables.
+state variables and the result.
 
 Is 128-bit version of this hash function planned? Most probably, no, it is
 not. While such version may be reasonable for data structure compatibility
@@ -354,7 +356,7 @@ e.g. 41 GB/s, a "bulk" single-threaded hashing performance on the order of
 30 GB/s is excessive considering memory bandwidth has to be spread over
 multiple cores. So, practically, such "fast" hash function, working on a
 high-load 8-core server, rarely receives more than 8 GB/s of bandwidth.
-Another factor worth mentioning is that a server rarely has more than 10 Gb/s
+Another factor worth a mention is that a server rarely has more than 10 Gb/s
 network connectivity, thus further reducing practical hashing performance of
 incoming data. The same applies to disk system's throughput, if on-disk data
 is not yet in memory.
