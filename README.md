@@ -91,7 +91,7 @@ number of `update` calls inbetween the `init` and `final` calls:
 	uint64_t Hash = komihash_stream_final( &ctx );
 ```
 
-Since the `final` function is non-destructive for the context structure, the
+Since the `final` function is non-destructive to the context structure, the
 function can be used to obtain intermediate "incremental" hashes of the data
 stream being hashed, and the hashing can then be resumed.
 
