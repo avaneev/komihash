@@ -1,5 +1,5 @@
 /**
- * komihash.h version 5.2
+ * komihash.h version 5.3
  *
  * The inclusion file for the "komihash" hash function, "komirand" 64-bit
  * PRNG, and streamed "komihash" implementation.
@@ -317,27 +317,24 @@ static inline uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 	// from https://go.dev/src/runtime/softfloat64.go
 	// Licensed under BSD-style license.
 
-	#if defined( _MSC_VER )
+	#if defined( _MSC_VER ) && !defined( __INTEL_COMPILER )
 
 		#include <intrin.h>
-
-		#if !defined( __INTEL_COMPILER )
-			#pragma intrinsic(__emulu)
-		#endif // !defined( __INTEL_COMPILER )
+		#pragma intrinsic(__emulu)
 
 		static inline uint64_t kh__emulu( const uint32_t x, const uint32_t y )
 		{
 			return( __emulu( x, y ));
 		}
 
-	#else // defined( _MSC_VER )
+	#else // defined( _MSC_VER ) && !defined( __INTEL_COMPILER )
 
 		static inline uint64_t kh__emulu( const uint32_t x, const uint32_t y )
 		{
 			return( (uint64_t) x * y );
 		}
 
-	#endif // defined( _MSC_VER )
+	#endif // defined( _MSC_VER ) && !defined( __INTEL_COMPILER )
 
 	static inline void kh_m128( const uint64_t u, const uint64_t v,
 		uint64_t* const rl, uint64_t* const rh )
