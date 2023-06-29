@@ -1,8 +1,11 @@
 /**
- * komihash.h version 5.3
+ * komihash.h version 5.4
  *
  * The inclusion file for the "komihash" hash function, "komirand" 64-bit
  * PRNG, and streamed "komihash" implementation.
+ *
+ * This function is named the way it is named is to honor the Komi Republic
+ * (located in Russia), native to the author.
  *
  * Description is available at https://github.com/avaneev/komihash
  *
@@ -286,21 +289,8 @@ static inline uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 		*rh = (uint64_t) ( r >> 64 );
 	}
 
-#elif defined( _MSC_VER ) && defined( _M_X64 )
-
-	#include <intrin.h>
-
-	#if !defined( __INTEL_COMPILER )
-		#pragma intrinsic(_umul128)
-	#endif // !defined( __INTEL_COMPILER )
-
-	static inline void kh_m128( const uint64_t m1, const uint64_t m2,
-		uint64_t* const rl, uint64_t* const rh )
-	{
-		*rl = _umul128( m1, m2, rh );
-	}
-
-#elif defined( _MSC_VER ) && defined( _M_ARM64 )
+#elif defined( _MSC_VER ) && ( defined( _M_ARM64 ) || \
+	( defined( _M_X64 ) && defined( __INTEL_COMPILER )))
 
 	#include <intrin.h>
 
@@ -311,7 +301,18 @@ static inline uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 		*rh = __umulh( m1, m2 );
 	}
 
-#else // defined( _MSC_VER ) && defined( _M_ARM64 )
+#elif defined( _MSC_VER ) && defined( _M_X64 )
+
+	#include <intrin.h>
+	#pragma intrinsic(_umul128)
+
+	static inline void kh_m128( const uint64_t m1, const uint64_t m2,
+		uint64_t* const rl, uint64_t* const rh )
+	{
+		*rl = _umul128( m1, m2, rh );
+	}
+
+#else // defined( _MSC_VER ) && defined( _M_X64 )
 
 	// _umul128() code for 32-bit systems, adapted from mullu(),
 	// from https://go.dev/src/runtime/softfloat64.go
@@ -352,7 +353,7 @@ static inline uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 		*rh = kh__emulu( u1, v1 ) + ( w1 >> 32 ) + ( t >> 32 );
 	}
 
-#endif // defined( _MSC_VER )
+#endif // defined( _MSC_VER ) && defined( _M_X64 )
 
 // Macro for common hashing round with 16-byte input, using the "r1h"
 // temporary variable.
