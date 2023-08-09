@@ -1,5 +1,5 @@
 /**
- * komihash.h version 5.5
+ * komihash.h version 5.6
  *
  * The inclusion file for the "komihash" hash function, "komirand" 64-bit
  * PRNG, and streamed "komihash" implementation.
@@ -44,8 +44,9 @@
 // overhead).
 
 #if !defined( KOMIHASH_LITTLE_ENDIAN )
-	#if defined( _WIN32 ) || defined( __LITTLE_ENDIAN__ ) || \
-		( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ )
+	#if defined( _WIN32 ) || defined( i386 ) || defined( __x86_64__ ) || \
+		defined( __LITTLE_ENDIAN__ ) || ( defined( __BYTE_ORDER__ ) && \
+		__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ )
 
 		#define KOMIHASH_LITTLE_ENDIAN 1
 
@@ -66,7 +67,7 @@
 // Macro that denotes availability of required GCC-style built-in functions.
 
 #if defined( __GNUC__ ) || defined( __clang__ ) || \
-	defined( __IBMC__ ) || defined( __IBMCPP__ )
+	defined( __IBMC__ ) || defined( __IBMCPP__ ) || defined( __COMPCERT__ )
 
 	#define KOMIHASH_GCC_BUILTINS 1
 
@@ -87,6 +88,8 @@
 		#define KOMIHASH_EC64( v ) __builtin_bswap64( v )
 
 	#elif defined( _MSC_VER )
+
+		#include <intrin.h>
 
 		#define KOMIHASH_EC32( v ) _byteswap_ulong( v )
 		#define KOMIHASH_EC64( v ) _byteswap_uint64( v )
@@ -130,7 +133,7 @@
 // Memory address prefetch macro (temporal locality=1, in case a collision
 // resolution would be necessary).
 
-#if defined( KOMIHASH_GCC_BUILTINS )
+#if defined( KOMIHASH_GCC_BUILTINS ) && !defined( __COMPCERT__ )
 
 	#define KOMIHASH_PREFETCH( addr ) __builtin_prefetch( addr, 0, 1 )
 
@@ -210,13 +213,13 @@ static KOMIHASH_INLINE uint64_t kh_lpu64ec_l3( const uint8_t* const Msg,
 		const uint64_t m = (uint64_t) Msg3[ 0 ] | (uint64_t) Msg3[ 1 ] << 8 |
 			(uint64_t) Msg3[ 2 ] << 16;
 
-		return( 1ULL << ml8 | m >> ( 24 - ml8 ));
+		return( (uint64_t) 1 << ml8 | m >> ( 24 - ml8 ));
 	}
 
 	const uint64_t mh = kh_lu32ec( Msg + MsgLen - 4 );
 	const uint64_t ml = kh_lu32ec( Msg );
 
-	return( 1ULL << ml8 | ml | ( mh >> ( 64 - ml8 )) << 32 );
+	return( (uint64_t) 1 << ml8 | ml | ( mh >> ( 64 - ml8 )) << 32 );
 }
 
 /**
@@ -249,13 +252,13 @@ static KOMIHASH_INLINE uint64_t kh_lpu64ec_nz( const uint8_t* const Msg,
 			}
 		}
 
-		return( 1ULL << ml8 | m );
+		return( (uint64_t) 1 << ml8 | m );
 	}
 
 	const uint64_t mh = kh_lu32ec( Msg + MsgLen - 4 );
 	const uint64_t ml = kh_lu32ec( Msg );
 
-	return( 1ULL << ml8 | ml | ( mh >> ( 64 - ml8 )) << 32 );
+	return( (uint64_t) 1 << ml8 | ml | ( mh >> ( 64 - ml8 )) << 32 );
 }
 
 /**
@@ -278,12 +281,12 @@ static KOMIHASH_INLINE uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 	{
 		const uint64_t m = kh_lu32ec( Msg + MsgLen - 4 );
 
-		return( 1ULL << ml8 | m >> ( 32 - ml8 ));
+		return( (uint64_t) 1 << ml8 | m >> ( 32 - ml8 ));
 	}
 
 	const uint64_t m = kh_lu64ec( Msg + MsgLen - 8 );
 
-	return( 1ULL << ml8 | m >> ( 64 - ml8 ));
+	return( (uint64_t) 1 << ml8 | m >> ( 64 - ml8 ));
 }
 
 #if defined( __SIZEOF_INT128__ )
@@ -338,7 +341,7 @@ static KOMIHASH_INLINE uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 		*rl = _umul128( m1, m2, rh );
 	}
 
-#else // defined( _MSC_VER ) && defined( _M_X64 )
+#else // defined( _MSC_VER )
 
 	// _umul128() code for 32-bit systems, adapted from Hacker's Delight,
 	// Henry S. Warren, Jr.
@@ -348,19 +351,11 @@ static KOMIHASH_INLINE uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 		#include <intrin.h>
 		#pragma intrinsic(__emulu)
 
-		static KOMIHASH_INLINE uint64_t kh__emulu( const uint32_t x,
-			const uint32_t y )
-		{
-			return( __emulu( x, y ));
-		}
+		#define KOMIHASH_EMULU( x, y ) __emulu( x, y )
 
 	#else // defined( _MSC_VER ) && !defined( __INTEL_COMPILER )
 
-		static KOMIHASH_INLINE uint64_t kh__emulu( const uint32_t x,
-			const uint32_t y )
-		{
-			return( (uint64_t) x * y );
-		}
+		#define KOMIHASH_EMULU( x, y ) ( (uint64_t) ( x ) * ( y ))
 
 	#endif // defined( _MSC_VER ) && !defined( __INTEL_COMPILER )
 
@@ -371,16 +366,16 @@ static KOMIHASH_INLINE uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 
 		const uint32_t u0 = (uint32_t) u;
 		const uint32_t v0 = (uint32_t) v;
-		const uint64_t w0 = kh__emulu( u0, v0 );
+		const uint64_t w0 = KOMIHASH_EMULU( u0, v0 );
 		const uint32_t u1 = (uint32_t) ( u >> 32 );
 		const uint32_t v1 = (uint32_t) ( v >> 32 );
-		const uint64_t t = kh__emulu( u1, v0 ) + ( w0 >> 32 );
-		const uint64_t w1 = kh__emulu( u0, v1 ) + (uint32_t) t;
+		const uint64_t t = KOMIHASH_EMULU( u1, v0 ) + ( w0 >> 32 );
+		const uint64_t w1 = KOMIHASH_EMULU( u0, v1 ) + (uint32_t) t;
 
-		*rh = kh__emulu( u1, v1 ) + ( w1 >> 32 ) + ( t >> 32 );
+		*rh = KOMIHASH_EMULU( u1, v1 ) + ( w1 >> 32 ) + ( t >> 32 );
 	}
 
-#endif // defined( _MSC_VER ) && defined( _M_X64 )
+#endif // defined( _MSC_VER )
 
 // Macro for common hashing round with 16-byte input, using the "r1h"
 // temporary variable.

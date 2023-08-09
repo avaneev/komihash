@@ -45,6 +45,11 @@ The performance (expressed in cycles/byte) of this hash function on various
 platforms is best evaluated at the
 [ECRYPT/eBASH project](https://bench.cr.yp.to/results-hash.html).
 
+This function and its source code (which is
+[ISO C99](https://en.wikipedia.org/wiki/C99)) were quality-tested on:
+Clang, GCC, MSVC, Intel C++ compilers; x86, x86-64 (Intel, AMD), AArch64
+(Apple Silicon) architectures; Windows 10, CentOS 8 Linux, macOS 13.3.
+
 ## Discrete-Incremental Hashing ##
 
 A correct way to hash an array of independent values, and which does not
@@ -121,7 +126,7 @@ Compiler options: `/Ox /arch:sse2`; overhead: `1.8` cycles/h.
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----            |----           |----           |----           |
-|**komihash 5.5**|10.2           |12.1           |26.7           |
+|**komihash 5.6**|10.2           |12.1           |26.7           |
 |komihash 4.5    |11.0           |12.7           |26.2           |
 |komihash 4.3    |11.2           |13.0           |26.0           |
 |komihash 3.6    |11.1           |16.9           |27.5           |
@@ -135,7 +140,7 @@ Compiler options: `/Ox -mavx2`; overhead: `1.8` cycles/h.
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----            |----           |----           |----           |
-|**komihash 5.5**|10.2           |12.1           |26.7           |
+|**komihash 5.6**|10.2           |12.1           |26.7           |
 |komihash 4.5    |11.1           |12.7           |26.3           |
 |komihash 4.3    |11.2           |13.0           |25.9           |
 |komihash 3.6    |11.0           |16.3           |27.5           |
@@ -151,7 +156,7 @@ Compiler options: `/O3 /QxSSE2`; overhead: `2.0` cycles/h.
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----            |----           |----           |----           |
-|**komihash 5.5**|12.4           |14.5           |22.5           |
+|**komihash 5.6**|12.4           |14.5           |22.5           |
 |komihash 4.5    |18.1           |21.9           |16.4           |
 |komihash 4.3    |17.9           |21.6           |16.3           |
 |komihash 3.6    |20.1           |24.0           |16.3           |
@@ -171,7 +176,7 @@ Compiler options: `-O3 -mavx2`; overhead: `5.3` cycles/h.
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----            |----           |----           |----           |
-|**komihash 5.5**|12.7           |13.8           |22.8           |
+|**komihash 5.6**|12.7           |13.8           |22.8           |
 |komihash 4.5    |12.8           |14.4           |22.4           |
 |komihash 4.3    |15.3           |16.3           |22.8           |
 |komihash 3.6    |16.0           |19.0           |22.3           |
@@ -187,7 +192,7 @@ Compiler options: `-O3 -msse2`; overhead: `5.8` cycles/h.
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----            |----           |----           |----           |
-|**komihash 5.5**|13.3           |14.4           |25.0           |
+|**komihash 5.6**|13.3           |14.4           |25.0           |
 |komihash 4.5    |13.2           |15.1           |24.7           |
 |komihash 4.3    |15.4           |16.2           |24.4           |
 |komihash 3.6    |16.4           |20.3           |24.7           |
@@ -201,7 +206,7 @@ Compiler options: `-O3 -mavx2`; overhead: `5.8` cycles/h.
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----            |----           |----           |----           |
-|**komihash 5.5**|13.3           |14.3           |25.3           |
+|**komihash 5.6**|13.3           |14.3           |25.3           |
 |komihash 4.5    |13.8           |15.2           |24.7           |
 |komihash 4.3    |15.3           |16.4           |24.4           |
 |komihash 3.6    |15.8           |20.1           |24.7           |
@@ -217,7 +222,7 @@ Compiler options: `/Ox -mavx2`; overhead: `5.5` cycles/h.
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----            |----           |----           |----           |
-|**komihash 5.5**|11.4           |12.7           |22.7           |
+|**komihash 5.6**|11.4           |12.7           |22.7           |
 |komihash 4.5    |12.6           |14.5           |22.2           |
 |komihash 4.3    |14.1           |16.0           |22.0           |
 |komihash 3.6    |14.0           |22.0           |22.9           |
@@ -233,7 +238,7 @@ Compiler options: `/O3 /QxSSE2`; overhead: `5.9` cycles/h.
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----            |----           |----           |----           |
-|**komihash 5.5**|15.8           |19.3           |17.1           |
+|**komihash 5.6**|15.8           |19.3           |17.1           |
 |komihash 4.5    |18.1           |21.1           |17.2           |
 |komihash 4.3    |18.7           |21.5           |18.5           |
 |komihash 3.6    |19.5           |23.1           |18.1           |
@@ -249,7 +254,7 @@ Compiler options: `-O3`; overhead: `unestimatable`.
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|bulk, GB/s     |
 |----            |----           |----           |----           |
-|**komihash 5.5**|8.2            |8.4            |23.6           |
+|**komihash 5.6**|8.2            |8.4            |23.6           |
 |komihash 4.5    |8.3            |8.7            |23.6           |
 |komihash 4.3    |8.6            |9.0            |23.6           |
 |komihash 3.6    |8.5            |10.7           |23.6           |
@@ -269,7 +274,7 @@ overhead. Measurement error is approximately 3%.
 
 |Hash function   |0-15b, cycles/h|8-28b, cycles/h|
 |----            |----           |----           |
-|**komihash 5.5**|**8.2**        |**9.7**        |
+|**komihash 5.6**|**8.2**        |**9.7**        |
 |komihash 4.5    |9.5            |11.4           |
 |komihash 4.3    |10.4           |12.1           |
 |komihash 3.6    |10.9           |15.4           |
