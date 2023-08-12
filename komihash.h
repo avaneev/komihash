@@ -1,5 +1,5 @@
 /**
- * komihash.h version 5.6
+ * komihash.h version 5.7
  *
  * The inclusion file for the "komihash" hash function, "komirand" 64-bit
  * PRNG, and streamed "komihash" implementation.
@@ -8,7 +8,7 @@
  * (located in Russia), native to the author.
  *
  * Description is available at https://github.com/avaneev/komihash
- * E-mail: aleksey.vaneev@gmail.com
+ * E-mail: aleksey.vaneev@gmail.com or info@voxengo.com
  *
  * License
  *
@@ -39,19 +39,24 @@
 #include <stdint.h>
 #include <string.h>
 
-// Endianness-definition macro, can be defined externally (e.g. =1, if
-// endianness-correction is unnecessary in any case, to reduce its associated
-// overhead).
+// Endianness definition macro, can be used as a logical constant. Can be
+// defined externally (e.g. =1, if endianness-correction is unnecessary in any
+// case, to reduce its associated overhead).
 
 #if !defined( KOMIHASH_LITTLE_ENDIAN )
-	#if defined( _WIN32 ) || defined( i386 ) || defined( __x86_64__ ) || \
-		defined( __LITTLE_ENDIAN__ ) || ( defined( __BYTE_ORDER__ ) && \
-		__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ )
+	#if defined( __LITTLE_ENDIAN__ ) || defined( __LITTLE_ENDIAN ) || \
+		defined( _LITTLE_ENDIAN ) || defined( _WIN32 ) || defined( i386 ) || \
+		defined( __i386 ) || defined( __i386__ ) || defined( __x86_64__ ) || \
+		( defined( __BYTE_ORDER__ ) && \
+			__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ )
 
 		#define KOMIHASH_LITTLE_ENDIAN 1
 
-	#elif defined( __BIG_ENDIAN__ ) || defined( _BIG_ENDIAN ) || \
-		( defined( __BYTE_ORDER__ ) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ )
+	#elif defined( __BIG_ENDIAN__ ) || defined( __BIG_ENDIAN ) || \
+		defined( _BIG_ENDIAN ) || defined( __SYSC_ZARCH__ ) || \
+		defined( __zarch__ ) || defined( __s390x__ ) || defined( __sparc ) || \
+		defined( __sparc__ ) || ( defined( __BYTE_ORDER__ ) && \
+			__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ )
 
 		#define KOMIHASH_LITTLE_ENDIAN 0
 
@@ -69,7 +74,7 @@
 #if defined( __GNUC__ ) || defined( __clang__ ) || \
 	defined( __IBMC__ ) || defined( __IBMCPP__ ) || defined( __COMPCERT__ )
 
-	#define KOMIHASH_GCC_BUILTINS 1
+	#define KOMIHASH_GCC_BUILTINS
 
 #endif // GCC built-ins.
 
@@ -369,10 +374,11 @@ static KOMIHASH_INLINE uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 		const uint64_t w0 = KOMIHASH_EMULU( u0, v0 );
 		const uint32_t u1 = (uint32_t) ( u >> 32 );
 		const uint32_t v1 = (uint32_t) ( v >> 32 );
-		const uint64_t t = KOMIHASH_EMULU( u1, v0 ) + ( w0 >> 32 );
+		const uint64_t t = KOMIHASH_EMULU( u1, v0 ) + (uint32_t) ( w0 >> 32 );
 		const uint64_t w1 = KOMIHASH_EMULU( u0, v1 ) + (uint32_t) t;
 
-		*rh = KOMIHASH_EMULU( u1, v1 ) + ( w1 >> 32 ) + ( t >> 32 );
+		*rh = KOMIHASH_EMULU( u1, v1 ) + (uint32_t) ( w1 >> 32 ) +
+			(uint32_t) ( t >> 32 );
 	}
 
 #endif // defined( _MSC_VER )
