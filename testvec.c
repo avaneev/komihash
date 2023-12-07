@@ -1,8 +1,8 @@
 /**
- * testvec.c version 5.0
+ * testvec.c version 5.8
  *
  * The program that lists test vectors and their hash values, for the current
- * version of komihash. Also prints initial outputs of `komirand` PRNG.
+ * version of komihash. Also prints initial outputs of the `komirand` PRNG.
  *
  * Description is available at https://github.com/avaneev/komihash
  *
@@ -34,10 +34,10 @@
 
 int main()
 {
-	const int seedc = 3;
+	#define seedc 3
 	const uint64_t seeds[ seedc ] = { 0, 0x0123456789ABCDEF, 256 };
 
-	const int strc = 5;
+	#define strc 5
 	const char* const strs[ strc ] = {
 		"This is a 32-byte testing string",
 		"The cat is out of the bag",
@@ -46,14 +46,15 @@ int main()
 		"7 chars"
 	};
 
-	const int bulkc = 17;
+	#define bulkc 17
 	const int bulks[ bulkc ] = { 3, 6, 8, 12, 20, 31, 32, 40, 47, 48, 56, 64,
 		72, 80, 112, 132, 256 };
 
-	uint8_t bulkbuf[ 256 ];
+	#define bulkbc 256
+	uint8_t bulkbuf[ bulkbc ];
 	int i;
 
-	for( i = 0; i < 256; i++ )
+	for( i = 0; i < bulkbc; i++ )
 	{
 		bulkbuf[ i ] = (uint8_t) i;
 	}
