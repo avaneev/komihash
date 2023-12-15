@@ -1,5 +1,5 @@
 /**
- * komihash.h version 5.8
+ * komihash.h version 5.9
  *
  * The inclusion file for the "komihash" hash function, "komirand" 64-bit
  * PRNG, and streamed "komihash" implementation.
@@ -154,11 +154,15 @@
 
 	#define KOMIHASH_INLINE inline __attribute__((always_inline))
 
-#else // defined( KOMIHASH_GCC_BUILTINS )
+#elif defined( _MSC_VER )
+
+	#define KOMIHASH_INLINE inline __forceinline
+
+#else // defined( _MSC_VER )
 
 	#define KOMIHASH_INLINE inline
 
-#endif // defined( KOMIHASH_GCC_BUILTINS )
+#endif // defined( _MSC_VER )
 
 /**
  * An auxiliary function that returns an unsigned 32-bit value created out of
@@ -533,7 +537,7 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 	// komirand() function. Not required for hashing (but works for it) since
 	// the input entropy is usually available in abundance during hashing.
 	//
-	// Seed5 += r2h + 0xAAAAAAAAAAAAAAAA;
+	// Seed5 += 0xAAAAAAAAAAAAAAAA;
 	//
 	// (the `0xAAAA...` constant should match register's size; essentially,
 	// it is a replication of the `10` bit-pair; it is not an arbitrary
@@ -575,14 +579,14 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
 		{
 			r2h = Seed5 ^ kh_lpu64ec_l4( Msg + 24, MsgLen - 24 );
 			r1h = Seed1 ^ kh_lu64ec( Msg + 16 );
+			KOMIHASH_HASHFIN();
 		}
 		else
 		{
 			r1h = Seed1 ^ kh_lpu64ec_l4( Msg + 16, MsgLen - 16 );
 			r2h = Seed5;
+			KOMIHASH_HASHFIN();
 		}
-
-		KOMIHASH_HASHFIN();
 	}
 
 	if( KOMIHASH_LIKELY( MsgLen > 63 ))
@@ -646,7 +650,7 @@ static KOMIHASH_INLINE uint64_t komirand( uint64_t* const Seed1,
  */
 
 typedef struct {
-	uint8_t fb[ 8 ]; ///< Stream's final byte (at [7]), array to avoid OOB.
+	uint8_t pb[ 8 ]; ///< Buffer's padding bytes, to avoid OOB.
 	uint8_t Buf[ KOMIHASH_BUFSIZE ]; ///< Buffer.
 	uint64_t Seed[ 8 ]; ///< Hashing state variables.
 	size_t BufFill; ///< Buffer fill count (position), in bytes.
@@ -753,14 +757,13 @@ static inline void komihash_stream_update( komihash_stream_t* const ctx,
 
 			if( SwMsgLen == 0 )
 			{
-				if( MsgLen == 0 )
+				if( MsgLen != 0 )
 				{
-					ctx -> fb[ 7 ] = Msg[ -1 ];
-					ctx -> BufFill = 0;
-					return;
+					break;
 				}
 
-				break;
+				ctx -> BufFill = 0;
+				return;
 			}
 
 			Msg = SwMsg;
@@ -805,9 +808,10 @@ static inline uint64_t komihash_stream_final( komihash_stream_t* const ctx )
 		return( komihash( Msg, MsgLen, ctx -> Seed[ 0 ]));
 	}
 
-	ctx -> fb[ 4 ] = 0;
-	ctx -> fb[ 5 ] = 0;
-	ctx -> fb[ 6 ] = 0;
+	ctx -> pb[ 4 ] = 0;
+	ctx -> pb[ 5 ] = 0;
+	ctx -> pb[ 6 ] = 0;
+	ctx -> pb[ 7 ] = 0;
 
 	uint64_t Seed1 = ctx -> Seed[ 0 ];
 	uint64_t Seed2 = ctx -> Seed[ 1 ];
