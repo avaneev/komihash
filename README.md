@@ -216,7 +216,7 @@ Compiler options: `-O3 -mavx2`; overhead: `5.8` cycles/h.
 |XXH64 0.8.0     |15.3           |17.9           |18.1           |
 |prvhash64m 4.1  |21.7           |27.1           |4.4            |
 
-### LLVM clang 8.0.0 64-bit, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz ###
+### LLVM clang-cl 8.0.1 64-bit, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz ###
 
 Compiler options: `/Ox -mavx2`; overhead: `5.5` cycles/h.
 
@@ -373,6 +373,19 @@ simple, but reliable, self-starting, and fast (`0.62` cycles/byte) 64-bit
 pseudo-random number generator (PRNG) with `2^64` period. It is based on the
 same mathematical construct as the `komihash` hash function. `komirand`
 passes `PractRand` tests.
+
+The PRNG has a 128-bit state which is divided into two 64-bit unsigned integer
+variables ($s_{1}$ and $s_{2}$).
+
+$$ m_{128}=s_{1} * s_{2} $$
+
+$$ s_{2}'=(s_{2}+\lfloor m_{128} / 2^{64} \rfloor +C) \mod 2^{64} $$
+
+$$ s_{1}'=(m_{128} \mod 2^{64}) \oplus s_{2}' $$
+
+$C$ is any optional 64-bit constant (to facilitate PRNG auto-start from
+$m_{128}=0$ state), but can be zero if such auto-start is not needed.
+$s_{1}'$ is used as PRNG output.
 
 ## Other ##
 
