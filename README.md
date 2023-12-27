@@ -387,6 +387,11 @@ $C$ is any optional 64-bit constant (to facilitate PRNG auto-start from
 $m_{128}=0$ state), but can be zero if such auto-start is not needed.
 $s_{1}'$ is used as PRNG output.
 
+This construction can be scaled to any even-sized registers beside 64-bit ones
+(e.g., 32, 48) - it is invariant to the register size. The $C$ used in
+`komirand` (`0xAAAA...`) is a good choice as such constant carries no spectral
+information, and its influence on the statistics and modes is minimal.
+
 ## Other ##
 
 This function is named the way it is named is to honor
