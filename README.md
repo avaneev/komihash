@@ -134,7 +134,6 @@ Compiler options: `/Ox /arch:sse2`; overhead: `1.8` cycles/h.
 |wyhash_final4   |14.2           |18.2           |29.7           |
 |XXH3_64 0.8.0   |17.5           |21.1           |29.0           |
 |XXH64 0.8.0     |12.7           |17.3           |17.3           |
-|prvhash64m 4.1  |19.9           |26.1           |4.1            |
 
 Compiler options: `/Ox -mavx2`; overhead: `1.8` cycles/h.
 
@@ -148,7 +147,6 @@ Compiler options: `/Ox -mavx2`; overhead: `1.8` cycles/h.
 |wyhash_final4   |14.2           |18.2           |29.8           |
 |XXH3_64 0.8.0   |17.7           |21.3           |61.0           |
 |XXH64 0.8.0     |12.8           |17.4           |17.1           |
-|prvhash64m 4.1  |20.0           |26.2           |4.1            |
 
 ### ICC 19.0 64-bit, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz ###
 
@@ -164,7 +162,6 @@ Compiler options: `/O3 /QxSSE2`; overhead: `2.0` cycles/h.
 |wyhash_final4   |25.9           |32.9           |12.5           |
 |XXH3_64 0.8.0   |21.8           |27.2           |29.6           |
 |XXH64 0.8.0     |24.3           |36.6           |8.9            |
-|prvhash64m 4.1  |29.9           |39.1           |3.2            |
 
 (this is likely a worst-case scenario, when a compiler was not cross-tuned
 to a competing processor architecture; also, ICC for Windows does not support
@@ -184,7 +181,6 @@ Compiler options: `-O3 -mavx2`; overhead: `5.3` cycles/h.
 |wyhash_final4   |16.2           |19.7           |29.2           |
 |XXH3_64 0.8.0   |18.0           |29.3           |51.0           |
 |XXH64 0.8.0     |12.5           |16.4           |18.2           |
-|prvhash64m 4.1  |27.0           |29.9           |4.3            |
 
 ### GCC 8.5.0 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 4.5 GHz ###
 
@@ -200,7 +196,6 @@ Compiler options: `-O3 -msse2`; overhead: `5.8` cycles/h.
 |wyhash_final4   |17.6           |20.1           |30.6           |
 |XXH3_64 0.8.0   |16.9           |22.3           |26.6           |
 |XXH64 0.8.0     |13.7           |17.7           |18.0           |
-|prvhash64m 4.1  |23.2           |27.8           |4.3            |
 
 Compiler options: `-O3 -mavx2`; overhead: `5.8` cycles/h.
 
@@ -214,7 +209,6 @@ Compiler options: `-O3 -mavx2`; overhead: `5.8` cycles/h.
 |wyhash_final4   |16.8           |19.7           |29.9           |
 |XXH3_64 0.8.0   |18.8           |23.4           |38.0           |
 |XXH64 0.8.0     |15.3           |17.9           |18.1           |
-|prvhash64m 4.1  |21.7           |27.1           |4.4            |
 
 ### LLVM clang-cl 8.0.1 64-bit, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz ###
 
@@ -230,7 +224,6 @@ Compiler options: `/Ox -mavx2`; overhead: `5.5` cycles/h.
 |wyhash_final4   |15.5           |20.4           |29.8           |
 |XXH3_64 0.8.0   |18.4           |23.0           |48.3           |
 |XXH64 0.8.0     |13.2           |17.3           |17.7           |
-|prvhash64m 4.1  |23.2           |29.6           |4.1            |
 
 ### ICC 19.0 64-bit, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz ###
 
@@ -246,7 +239,6 @@ Compiler options: `/O3 /QxSSE2`; overhead: `5.9` cycles/h.
 |wyhash_final4   |21.1           |26.1           |19.4           |
 |XXH3_64 0.8.0   |19.9           |25.8           |28.0           |
 |XXH64 0.8.0     |18.8           |24.7           |16.0           |
-|prvhash64m 4.1  |25.5           |32.4           |3.2            |
 
 ### Apple clang 12.0.0 64-bit, macOS 12.0.1, Apple M1, 3.5 GHz ###
 
@@ -262,7 +254,6 @@ Compiler options: `-O3`; overhead: `0` (unestimatable).
 |wyhash_final4   |7.9            |8.1            |26.1           |
 |XXH3_64 0.8.0   |8.2            |8.2            |30.5           |
 |XXH64 0.8.0     |8.8            |10.4           |14.5           |
-|prvhash64m 4.1  |12.9           |16.8           |3.5            |
 
 Notes: `XXH3_64` is unseeded (seeded variant is 1 cycle/h higher). `bulk` is
 256000 bytes: this means it is mainly a cache-bound performance, not
@@ -282,7 +273,6 @@ overhead. Measurement error is approximately 3%.
 |wyhash_final4   |12.8           |16.6           |
 |XXH3_64 0.8.0   |13.7           |18.6           |
 |XXH64 0.8.0     |10.9           |15.8           |
-|prvhash64m 4.1  |18.8           |24.6           |
 
 This is the throughput comparison of hash functions on Ryzen 3700X. The used
 measurement method actually measures hash function's "latencied throughput",
@@ -387,10 +377,20 @@ $C$ is any optional 64-bit constant (to facilitate PRNG auto-start from
 $m_{128}=0$ state), but can be zero if such auto-start is not needed.
 $s_{1}'$ is used as PRNG output.
 
-This construction can be scaled to any even-sized registers beside 64-bit ones
+This construct can be scaled to any even-sized registers beside 64-bit ones
 (e.g., 32, 48) - it is invariant to the register size. The $C$ used in
 `komirand` (`0xAAAA...`) is a good choice as such constant carries no spectral
 information, and its influence on the statistics and modes is minimal.
+
+For hashing, the following expression for $m_{128}$ is used:
+
+$$ m_{128}=(s_{1} \oplus x_{1}) * (s_{2} \oplus x_{2}) $$
+
+Where $x_{1}$ and $x_{2}$ are 64-bit parts of a message/string being hashed.
+Since $s_{1}$ and $s_{2}$ are uniformly-distributed values, such mixing is
+equivalent to mixing a message with a cryptographic one-time-pad (bitwise
+modulo 2 addition). Message's statistics and distribution become unimportant,
+and do not change the uniform distribution of $s_{1}$ and $s_{2}$.
 
 ## Other ##
 
