@@ -1,5 +1,5 @@
 /**
- * testvec.c version 5.8
+ * testvec.c version 5.9
  *
  * The program that lists test vectors and their hash values, for the current
  * version of komihash. Also prints initial outputs of the `komirand` PRNG.
@@ -63,20 +63,20 @@ int main()
 
 	for( j = 0; j < seedc; j++ )
 	{
-		printf( "\tkomihash UseSeed = 0x%016llx:\n", seeds[ j ]);
+		printf( "komihash UseSeed = 0x%016llx:\n", seeds[ j ]);
 
 		for( i = 0; i < strc; i++ )
 		{
 			const char* const s = strs[ i ];
 			const size_t sl = strlen( s );
 
-			printf( "\t\"%s\" = 0x%016llx\n", s,
+			printf( "\"%s\" = 0x%016llx\n", s,
 				komihash( s, sl, seeds[ j ]));
 		}
 
 		for( i = 0; i < bulkc; i++ )
 		{
-			printf( "\tbulk(%i) = 0x%016llx\n", bulks[ i ],
+			printf( "bulk(%i) = 0x%016llx\n", bulks[ i ],
 				komihash( bulkbuf, bulks[ i ], seeds[ j ]));
 		}
 
@@ -85,14 +85,14 @@ int main()
 
 	for( j = 0; j < seedc; j++ )
 	{
-		printf( "\tkomirand Seed1/Seed2 = 0x%016llx:\n", seeds[ j ]);
+		printf( "komirand Seed1/Seed2 = 0x%016llx:\n", seeds[ j ]);
 
 		uint64_t Seed1 = seeds[ j ];
 		uint64_t Seed2 = seeds[ j ];
 
 		for( i = 0; i < 12; i++ )
 		{
-			printf( "\t0x%016llx\n", komirand( &Seed1, &Seed2 ));
+			printf( "0x%016llx\n", komirand( &Seed1, &Seed2 ));
 		}
 
 		printf( "\n" );

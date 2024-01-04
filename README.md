@@ -61,11 +61,11 @@ compiler's branching optimization). In most cases, incremental hashing of even
 a few 2-8-byte values may be faster than using pre-buffering if the overall
 input length is not known in advance.
 
-```
-	uint64_t HashVal = komihash( &val1, sizeof( val1 ), Seed );
-	HashVal = komihash( &val2, sizeof( val2 ), HashVal );
-	...
-	HashVal = komihash( &valN, sizeof( valN ), HashVal );
+```c
+uint64_t HashVal = komihash( &val1, sizeof( val1 ), Seed );
+HashVal = komihash( &val2, sizeof( val2 ), HashVal );
+...
+HashVal = komihash( &valN, sizeof( valN ), HashVal );
 ```
 
 Note that this approach is not the same as "streamed" hashing since this
@@ -84,16 +84,16 @@ The `komihash.h` file also features a fast continuously-streamed
 implementation of the `komihash` hash function. Streamed hashing expects any
 number of `update` calls inbetween the `init` and `final` calls:
 
-```
-	komihash_stream_t ctx;
-	komihash_stream_init( &ctx, UseSeed );
+```c
+komihash_stream_t ctx;
+komihash_stream_init( &ctx, UseSeed );
 
-	komihash_stream_update( &ctx, &val1, sizeof( val1 ));
-	komihash_stream_update( &ctx, &val2, sizeof( val2 ));
-	...
-	komihash_stream_update( &ctx, &valN, sizeof( valN ));
+komihash_stream_update( &ctx, &val1, sizeof( val1 ));
+komihash_stream_update( &ctx, &val2, sizeof( val2 ));
+...
+komihash_stream_update( &ctx, &valN, sizeof( valN ));
 
-	uint64_t Hash = komihash_stream_final( &ctx );
+uint64_t Hash = komihash_stream_final( &ctx );
 ```
 
 Since the `final` function is non-destructive to the context structure, the
@@ -293,32 +293,32 @@ subsequent accesses. This, and many other synthetic hash function tests should
 be taken with a grain of salt. Only an actual use-case can reveal which hash
 function is preferrable.
 
-```
-	const uint64_t rc = 1ULL << 26;
-	const int minl = 8; const int maxl = 28;
-	volatile uint64_t msg[ 8 ] = { 0 };
-	uint64_t v = 0;
+```c++
+const uint64_t rc = 1ULL << 26;
+const int minl = 8; const int maxl = 28;
+volatile uint64_t msg[ 8 ] = { 0 };
+uint64_t v = 0;
 
-	const TClock t1( CSystem :: getClock() );
+const TClock t1( CSystem :: getClock() );
 
-	for( int k = minl; k <= maxl; k++ )
-	{
-		volatile size_t msgl = k;
-		volatile uint64_t sd = k + 1;
+for( int k = minl; k <= maxl; k++ )
+{
+    volatile size_t msgl = k;
+    volatile uint64_t sd = k + 1;
 
-		for( uint64_t i = 0; i < rc; i++ )
-		{
-			v ^= komihash( (uint8_t*) &msg, msgl, sd );
-//			v ^= wyhash( (uint8_t*) &msg, msgl, sd, _wyp );
-//			v ^= XXH3_64bits( (uint8_t*) &msg, msgl );
-//			v ^= msg[ 0 ]; // Used to estimate the overhead.
-			msg[ 0 ]++;
-		}
-	}
+    for( uint64_t i = 0; i < rc; i++ )
+    {
+        v ^= komihash( (uint8_t*) &msg, msgl, sd );
+//        v ^= wyhash( (uint8_t*) &msg, msgl, sd, _wyp );
+//        v ^= XXH3_64bits( (uint8_t*) &msg, msgl );
+//        v ^= msg[ 0 ]; // Used to estimate the overhead.
+        msg[ 0 ]++;
+    }
+}
 
-	printf( "%016llx\n", v );
-	printf( "%.1f\n", CSystem :: getClockDiffSec( t1 ) * 4.2e9 /
-		( rc * ( maxl - minl + 1 ))); // 4.5 on Xeon, 4.5 on i7700K, 3.5 on M1
+printf( "%016llx\n", v );
+printf( "%.1f\n", CSystem :: getClockDiffSec( t1 ) * 4.2e9 /
+    ( rc * ( maxl - minl + 1 ))); // 4.5 on Xeon, 4.5 on i7700K, 3.5 on M1
 ```
 
 ## Discussion ##
@@ -406,119 +406,118 @@ buffer with increasing 8-bit values; `bulk` hashes are calculated from this
 buffer using various lengths. See the `testvec.c` file for details.
 
 ```
-	komihash UseSeed = 0x0000000000000000:
-	"This is a 32-byte testing string" = 0x05ad960802903a9d
-	"The cat is out of the bag" = 0xd15723521d3c37b1
-	"A 16-byte string" = 0x467caa28ea3da7a6
-	"The new string" = 0xf18e67bc90c43233
-	"7 chars" = 0x2c514f6e5dcb11cb
-	bulk(3) = 0x7a9717e9eea4be8b
-	bulk(6) = 0xa56469564c2ea0ff
-	bulk(8) = 0x00b4313a24431306
-	bulk(12) = 0x64c2ad96013f70fe
-	bulk(20) = 0x7a3888bc95545364
-	bulk(31) = 0xc77e02ed4b201b9a
-	bulk(32) = 0x256d74350303a1ba
-	bulk(40) = 0x59609c71697bb9df
-	bulk(47) = 0x36eb9e6a4c2c5e4b
-	bulk(48) = 0x8dd56c332850baa6
-	bulk(56) = 0xcbb722192b353999
-	bulk(64) = 0x90b07e2158f88cc0
-	bulk(72) = 0x24c9621701603741
-	bulk(80) = 0x1d4c1d97ca684334
-	bulk(112) = 0xd1a425d530652287
-	bulk(132) = 0x72623be342c20ab5
-	bulk(256) = 0x94c3dbdca59ddf57
+komihash UseSeed = 0x0000000000000000:
+"This is a 32-byte testing string" = 0x05ad960802903a9d
+"The cat is out of the bag" = 0xd15723521d3c37b1
+"A 16-byte string" = 0x467caa28ea3da7a6
+"The new string" = 0xf18e67bc90c43233
+"7 chars" = 0x2c514f6e5dcb11cb
+bulk(3) = 0x7a9717e9eea4be8b
+bulk(6) = 0xa56469564c2ea0ff
+bulk(8) = 0x00b4313a24431306
+bulk(12) = 0x64c2ad96013f70fe
+bulk(20) = 0x7a3888bc95545364
+bulk(31) = 0xc77e02ed4b201b9a
+bulk(32) = 0x256d74350303a1ba
+bulk(40) = 0x59609c71697bb9df
+bulk(47) = 0x36eb9e6a4c2c5e4b
+bulk(48) = 0x8dd56c332850baa6
+bulk(56) = 0xcbb722192b353999
+bulk(64) = 0x90b07e2158f88cc0
+bulk(72) = 0x24c9621701603741
+bulk(80) = 0x1d4c1d97ca684334
+bulk(112) = 0xd1a425d530652287
+bulk(132) = 0x72623be342c20ab5
+bulk(256) = 0x94c3dbdca59ddf57
 
-	komihash UseSeed = 0x0123456789abcdef:
-	"This is a 32-byte testing string" = 0x6ce66a2e8d4979a5
-	"The cat is out of the bag" = 0x5b1da0b43545d196
-	"A 16-byte string" = 0x26af914213d0c915
-	"The new string" = 0x62d9ca1b73250cb5
-	"7 chars" = 0x90ab7c9f831cd940
-	bulk(3) = 0x84ae4eb65b96617e
-	bulk(6) = 0xaceebc32a3c0d9e4
-	bulk(8) = 0xdaa1a90ecb95f6f8
-	bulk(12) = 0xec8eb3ef4af380b4
-	bulk(20) = 0x07045bd31abba34c
-	bulk(31) = 0xd5f619fb2e62c4ae
-	bulk(32) = 0x5a336fd2c4c39abe
-	bulk(40) = 0x0e870b4623eea8ec
-	bulk(47) = 0xe552edd6bf419d1d
-	bulk(48) = 0x37d170ddcb1223e6
-	bulk(56) = 0x1cd89e708e5098b6
-	bulk(64) = 0x765490569ccd77f2
-	bulk(72) = 0x19e9d77b86d01ee8
-	bulk(80) = 0x25f83ee520c1d241
-	bulk(112) = 0xd6007417091cd4c0
-	bulk(132) = 0x3e49c2d3727b9cc9
-	bulk(256) = 0xb2b3405ee5d65f4c
+komihash UseSeed = 0x0123456789abcdef:
+"This is a 32-byte testing string" = 0x6ce66a2e8d4979a5
+"The cat is out of the bag" = 0x5b1da0b43545d196
+"A 16-byte string" = 0x26af914213d0c915
+"The new string" = 0x62d9ca1b73250cb5
+"7 chars" = 0x90ab7c9f831cd940
+bulk(3) = 0x84ae4eb65b96617e
+bulk(6) = 0xaceebc32a3c0d9e4
+bulk(8) = 0xdaa1a90ecb95f6f8
+bulk(12) = 0xec8eb3ef4af380b4
+bulk(20) = 0x07045bd31abba34c
+bulk(31) = 0xd5f619fb2e62c4ae
+bulk(32) = 0x5a336fd2c4c39abe
+bulk(40) = 0x0e870b4623eea8ec
+bulk(47) = 0xe552edd6bf419d1d
+bulk(48) = 0x37d170ddcb1223e6
+bulk(56) = 0x1cd89e708e5098b6
+bulk(64) = 0x765490569ccd77f2
+bulk(72) = 0x19e9d77b86d01ee8
+bulk(80) = 0x25f83ee520c1d241
+bulk(112) = 0xd6007417091cd4c0
+bulk(132) = 0x3e49c2d3727b9cc9
+bulk(256) = 0xb2b3405ee5d65f4c
 
-	komihash UseSeed = 0x0000000000000100:
-	"This is a 32-byte testing string" = 0x5f197b30bcec1e45
-	"The cat is out of the bag" = 0xa761280322bb7698
-	"A 16-byte string" = 0x11c31ccabaa524f1
-	"The new string" = 0x3a43b7f58281c229
-	"7 chars" = 0xcff90b0466b7e3a2
-	bulk(3) = 0x8ab53f45cc9315e3
-	bulk(6) = 0xea606e43d1976ccf
-	bulk(8) = 0x889b2f2ceecbec73
-	bulk(12) = 0xacbec1886cd23275
-	bulk(20) = 0x57c3affd1b71fcdb
-	bulk(31) = 0x7ef6ba49a3b068c3
-	bulk(32) = 0x49dbca62ed5a1ddf
-	bulk(40) = 0x192848484481e8c0
-	bulk(47) = 0x420b43a5edba1bd7
-	bulk(48) = 0xd6e8400a9de24ce3
-	bulk(56) = 0xbea291b225ff384d
-	bulk(64) = 0x0ec94062b2f06960
-	bulk(72) = 0xfa613272ecd49985
-	bulk(80) = 0x76f0bb380bc207be
-	bulk(112) = 0x4afb4e08ca77c020
-	bulk(132) = 0x410f9c129ad88aea
-	bulk(256) = 0x066c7b25f4f569ae
-```
+komihash UseSeed = 0x0000000000000100:
+"This is a 32-byte testing string" = 0x5f197b30bcec1e45
+"The cat is out of the bag" = 0xa761280322bb7698
+"A 16-byte string" = 0x11c31ccabaa524f1
+"The new string" = 0x3a43b7f58281c229
+"7 chars" = 0xcff90b0466b7e3a2
+bulk(3) = 0x8ab53f45cc9315e3
+bulk(6) = 0xea606e43d1976ccf
+bulk(8) = 0x889b2f2ceecbec73
+bulk(12) = 0xacbec1886cd23275
+bulk(20) = 0x57c3affd1b71fcdb
+bulk(31) = 0x7ef6ba49a3b068c3
+bulk(32) = 0x49dbca62ed5a1ddf
+bulk(40) = 0x192848484481e8c0
+bulk(47) = 0x420b43a5edba1bd7
+bulk(48) = 0xd6e8400a9de24ce3
+bulk(56) = 0xbea291b225ff384d
+bulk(64) = 0x0ec94062b2f06960
+bulk(72) = 0xfa613272ecd49985
+bulk(80) = 0x76f0bb380bc207be
+bulk(112) = 0x4afb4e08ca77c020
+bulk(132) = 0x410f9c129ad88aea
+bulk(256) = 0x066c7b25f4f569ae
 
-```
-	komirand Seed1/Seed2 = 0x0000000000000000:
-	0xaaaaaaaaaaaaaaaa
-	0xfffffffffffffffe
-	0x4924924924924910
-	0xbaebaebaebaeba00
-	0x400c62cc4727496b
-	0x35a969173e8f925b
-	0xdb47f6bae9a247ad
-	0x98e0f6cece6711fe
-	0x97ffa2397fda534b
-	0x11834262360df918
-	0x34e53df5399f2252
-	0xecaeb74a81d648ed
+komirand Seed1/Seed2 = 0x0000000000000000:
+0xaaaaaaaaaaaaaaaa
+0xfffffffffffffffe
+0x4924924924924910
+0xbaebaebaebaeba00
+0x400c62cc4727496b
+0x35a969173e8f925b
+0xdb47f6bae9a247ad
+0x98e0f6cece6711fe
+0x97ffa2397fda534b
+0x11834262360df918
+0x34e53df5399f2252
+0xecaeb74a81d648ed
 
-	komirand Seed1/Seed2 = 0x0123456789abcdef:
-	0x776ad9718078ca64
-	0x737aa5d5221633d0
-	0x685046cca30f6f44
-	0xfb725cb01b30c1ba
-	0xc501cc999ede619f
-	0x8427298e525db507
-	0xd9baf3c54781f75e
-	0x7f5a4e5b97b37c7b
-	0xde8a0afe8e03b8c1
-	0xb6ed3e72b69fc3d6
-	0xa68727902f7628d0
-	0x44162b63af484587
+komirand Seed1/Seed2 = 0x0123456789abcdef:
+0x776ad9718078ca64
+0x737aa5d5221633d0
+0x685046cca30f6f44
+0xfb725cb01b30c1ba
+0xc501cc999ede619f
+0x8427298e525db507
+0xd9baf3c54781f75e
+0x7f5a4e5b97b37c7b
+0xde8a0afe8e03b8c1
+0xb6ed3e72b69fc3d6
+0xa68727902f7628d0
+0x44162b63af484587
 
-	komirand Seed1/Seed2 = 0x0000000000000100:
-	0xaaaaaaaaaaababaa
-	0xfffffffff8fcf8fe
-	0xdb6dba1e4dbb1134
-	0xf5b7d3aec37f4cb1
-	0x66a571da7ded7051
-	0x2d59ec9245bf03d9
-	0x5c06a41bd510aed8
-	0xea5e7ea9d2bd07a2
-	0xe395015ddce7756f
-	0xc07981aaeaae3b38
-	0x2e120ebfee59a5a2
-	0x9001eee495244dba
+komirand Seed1/Seed2 = 0x0000000000000100:
+0xaaaaaaaaaaababaa
+0xfffffffff8fcf8fe
+0xdb6dba1e4dbb1134
+0xf5b7d3aec37f4cb1
+0x66a571da7ded7051
+0x2d59ec9245bf03d9
+0x5c06a41bd510aed8
+0xea5e7ea9d2bd07a2
+0xe395015ddce7756f
+0xc07981aaeaae3b38
+0x2e120ebfee59a5a2
+0x9001eee495244dba
+
 ```
