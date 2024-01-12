@@ -43,7 +43,9 @@ overhead by 1-2 cycles/hash (compiler-dependent).
 This function passes all [SMHasher](https://github.com/rurban/smhasher) tests.
 The performance (expressed in cycles/byte) of this hash function on various
 platforms is best evaluated at the
-[ECRYPT/eBASH project](https://bench.cr.yp.to/results-hash.html).
+[ECRYPT/eBASH project](https://bench.cr.yp.to/results-hash.html). Thanks to
+[Daniel J. Bernstein](https://en.wikipedia.org/wiki/Daniel_J._Bernstein) for
+maintaining the benchmark.
 
 This function and its source code (which is
 [ISO C99](https://en.wikipedia.org/wiki/C99)) were quality-tested on:
@@ -322,6 +324,11 @@ printf( "%.1f\n", CSystem :: getClockDiffSec( t1 ) * 4.2e9 /
 ```
 
 ## Discussion ##
+
+Does `komihash` feature identity hashing? No, it does not. If you are using
+fixed-size keys, it is by all means advisable to use direct key values, and
+not the ones obtained via a hash function. Adding the identity hashing feature
+to any hash function increases the overhead.
 
 You may wonder, why `komihash` does not include a quite common `^MsgLen` XOR
 instruction at some place in the code? The main reason is that due to the way
