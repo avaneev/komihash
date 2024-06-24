@@ -115,7 +115,6 @@ produce a hash value of any required bit-size.
 * [LUA, by rangercyh](https://github.com/rangercyh/lua-komihash)
 * [.NET, by TommasoBelluzzo](https://www.nuget.org/packages/FastHashes/)
 * [Rust, by thynson](https://crates.io/crates/komihash)
-* [Zig, by tensorush](https://github.com/tensorush/zig-komihash)
 
 ## Comparisons ##
 
