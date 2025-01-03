@@ -404,6 +404,15 @@ This function is named the way it is named is to honor
 the [Komi Republic](https://en.wikipedia.org/wiki/Komi_Republic) (located in
 Russia), native to the author.
 
+According to OMNIUM REGIONUM MOSCOVIAE DESCRIPTIO by ALEXANDRI GWAGNINI
+VERONENSIS 1611, the territory of the Komi Republic was internationally
+known as Condora Regio inhabited by people worshipping a golden
+(sun-shining) woman-goddess holding a child and a spear, Зарни Ань
+(Zarni Ana). Condora is also mentioned as a territory near Mezena river
+on the map produced by Englishman Anthony Jenkinson in 1562.
+"Condora" may have meant a "pine country" (from Komi "conda"-pine and
+"dor"-country, region).
+
 ## Test Vectors ##
 
 Test vectors for the current version of `komihash`, string-hash pairs (note
