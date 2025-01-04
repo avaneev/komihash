@@ -407,11 +407,15 @@ Russia), native to the author.
 According to OMNIUM REGIONUM MOSCOVIAE DESCRIPTIO by ALEXANDRI GWAGNINI
 VERONENSIS 1611, the territory of the Komi Republic was internationally
 known as Condora Regio inhabited by people worshipping a golden
-(sun-shining) woman-goddess holding a child and a spear, Зарни Ань
-(Zarni Ana). Condora is also mentioned as a territory near Mezena river
+(sun-shining) woman-goddess, usually depicted as holding a child and
+a spear, Zarni Ana (Зарни Ань), and usually roughly translated as
+Zlatababa. Condora is also mentioned as a territory near Mezena river
 on the map produced by Englishman Anthony Jenkinson in 1562.
 "Condora" may have meant a "pine country" (from Komi "conda"-pine and
-"dor"-country, region).
+"dor"-region, land area, country). Southern part of the modern Komi
+Republic near the Voichegda and Vischera rivers, baptized by bishop
+Stephen Velickopermsky, was known as Permia, which does not correspond
+to the modern Perm region near Cama river.
 
 ## Test Vectors ##
 
