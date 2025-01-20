@@ -717,8 +717,12 @@ static inline uint64_t komihash( const void* const Msg0, size_t MsgLen,
  *
  * @param[in,out] Seed1 Seed value 1. Can be initialized to any value
  * (even 0). This is the usual "PRNG seed" value.
- * @param[in,out] Seed2 Seed value 2, a supporting variable. Best initialized
- * to the same value as `Seed1`.
+ * @param[in,out] Seed2 Seed value 2, a supporting variable.
+ *
+ * Seed1 and Seed2 are best initialized using random bits from your OS's
+ * entropy pool. Seeds can be the same, or even 0, if a sufficient
+ * "warm up" process is used before consuming random values.
+ *
  * @return The next uniformly-random 64-bit value.
  */
 
