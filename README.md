@@ -399,6 +399,28 @@ equivalent to mixing a message with a cryptographic one-time-pad (bitwise
 modulo 2 addition). Message's statistics and distribution become unimportant,
 and do not change the uniform distribution of $s_{1}$ and $s_{2}$.
 
+Like most PRNGs Komirand takes two seed values: Seed1 and Seed2. Seed1 and
+Seed2 are best initialized using random bits from your OS's entropy pool.
+Seeds can be the same, or even 0, if a sufficient "warm up" process is used
+before consuming random values.
+
+```
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include "komihash.h"
+
+int main(int argc, char *argv[]) {
+	uint64_t seed1 = time(NULL);
+	uint64_t seed2 = seed1 * 0x61c8864680b583ebull;
+
+	for (uint8_t i = 0; i < 5; i++) {
+		uint64_t rand_num = komirand(&seed1, &seed2);
+		printf("Komirand: %llu\n", rand_num);
+	}
+}
+```
+
 ## Other ##
 
 This function is named the way it is named is to honor
