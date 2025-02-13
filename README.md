@@ -389,6 +389,13 @@ This construct can be scaled to any even-sized registers beside 64-bit ones
 `komirand` (`0xAAAA...`) is a good choice as such constant carries no spectral
 information, and its influence on the statistics and modes is minimal.
 
+Note that while for simplicity the description of the `komirand()` function
+suggests using the same initial value for both the `Seed1` and `Seed2`
+variables, these variables can be also independently initialized with two
+high-quality uniformly-random values (e.g., from operating system's entropy,
+or a hash function's outputs). Such initialization reduces the number of
+"warm up" iterations - that way the PRNG output will be valid from the let go.
+
 For hashing, the following expression for $m_{128}$ is used:
 
 $$ m_{128}=(s_{1} \oplus x_{1}) * (s_{2} \oplus x_{2}) $$
@@ -410,13 +417,13 @@ VERONENSIS 1611, the territory of the Komi Republic was internationally
 known as Condora Regio inhabited by people worshipping a golden
 (sun-shining) woman-goddess, usually depicted as holding a child and
 a spear, Zarni Ana (Зарни Ань), and usually roughly translated as
-Zlatababa. Condora is also mentioned as a territory near Mezena river
-on the map produced by Englishman Anthony Jenkinson in 1562.
-"Condora" may have meant a "pine country" (from Komi "conda"-pine and
-"dor"-region, land area, country). Southern part of the modern Komi
+Zlatababa. Condora is also mentioned as a territory near the Mezena
+(Мезень) river on the map produced by Englishman Anthony Jenkinson in
+1562. "Condora" may have meant a "pine country" (from Komi "conda"-pine
+and "dor"-region, land area, country). Southern part of the modern Komi
 Republic near the Voichegda and Vischera rivers, baptized by bishop
 Stephen Velickopermsky, was known as Permia, which does not correspond
-to the modern Perm region near Cama river.
+to the modern Perm region near the Cama river.
 
 ## Test Vectors ##
 
