@@ -1,7 +1,7 @@
 /**
  * @file komihash.h
  *
- * @version 5.10
+ * @version 5.11
  *
  * @brief The inclusion file for the "komihash" 64-bit hash function,
  * "komirand" 64-bit PRNG, and streamed "komihash".
@@ -15,7 +15,7 @@
  *
  * LICENSE:
  *
- * Copyright (c) 2021-2024 Aleksey Vaneev
+ * Copyright (c) 2021-2025 Aleksey Vaneev
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -42,7 +42,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#define KOMIHASH_VER_STR "5.10" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.11" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_LITTLE_ENDIAN
@@ -421,7 +421,7 @@ static KOMIHASH_INLINE uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 	static KOMIHASH_INLINE void kh_m128( const uint64_t u, const uint64_t v,
 		uint64_t* const rl, uint64_t* const rha )
 	{
-		const unsigned __int128 r = (unsigned __int128) u * v;
+		const __uint128_t r = (__uint128_t) u * v;
 
 		*rha += (uint64_t) ( r >> 64 );
 		*rl = (uint64_t) r;
