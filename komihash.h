@@ -1,7 +1,7 @@
 /**
  * @file komihash.h
  *
- * @version 5.14
+ * @version 5.15
  *
  * @brief The inclusion file for the "komihash" 64-bit hash function,
  * "komirand" 64-bit PRNG, and streamed "komihash" implementation.
@@ -39,7 +39,7 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.14" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.15" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_U64_C( x )
@@ -324,7 +324,7 @@ KOMIHASH_INLINE_F uint32_t kh_lu32ec( const KOMIHASH_U8* const p )
 
 #else // defined( KOMIHASH_EC32 )
 
-	return( p[ 3 ] | p[ 2 ] << 8 | p[ 1 ] << 16 | p[ 0 ] << 24 );
+	return( p[ 0 ] | p[ 1 ] << 8 | p[ 2 ] << 16 | p[ 3 ] << 24 );
 
 #endif // defined( KOMIHASH_EC32 )
 }
