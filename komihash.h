@@ -1,7 +1,7 @@
 /**
  * @file komihash.h
  *
- * @version 5.13
+ * @version 5.14
  *
  * @brief The inclusion file for the "komihash" 64-bit hash function,
  * "komirand" 64-bit PRNG, and streamed "komihash" implementation.
@@ -39,7 +39,7 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.13" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.14" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_U64_C( x )
@@ -53,6 +53,11 @@
  * environment.
  */
 
+/**
+ * @def KOMIHASH_U8
+ * @brief Macro that defines unsigned 8-bit type, for C++ aliasing compliance.
+ */
+
 #if defined( __cplusplus ) && __cplusplus >= 201103L
 
 	#include <cstdint>
@@ -60,6 +65,7 @@
 
 	#define KOMIHASH_U64_C( x ) UINT64_C( x )
 	#define KOMIHASH_NOEX noexcept
+	#define KOMIHASH_U8 unsigned char
 
 #else // __cplusplus
 
@@ -68,6 +74,7 @@
 
 	#define KOMIHASH_U64_C( x ) (uint64_t) ( x )
 	#define KOMIHASH_NOEX
+	#define KOMIHASH_U8 uint8_t
 
 #endif // __cplusplus
 
@@ -167,12 +174,14 @@
 /**
  * @def KOMIHASH_EC32( v )
  * @brief Macro that appies 32-bit byte-swapping, for endianness-correction.
+ * Undefined for unknown compilers, if big-endian.
  * @param v Value to byte-swap.
  */
 
 /**
  * @def KOMIHASH_EC64( v )
  * @brief Macro that appies 64-bit byte-swapping, for endianness-correction.
+ * Undefined for unknown compilers, if big-endian.
  * @param v Value to byte-swap.
  */
 
@@ -194,24 +203,6 @@
 
 		#define KOMIHASH_EC32( v ) _byteswap_ulong( v )
 		#define KOMIHASH_EC64( v ) _byteswap_uint64( v )
-
-	#else // defined( _MSC_VER )
-
-		#define KOMIHASH_EC32( v ) (uint32_t) ( \
-			v >> 24 | \
-			( v & 0x00FF0000 ) >> 8 | \
-			( v & 0x0000FF00 ) << 8 | \
-			v << 24 )
-
-		#define KOMIHASH_EC64( v ) (uint64_t) ( \
-			v >> 56 | \
-			( v & KOMIHASH_U64_C( 0x00FF000000000000 )) >> 40 | \
-			( v & KOMIHASH_U64_C( 0x0000FF0000000000 )) >> 24 | \
-			( v & KOMIHASH_U64_C( 0x000000FF00000000 )) >> 8 | \
-			( v & KOMIHASH_U64_C( 0x00000000FF000000 )) << 8 | \
-			( v & KOMIHASH_U64_C( 0x0000000000FF0000 )) << 24 | \
-			( v & KOMIHASH_U64_C( 0x000000000000FF00 )) << 40 | \
-			v << 56 )
 
 	#endif // defined( _MSC_VER )
 
@@ -321,12 +312,21 @@
  * @return Endianness-corrected 32-bit value from memory.
  */
 
-KOMIHASH_INLINE_F uint32_t kh_lu32ec( const uint8_t* const p ) KOMIHASH_NOEX
+KOMIHASH_INLINE_F uint32_t kh_lu32ec( const KOMIHASH_U8* const p )
+	KOMIHASH_NOEX
 {
+#if defined( KOMIHASH_EC32 )
+
 	uint32_t v;
 	memcpy( &v, p, 4 );
 
 	return( KOMIHASH_EC32( v ));
+
+#else // defined( KOMIHASH_EC32 )
+
+	return( p[ 3 ] | p[ 2 ] << 8 | p[ 1 ] << 16 | p[ 0 ] << 24 );
+
+#endif // defined( KOMIHASH_EC32 )
 }
 
 /**
@@ -341,12 +341,21 @@ KOMIHASH_INLINE_F uint32_t kh_lu32ec( const uint8_t* const p ) KOMIHASH_NOEX
  * @return Endianness-corrected 64-bit value from memory.
  */
 
-KOMIHASH_INLINE_F uint64_t kh_lu64ec( const uint8_t* const p ) KOMIHASH_NOEX
+KOMIHASH_INLINE_F uint64_t kh_lu64ec( const KOMIHASH_U8* const p )
+	KOMIHASH_NOEX
 {
+#if defined( KOMIHASH_EC64 )
+
 	uint64_t v;
 	memcpy( &v, p, 8 );
 
 	return( KOMIHASH_EC64( v ));
+
+#else // defined( KOMIHASH_EC64 )
+
+	return( kh_lu32ec( p ) | (uint64_t) kh_lu32ec( p + 4 ) << 32 );
+
+#endif // defined( KOMIHASH_EC64 )
 }
 
 /**
@@ -362,14 +371,14 @@ KOMIHASH_INLINE_F uint64_t kh_lu64ec( const uint8_t* const p ) KOMIHASH_NOEX
  * @return Final byte-padded value from the message.
  */
 
-KOMIHASH_INLINE_F uint64_t kh_lpu64ec_l3( const uint8_t* const Msg,
+KOMIHASH_INLINE_F uint64_t kh_lpu64ec_l3( const KOMIHASH_U8* const Msg,
 	const size_t MsgLen ) KOMIHASH_NOEX
 {
 	const int ml8 = (int) ( MsgLen * 8 );
 
 	if( MsgLen < 4 )
 	{
-		const uint8_t* const Msg3 = Msg + MsgLen - 3;
+		const KOMIHASH_U8* const Msg3 = Msg + MsgLen - 3;
 		const uint64_t m = (uint64_t) Msg3[ 0 ] | (uint64_t) Msg3[ 1 ] << 8 |
 			(uint64_t) Msg3[ 2 ] << 16;
 
@@ -395,7 +404,7 @@ KOMIHASH_INLINE_F uint64_t kh_lpu64ec_l3( const uint8_t* const Msg,
  * @return Final byte-padded value from the message.
  */
 
-KOMIHASH_INLINE_F uint64_t kh_lpu64ec_nz( const uint8_t* const Msg,
+KOMIHASH_INLINE_F uint64_t kh_lpu64ec_nz( const KOMIHASH_U8* const Msg,
 	const size_t MsgLen ) KOMIHASH_NOEX
 {
 	const int ml8 = (int) ( MsgLen * 8 );
@@ -436,7 +445,7 @@ KOMIHASH_INLINE_F uint64_t kh_lpu64ec_nz( const uint8_t* const Msg,
  * @return Final byte-padded value from the message.
  */
 
-KOMIHASH_INLINE_F uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
+KOMIHASH_INLINE_F uint64_t kh_lpu64ec_l4( const KOMIHASH_U8* const Msg,
 	const size_t MsgLen ) KOMIHASH_NOEX
 {
 	const int ml8 = (int) ( MsgLen * 8 );
@@ -659,7 +668,7 @@ KOMIHASH_INLINE_F uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
  * @return 64-bit hash value.
  */
 
-KOMIHASH_INLINE_F uint64_t komihash_epi( const uint8_t* Msg,
+KOMIHASH_INLINE_F uint64_t komihash_epi( const KOMIHASH_U8* Msg,
 	size_t MsgLen, uint64_t Seed1, uint64_t Seed5 ) KOMIHASH_NOEX
 {
 	uint64_t r1h, r2h;
@@ -719,7 +728,7 @@ KOMIHASH_INLINE_F uint64_t komihash_epi( const uint8_t* Msg,
 KOMIHASH_INLINE uint64_t komihash( const void* const Msg0, size_t MsgLen,
 	const uint64_t UseSeed ) KOMIHASH_NOEX
 {
-	const uint8_t* Msg = (const uint8_t*) Msg0;
+	const KOMIHASH_U8* Msg = (const KOMIHASH_U8*) Msg0;
 
 	uint64_t Seed1 = KOMIHASH_IVAL1 ^ ( UseSeed & KOMIHASH_VAL01 );
 	uint64_t Seed5 = KOMIHASH_IVAL5 ^ ( UseSeed & KOMIHASH_VAL10 );
@@ -849,8 +858,8 @@ KOMIHASH_INLINE_F uint64_t komirand( uint64_t* const Seed1,
  */
 
 typedef struct {
-	uint8_t pb[ 8 ]; ///< Buffer's padding bytes, to avoid OOB.
-	uint8_t Buf[ KOMIHASH_BUFSIZE ]; ///< Buffer.
+	KOMIHASH_U8 pb[ 8 ]; ///< Buffer's padding bytes, to avoid OOB.
+	KOMIHASH_U8 Buf[ KOMIHASH_BUFSIZE ]; ///< Buffer.
 	uint64_t Seed[ 8 ]; ///< Hashing state variables.
 	size_t BufFill; ///< Buffer fill count (position), in bytes.
 	size_t IsHashing; ///< 0 or 1, equals 1 if the actual hashing was started.
@@ -889,9 +898,9 @@ KOMIHASH_INLINE void komihash_stream_init( komihash_stream_t* const ctx,
 KOMIHASH_INLINE void komihash_stream_update( komihash_stream_t* const ctx,
 	const void* const Msg0, size_t MsgLen ) KOMIHASH_NOEX
 {
-	const uint8_t* Msg = (const uint8_t*) Msg0;
+	const KOMIHASH_U8* Msg = (const KOMIHASH_U8*) Msg0;
 
-	const uint8_t* SwMsg = 0;
+	const KOMIHASH_U8* SwMsg = 0;
 	size_t SwMsgLen = 0;
 	size_t BufFill = ctx -> BufFill;
 
@@ -975,7 +984,7 @@ KOMIHASH_INLINE void komihash_stream_update( komihash_stream_t* const ctx,
 	}
 
 	ctx -> BufFill = BufFill + MsgLen;
-	uint8_t* op = ctx -> Buf + BufFill;
+	KOMIHASH_U8* op = ctx -> Buf + BufFill;
 
 	while( MsgLen != 0 )
 	{
@@ -1003,10 +1012,10 @@ KOMIHASH_INLINE void komihash_stream_update( komihash_stream_t* const ctx,
  * is shared between big- and little-endian systems.
  */
 
-KOMIHASH_INLINE uint64_t komihash_stream_final(
-	komihash_stream_t* const ctx ) KOMIHASH_NOEX
+KOMIHASH_INLINE uint64_t komihash_stream_final( komihash_stream_t* const ctx )
+	KOMIHASH_NOEX
 {
-	const uint8_t* Msg = ctx -> Buf;
+	const KOMIHASH_U8* Msg = ctx -> Buf;
 	size_t MsgLen = ctx -> BufFill;
 
 	if( ctx -> IsHashing == 0 )
