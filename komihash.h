@@ -1,10 +1,10 @@
 /**
  * @file komihash.h
  *
- * @version 5.12
+ * @version 5.13
  *
  * @brief The inclusion file for the "komihash" 64-bit hash function,
- * "komirand" 64-bit PRNG, and streamed "komihash".
+ * "komirand" 64-bit PRNG, and streamed "komihash" implementation.
  *
  * This function is named the way it is named is to honor the Komi Republic
  * (located in Russia), native to the author.
@@ -39,7 +39,7 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.12" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.13" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_U64_C( x )
@@ -66,7 +66,7 @@
 	#include <stdint.h>
 	#include <string.h>
 
-	#define KOMIHASH_U64_C( x ) ( x )
+	#define KOMIHASH_U64_C( x ) (uint64_t) ( x )
 	#define KOMIHASH_NOEX
 
 #endif // __cplusplus
@@ -139,12 +139,26 @@
 #endif // !defined( KOMIHASH_LITTLE_ENDIAN )
 
 /**
+ * @def KOMIHASH_ICC_GCC
+ * @brief Macro that denotes the use of the ICC classic compiler with
+ * GCC-style built-in functions.
+ */
+
+#if defined( __INTEL_COMPILER ) && __INTEL_COMPILER >= 1300 && \
+	!defined( _MSC_VER )
+
+	#define KOMIHASH_ICC_GCC
+
+#endif // ICC check
+
+/**
  * @def KOMIHASH_GCC_BUILTINS
  * @brief Macro that denotes availability of GCC-style built-in functions.
  */
 
 #if defined( __GNUC__ ) || defined( __clang__ ) || \
-	defined( __IBMC__ ) || defined( __IBMCPP__ ) || defined( __COMPCERT__ )
+	defined( __IBMC__ ) || defined( __IBMCPP__ ) || \
+	defined( __COMPCERT__ ) || defined( KOMIHASH_ICC_GCC )
 
 	#define KOMIHASH_GCC_BUILTINS
 
@@ -459,7 +473,7 @@ KOMIHASH_INLINE_F uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
  */
 
 #if defined( _MSC_VER ) && ( defined( _M_ARM64 ) || defined( _M_ARM64EC ) || \
-	( defined( _M_X64 ) && defined( __INTEL_COMPILER )))
+	( defined( __INTEL_COMPILER ) && defined( _M_X64 )))
 
 	#include <intrin.h>
 
@@ -483,7 +497,8 @@ KOMIHASH_INLINE_F uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 		*rha += rh;
 	}
 
-#elif defined( __SIZEOF_INT128__ )
+#elif defined( __SIZEOF_INT128__ ) || \
+	( defined( KOMIHASH_ICC_GCC ) && defined( __x86_64__ ))
 
 	KOMIHASH_INLINE_F void kh_m128( const uint64_t u, const uint64_t v,
 		uint64_t* const rl, uint64_t* const rha ) KOMIHASH_NOEX
