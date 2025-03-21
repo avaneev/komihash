@@ -5,8 +5,9 @@
 The `komihash()` function available in the `komihash.h` file implements a very
 fast 64-bit hash function, mainly designed for hash-table, hash-map, and
 bloom-filter uses; produces identical hashes on both big- and little-endian
-systems. Function's code is portable, cross-platform, scalar, zero-allocation,
-header-only, inlineable C (C++ compatible).
+systems. Suitable for file and large data hashing. Function's code is
+portable, cross-platform, scalar, zero-allocation, is header-only,
+inlineable C (C++ compatible).
 
 This function features both a high large-block hashing performance (26 GB/s
 on Ryzen 3700X) and a high hashing throughput for small strings/messages
