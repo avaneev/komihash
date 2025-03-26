@@ -1,7 +1,7 @@
 /**
  * @file komihash.h
  *
- * @version 5.16
+ * @version 5.17
  *
  * @brief The inclusion file for the "komihash" 64-bit hash function,
  * "komirand" 64-bit PRNG, and streamed "komihash" implementation.
@@ -39,7 +39,7 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.16" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.17" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_U64_C( x )
@@ -300,13 +300,13 @@
 
 #if defined( KOMIHASH_NS )
 
-namespace KOMIHASH_NS
-{
-	using std :: memcpy;
-	using std :: size_t;
-	using std :: uint32_t;
-	using std :: uint64_t;
-	using uint8_t = unsigned char; ///< For C++ type aliasing compliance.
+namespace KOMIHASH_NS {
+
+using std :: memcpy;
+using std :: size_t;
+using std :: uint32_t;
+using std :: uint64_t;
+using uint8_t = unsigned char; ///< For C++ type aliasing compliance.
 
 #endif // defined( KOMIHASH_NS )
 
@@ -1083,7 +1083,6 @@ KOMIHASH_INLINE uint64_t komihash_stream_oneshot( const void* const Msg,
 #undef KOMIHASH_IVAL8
 #undef KOMIHASH_VAL01
 #undef KOMIHASH_VAL10
-#undef KOMIHASH_EC32
 #undef KOMIHASH_LIKELY
 #undef KOMIHASH_UNLIKELY
 #undef KOMIHASH_PREFETCH
@@ -1096,20 +1095,29 @@ KOMIHASH_INLINE uint64_t komihash_stream_oneshot( const void* const Msg,
 #undef KOMIHASH_HASHFIN
 #undef KOMIHASH_HASHLOOP64
 
+#if defined( KOMIHASH_ICC_GCC )
+	#undef KOMIHASH_ICC_GCC
+#endif // defined( KOMIHASH_ICC_GCC )
+
+#if defined( KOMIHASH_EC32 )
+	#undef KOMIHASH_EC32
+#endif // defined( KOMIHASH_EC32 )
+
 #if defined( KOMIHASH_NS )
 
-}
+} // namespace KOMIHASH_NS
 
-namespace
-{
-	using KOMIHASH_NS :: komihash;
-	using KOMIHASH_NS :: komirand;
-	using KOMIHASH_NS :: komihash_stream_t;
-	using KOMIHASH_NS :: komihash_stream_init;
-	using KOMIHASH_NS :: komihash_stream_update;
-	using KOMIHASH_NS :: komihash_stream_final;
-	using KOMIHASH_NS :: komihash_stream_oneshot;
-}
+namespace {
+
+using KOMIHASH_NS :: komihash;
+using KOMIHASH_NS :: komirand;
+using KOMIHASH_NS :: komihash_stream_t;
+using KOMIHASH_NS :: komihash_stream_init;
+using KOMIHASH_NS :: komihash_stream_update;
+using KOMIHASH_NS :: komihash_stream_final;
+using KOMIHASH_NS :: komihash_stream_oneshot;
+
+} // namespace
 
 #endif // defined( KOMIHASH_NS )
 

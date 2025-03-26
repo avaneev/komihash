@@ -58,6 +58,22 @@ This function and its source code (which is
 Clang, GCC, MSVC, Intel C++ compilers; x86, x86-64 (Intel, AMD), AArch64
 (Apple Silicon) architectures; Windows 10, CentOS 8 Linux, macOS 13.3.
 
+## Usage
+
+```c
+#include <stdio.h>
+#include "komihash.h"
+
+int main()
+{
+    const char s1[] = "This is a test of komihash.";
+    const char s2[] = "7 chars";
+
+    printf( "%llx\n", komihash( s1, strlen( s1 ), 0 )); // 5b13177fc68b4f96
+    printf( "%llx\n", komihash( s2, strlen( s2 ), 0 )); // 2c514f6e5dcb11cb
+}
+```
+
 ## Discrete-Incremental Hashing
 
 A correct way to hash an array of independent values, and which does not
@@ -153,7 +169,7 @@ Compiler options: `-O3`; overhead: `0` (unestimatable).
 |Platform         |1                |1              |1              |2      |2    |2   |3      |3    |3   |4      |4    |4   |5      |5    |5   |6      |6    |6   |7      |7    |7   |8      |8    |8   |9      |9    |9   |
 |-----------------|-----------------|---------------|---------------|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|
 |Hash function    |`0-15b, cycles/h`|8-28b, cycles/h|bulk, GB/s     |`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|
-|**komihash 5.16**|`10.2`           |12.1           |26.2           |`10.2` |12.0 |26.2|`12.3` |14.6 |23.1|`12.7` |13.8 |23.3|`13.2` |14.6 |25.3|`13.2` |14.6 |25.4|`11.9` |13.6 |21.3|`15.5` |18.6 |19.3|`8.2`  |8.4  |23.6|
+|**komihash 5.17**|`10.2`           |12.1           |26.2           |`10.2` |12.0 |26.2|`12.3` |14.6 |23.1|`12.7` |13.8 |23.3|`13.2` |14.6 |25.3|`13.2` |14.6 |25.4|`11.9` |13.6 |21.3|`15.5` |18.6 |19.3|`8.2`  |8.4  |23.6|
 |komihash 4.5     |`11.0`           |12.7           |26.2           |`11.1` |12.7 |26.3|`18.1` |21.9 |16.4|`12.8` |14.4 |22.4|`13.2` |15.1 |24.7|`13.8` |15.2 |24.7|`12.6` |14.5 |22.2|`18.1` |21.1 |17.2|`8.3`  |8.7  |23.6|
 |komihash 4.3     |`11.2`           |13.0           |26.0           |`11.2` |13.0 |25.9|`17.9` |21.6 |16.3|`15.3` |16.3 |22.8|`15.4` |16.2 |24.4|`15.3` |16.4 |24.4|`14.1` |16.0 |22.0|`18.7` |21.5 |18.5|`8.6`  |9.0  |23.6|
 |komihash 3.6     |`11.1`           |16.9           |27.5           |`11.0` |16.3 |27.5|`20.1` |24.0 |16.3|`16.0` |19.0 |22.3|`16.4` |20.3 |24.7|`15.8` |20.1 |24.7|`14.0` |22.0 |22.9|`19.5` |23.1 |18.1|`8.5`  |10.7 |23.6|
@@ -172,7 +188,7 @@ overhead. Measurement error is approximately 3%.
 
 |Hash function    |0-15b, cycles/h|8-28b, cycles/h|
 |----             |----           |----           |
-|**komihash 5.16**|**8.2**        |**9.8**        |
+|**komihash 5.17**|**8.2**        |**9.8**        |
 |komihash 4.5     |9.5            |11.4           |
 |komihash 4.3     |10.4           |12.1           |
 |komihash 3.6     |10.9           |15.4           |
@@ -303,6 +319,35 @@ Since $s_{1}$ and $s_{2}$ are uniformly-distributed values, such mixing is
 equivalent to mixing a message with a cryptographic one-time-pad (bitwise
 modulo 2 addition). Message's statistics and distribution become unimportant,
 and do not change the uniform distribution of $s_{1}$ and $s_{2}$.
+
+```c
+#include <stdio.h>
+#include "komihash.h"
+
+int main()
+{
+    uint64_t Seed1 = 0, Seed2 = 0;
+    int i;
+
+    for( i = 0; i < 8; i++ )
+    {
+        printf( "%llx\n", komirand( &Seed1, &Seed2 ));
+    }
+}
+```
+
+Output:
+
+```
+aaaaaaaaaaaaaaaa
+fffffffffffffffe
+4924924924924910
+baebaebaebaeba00
+400c62cc4727496b
+35a969173e8f925b
+db47f6bae9a247ad
+98e0f6cece6711fe
+```
 
 ## Other
 
