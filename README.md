@@ -56,7 +56,7 @@ maintaining the benchmark.
 This function and its source code (which is
 [ISO C99](https://en.wikipedia.org/wiki/C99)) were quality-tested on:
 Clang, GCC, MSVC, Intel C++ compilers; x86, x86-64 (Intel, AMD), AArch64
-(Apple Silicon) architectures; Windows 10, CentOS 8 Linux, macOS 13.3.
+(Apple Silicon) architectures; Windows 10, AlmaLinux 9.3, macOS 13.3.
 
 ## Usage
 
@@ -144,32 +144,29 @@ produce a hash value of any required bit-size.
 These are the performance comparisons made and used by the author during the
 development of `komihash`, on different compilers and platforms.
 
-1. LLVM clang-cl 8.0.1 64-bit, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz.
+1. LLVM clang-cl 18.1.8 x86-64, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz.
 Compiler options: `/Ox /arch:sse2`; overhead: `1.8` cycles/h.
-2. LLVM clang-cl 8.0.1 64-bit, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz.
+2. LLVM clang-cl 18.1.8 x86-64, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz.
 Compiler options: `/Ox -mavx2`; overhead: `1.8` cycles/h.
-3. ICC 19.0 64-bit, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz.
-Compiler options: `/O3 /QxSSE2`; overhead: `2.0` cycles/h. (this is likely a
-worst-case scenario, when a compiler was not cross-tuned to a competing
-processor architecture; also, ICC for Windows does not support the
-`__builtin_expect` and `__builtin_prefetch` intrinsics)
-4. LLVM clang 12.0.1 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 4.5 GHz.
-Compiler options: `-O3 -mavx2`; overhead: `5.3` cycles/h.
-5. GCC 8.5.0 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 4.5 GHz.
-Compiler options: `-O3 -msse2`; overhead: `5.8` cycles/h.
-6. GCC 8.5.0 64-bit, CentOS 8, Xeon E-2176G (CoffeeLake), 4.5 GHz.
-Compiler options: `-O3 -mavx2`; overhead: `5.8` cycles/h.
-7. LLVM clang-cl 8.0.1 64-bit, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz.
+3. ICC 19.0 x86-64, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz.
+Compiler options: `/O3 /QxSSE2`; overhead: `1.9` cycles/h.
+4. LLVM clang 16.0.6 x86-64, AlmaLinux 9.3, Xeon E-2386G (RocketLake), 5.1 GHz.
+Compiler options: `-O3 -mavx2`; overhead: `3.9` cycles/h.
+5. GCC 11.4.1 x86-64, AlmaLinux 9.3, Xeon E-2386G (RocketLake), 5.1 GHz.
+Compiler options: `-O3 -msse2`; overhead: `2.8` cycles/h.
+6. GCC 11.4.1 x86-64, AlmaLinux 9.3, Xeon E-2386G (RocketLake), 5.1 GHz.
+Compiler options: `-O3 -mavx2`; overhead: `4.0` cycles/h.
+7. LLVM clang-cl 8.0.1 x86-64, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz.
 Compiler options: `/Ox -mavx2`; overhead: `5.5` cycles/h.
-8. ICC 19.0 64-bit, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz.
+8. ICC 19.0 x86-64, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz.
 Compiler options: `/O3 /QxSSE2`; overhead: `5.9` cycles/h.
-9. Apple clang 12.0.0 64-bit, macOS 12.0.1, Apple M1, 3.5 GHz.
+9. Apple clang 15.0.0 arm64, macOS 13.3.2, Apple M1, 3.5 GHz.
 Compiler options: `-O3`; overhead: `0` (unestimatable).
 
 |Platform         |1                |1              |1              |2      |2    |2   |3      |3    |3   |4      |4    |4   |5      |5    |5   |6      |6    |6   |7      |7    |7   |8      |8    |8   |9      |9    |9   |
 |-----------------|-----------------|---------------|---------------|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|
 |Hash function    |`0-15b, cycles/h`|8-28b, cycles/h|bulk, GB/s     |`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|
-|**komihash 5.17**|`10.2`           |12.1           |26.2           |`10.2` |12.0 |26.2|`12.3` |14.6 |23.1|`12.7` |13.8 |23.3|`13.2` |14.6 |25.3|`13.2` |14.6 |25.4|`11.9` |13.6 |21.3|`15.5` |18.6 |19.3|`8.2`  |8.4  |23.6|
+|**komihash 5.18**|`11.2`           |12.6           |26.2           |`11.2` |12.7 |26.2|`12.1` |14.2 |23.2|`12.0` |13.3 |30.7|`10.8` |12.2 |30.9|`10.8` |12.2 |31.0|`11.9` |13.6 |21.3|`15.5` |18.6 |19.3|`8.1`  |8.3  |23.6|
 |komihash 4.5     |`11.0`           |12.7           |26.2           |`11.1` |12.7 |26.3|`18.1` |21.9 |16.4|`12.8` |14.4 |22.4|`13.2` |15.1 |24.7|`13.8` |15.2 |24.7|`12.6` |14.5 |22.2|`18.1` |21.1 |17.2|`8.3`  |8.7  |23.6|
 |komihash 4.3     |`11.2`           |13.0           |26.0           |`11.2` |13.0 |25.9|`17.9` |21.6 |16.3|`15.3` |16.3 |22.8|`15.4` |16.2 |24.4|`15.3` |16.4 |24.4|`14.1` |16.0 |22.0|`18.7` |21.5 |18.5|`8.6`  |9.0  |23.6|
 |komihash 3.6     |`11.1`           |16.9           |27.5           |`11.0` |16.3 |27.5|`20.1` |24.0 |16.3|`16.0` |19.0 |22.3|`16.4` |20.3 |24.7|`15.8` |20.1 |24.7|`14.0` |22.0 |22.9|`19.5` |23.1 |18.1|`8.5`  |10.7 |23.6|
@@ -188,7 +185,7 @@ overhead. Measurement error is approximately 3%.
 
 |Hash function    |0-15b, cycles/h|8-28b, cycles/h|
 |----             |----           |----           |
-|**komihash 5.17**|**8.2**        |**9.8**        |
+|**komihash 5.18**|**8.4**        |**10.0**       |
 |komihash 4.5     |9.5            |11.4           |
 |komihash 4.3     |10.4           |12.1           |
 |komihash 3.6     |10.9           |15.4           |

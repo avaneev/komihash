@@ -1,7 +1,7 @@
 /**
  * @file komihash.h
  *
- * @version 5.17
+ * @version 5.18
  *
  * @brief The inclusion file for the "komihash" 64-bit hash function,
  * "komirand" 64-bit PRNG, and streamed "komihash" implementation.
@@ -39,7 +39,7 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.17" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.18" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_U64_C( x )
@@ -477,10 +477,11 @@ KOMIHASH_INLINE_F uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 	( defined( __INTEL_COMPILER ) && defined( _M_X64 )))
 
 	#define KOMIHASH_M128_IMPL \
+		const uint64_t rh = __umulh( u, v ); \
 		*rl = u * v; \
-		*rha += __umulh( u, v );
+		*rha += rh;
 
-#elif defined( _MSC_VER ) && ( defined( _M_X64 ) || defined( _M_IA64 ))
+#elif defined( _MSC_VER ) && ( defined( _M_AMD64 ) || defined( _M_IA64 ))
 
 	#pragma intrinsic(_umul128)
 
@@ -494,14 +495,16 @@ KOMIHASH_INLINE_F uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
 
 	#define KOMIHASH_M128_IMPL \
 		const __uint128_t r = (__uint128_t) u * v; \
-		*rha += (uint64_t) ( r >> 64 ); \
-		*rl = (uint64_t) r;
+		const uint64_t rh = (uint64_t) ( r >> 64 ); \
+		*rl = (uint64_t) r; \
+		*rha += rh;
 
 #elif ( defined( __IBMC__ ) || defined( __IBMCPP__ )) && defined( __LP64__ )
 
 	#define KOMIHASH_M128_IMPL \
+		const uint64_t rh = __mulhdu( u, v ); \
 		*rl = u * v; \
-		*rha += __mulhdu( u, v );
+		*rha += rh;
 
 #else // defined( __IBMC__ )
 
