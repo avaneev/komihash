@@ -57,6 +57,8 @@ This function and its source code (which is
 [ISO C99](https://en.wikipedia.org/wiki/C99)) were quality-tested on:
 Clang, GCC, MSVC, Intel C++ compilers; x86, x86-64 (Intel, AMD), AArch64
 (Apple Silicon) architectures; Windows 10, AlmaLinux 9.3, macOS 13.3.
+Full C++ compliance is enabled conditionally, when compiled with a C++
+compiler.
 
 ## Usage
 
