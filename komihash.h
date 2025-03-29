@@ -1,10 +1,13 @@
 /**
  * @file komihash.h
  *
- * @version 5.18
+ * @version 5.19
  *
  * @brief The inclusion file for the "komihash" 64-bit hash function,
- * "komirand" 64-bit PRNG, and streamed "komihash" implementation.
+ * the "komirand" 64-bit PRNG, and streamed "komihash" implementation.
+ *
+ * The source code is written in ISO C99, with full C++ compliance enabled
+ * conditionally and automatically, if compiled with a C++ compiler.
  *
  * This function is named the way it is named is to honor the Komi Republic
  * (located in Russia), native to the author.
@@ -39,7 +42,7 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.18" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.19" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_U64_C( x )
@@ -123,20 +126,20 @@
 
 #if !defined( KOMIHASH_LITTLE_ENDIAN )
 	#if defined( __LITTLE_ENDIAN__ ) || defined( __LITTLE_ENDIAN ) || \
-		defined( _LITTLE_ENDIAN ) || defined( _WIN32 ) || defined( i386 ) || \
-		defined( __i386 ) || defined( __i386__ ) || defined( _M_IX86 ) || \
-		defined( _M_X64 ) || defined( _M_AMD64 ) || defined( __x86_64__ ) || \
-		defined( __amd64 ) || defined( __amd64__ ) || \
-		( defined( __BYTE_ORDER__ ) && \
-			__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ )
+		defined( _LITTLE_ENDIAN ) || ( defined( __BYTE_ORDER__ ) && \
+			__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ ) || \
+		defined( _WIN32 ) || defined( i386 ) || defined( __i386 ) || \
+		defined( __i386__ ) || defined( _M_IX86 ) || defined( _M_AMD64 ) || \
+		defined( __x86_64__ ) || defined( __amd64 ) || \
+		defined( __amd64__ ) || defined( _M_ARM ) || defined( _M_ARM64 )
 
 		#define KOMIHASH_LITTLE_ENDIAN 1
 
 	#elif defined( __BIG_ENDIAN__ ) || defined( __BIG_ENDIAN ) || \
-		defined( _BIG_ENDIAN ) || defined( __SYSC_ZARCH__ ) || \
-		defined( __zarch__ ) || defined( __s390x__ ) || defined( __sparc ) || \
-		defined( __sparc__ ) || ( defined( __BYTE_ORDER__ ) && \
-			__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ )
+		defined( _BIG_ENDIAN ) || ( defined( __BYTE_ORDER__ ) && \
+			__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ ) || \
+		defined( __SYSC_ZARCH__ ) || defined( __zarch__ ) || \
+		defined( __s390x__ ) || defined( __sparc ) || defined( __sparc__ )
 
 		#define KOMIHASH_LITTLE_ENDIAN 0
 
@@ -255,26 +258,6 @@
 	#define KOMIHASH_PREFETCH( a ) (void) 0
 
 #endif // Prefetch macro
-
-/**
- * @def KOMIHASH_PREFETCH_1
- * @brief Compiler-dependent address prefetch macro, ordered position 1.
- * @param a Prefetch address.
- */
-
-/**
- * @def KOMIHASH_PREFETCH_2
- * @brief Compiler-dependent address prefetch macro, ordered position 2.
- * @param a Prefetch address.
- */
-
-#if defined( __clang__ )
-	#define KOMIHASH_PREFETCH_1( a ) KOMIHASH_PREFETCH( a )
-	#define KOMIHASH_PREFETCH_2( a ) (void) 0
-#else // defined( __clang__ )
-	#define KOMIHASH_PREFETCH_1( a ) (void) 0
-	#define KOMIHASH_PREFETCH_2( a ) KOMIHASH_PREFETCH( a )
-#endif // defined( __clang__ )
 
 #define KOMIHASH_INLINE static inline ///< Macro that defines a function as
 	///< inlinable at compiler's discretion.
@@ -638,8 +621,6 @@ void kh_m128( const uint64_t u, const uint64_t v,
 #define KOMIHASH_HASHLOOP64() \
 	do \
 	{ \
-		KOMIHASH_PREFETCH_1( Msg ); \
-	\
 		kh_m128( Seed1 ^ kh_lu64ec( Msg ), \
 			Seed5 ^ kh_lu64ec( Msg + 32 ), &Seed1, &Seed5 ); \
 	\
@@ -655,12 +636,12 @@ void kh_m128( const uint64_t u, const uint64_t v,
 		Msg += 64; \
 		MsgLen -= 64; \
 	\
-		KOMIHASH_PREFETCH_2( Msg ); \
-	\
 		Seed2 ^= Seed5; \
 		Seed3 ^= Seed6; \
 		Seed4 ^= Seed7; \
 		Seed1 ^= Seed8; \
+	\
+		KOMIHASH_PREFETCH( Msg ); \
 	\
 	} while( KOMIHASH_LIKELY( MsgLen > 63 ))
 
@@ -930,7 +911,7 @@ KOMIHASH_INLINE void komihash_stream_update( komihash_stream_t* const ctx,
 			uint64_t Seed1, Seed2, Seed3, Seed4;
 			uint64_t Seed5, Seed6, Seed7, Seed8;
 
-			KOMIHASH_PREFETCH_2( Msg );
+			KOMIHASH_PREFETCH( Msg );
 
 			if( ctx -> IsHashing )
 			{
@@ -1089,8 +1070,6 @@ KOMIHASH_INLINE uint64_t komihash_stream_oneshot( const void* const Msg,
 #undef KOMIHASH_LIKELY
 #undef KOMIHASH_UNLIKELY
 #undef KOMIHASH_PREFETCH
-#undef KOMIHASH_PREFETCH_1
-#undef KOMIHASH_PREFETCH_2
 #undef KOMIHASH_INLINE
 #undef KOMIHASH_INLINE_F
 #undef KOMIHASH_HASHROUND

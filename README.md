@@ -46,7 +46,7 @@ overhead by 1-2 cycles/hash (compiler-dependent).
 This function passes all [SMHasher](https://github.com/rurban/smhasher) and
 [SMHasher3](https://gitlab.com/fwojcik/smhasher3/-/tree/main/results) tests.
 The function was also tested with the [xxHash collision tester](https://github.com/Cyan4973/xxHash/tree/dev/tests/collisions)
-at various settings, with the collision statistics meeting the expectations.
+at various settings, with the collision statistics satisfying the expectations.
 The performance (expressed in cycles/byte) of this hash function on various
 platforms is best evaluated at the
 [ECRYPT/eBASH project](https://bench.cr.yp.to/results-hash.html). Thanks to
@@ -57,8 +57,8 @@ This function and its source code (which is
 [ISO C99](https://en.wikipedia.org/wiki/C99)) were quality-tested on:
 Clang, GCC, MSVC, Intel C++ compilers; x86, x86-64 (Intel, AMD), AArch64
 (Apple Silicon) architectures; Windows 10, AlmaLinux 9.3, macOS 13.3.
-Full C++ compliance is enabled conditionally, when compiled with a C++
-compiler.
+Full C++ compliance is enabled conditionally and automatically, when the
+source code is compiled with a C++ compiler.
 
 ## Usage
 
@@ -168,7 +168,7 @@ Compiler options: `-O3`; overhead: `0` (unestimatable).
 |Platform         |1                |1              |1              |2      |2    |2   |3      |3    |3   |4      |4    |4   |5      |5    |5   |6      |6    |6   |7      |7    |7   |8      |8    |8   |9      |9    |9   |
 |-----------------|-----------------|---------------|---------------|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|
 |Hash function    |`0-15b, cycles/h`|8-28b, cycles/h|bulk, GB/s     |`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|
-|**komihash 5.18**|`11.2`           |12.6           |26.2           |`11.2` |12.7 |26.2|`12.1` |14.2 |23.2|`12.0` |13.3 |30.7|`10.8` |12.2 |30.9|`10.8` |12.2 |31.0|`11.9` |13.6 |21.3|`15.5` |18.6 |19.3|`8.1`  |8.3  |23.6|
+|**komihash 5.19**|`11.2`           |12.6           |26.8           |`11.2` |12.7 |26.8|`12.1` |14.2 |23.2|`12.0` |13.3 |31.7|`10.8` |12.2 |30.9|`10.8` |12.2 |31.0|`11.9` |13.6 |21.3|`15.5` |18.6 |19.3|`8.1`  |8.3  |23.6|
 |komihash 4.5     |`11.0`           |12.7           |26.2           |`11.1` |12.7 |26.3|`18.1` |21.9 |16.4|`12.8` |14.4 |22.4|`13.2` |15.1 |24.7|`13.8` |15.2 |24.7|`12.6` |14.5 |22.2|`18.1` |21.1 |17.2|`8.3`  |8.7  |23.6|
 |komihash 4.3     |`11.2`           |13.0           |26.0           |`11.2` |13.0 |25.9|`17.9` |21.6 |16.3|`15.3` |16.3 |22.8|`15.4` |16.2 |24.4|`15.3` |16.4 |24.4|`14.1` |16.0 |22.0|`18.7` |21.5 |18.5|`8.6`  |9.0  |23.6|
 |komihash 3.6     |`11.1`           |16.9           |27.5           |`11.0` |16.3 |27.5|`20.1` |24.0 |16.3|`16.0` |19.0 |22.3|`16.4` |20.3 |24.7|`15.8` |20.1 |24.7|`14.0` |22.0 |22.9|`19.5` |23.1 |18.1|`8.5`  |10.7 |23.6|
@@ -187,7 +187,7 @@ overhead. Measurement error is approximately 3%.
 
 |Hash function    |0-15b, cycles/h|8-28b, cycles/h|
 |----             |----           |----           |
-|**komihash 5.18**|**8.4**        |**10.0**       |
+|**komihash 5.19**|**8.4**        |**10.0**       |
 |komihash 4.5     |9.5            |11.4           |
 |komihash 4.3     |10.4           |12.1           |
 |komihash 3.6     |10.9           |15.4           |
