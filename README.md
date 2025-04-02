@@ -9,12 +9,12 @@ systems. Suitable for file and large data hashing. Function's code is
 portable, cross-platform, scalar, zero-allocation, is header-only,
 inlineable C (C++ compatible).
 
-This function features both a high large-block hashing performance (26 GB/s
+This function features both a high large-block hashing performance (27 GB/s
 on Ryzen 3700X) and a high hashing throughput for small strings/messages
-(about 9 cycles/hash for 0-15-byte strings). Performance on 32-bit systems
-is, however, quite low. Also, large-block hashing performance on big-endian
-systems may be 20% lower due to the need of byte-swapping (can be switched off
-with a define).
+(about 9 cycles/hash for 0-15-byte strings, hashed repeatedly). Performance on
+32-bit systems is, however, quite low. Also, large-block hashing performance
+on big-endian systems may be 20% lower due to the need of byte-swapping (can
+be switched off with a define).
 
 Technically, `komihash` is close to the class of hash functions like `wyhash`
 and `CircleHash`, which are, in turn, close to the `lehmer64` PRNG. However,
@@ -141,41 +141,64 @@ produce a hash value of any required bit-size.
 * [Rust, by thynson](https://crates.io/crates/komihash)
 * [Perl, by scottchiefbaker](https://github.com/scottchiefbaker/perl-Crypt-Komihash)
 
+## Customizing C++ namespace
+
+If for some reason, in C++ environment, it is undesired to export `komihash`
+symbols into the global namespace, the `KOMIHASH_NS_CUSTOM` macro can be
+defined externally:
+
+```c++
+#define KOMIHASH_NS_CUSTOM komihash
+#include "komihash.h"
+```
+
+Similarly, `komihash` symbols can be placed into any other custom namespace
+(e.g., a namespace with hash functions):
+
+```c++
+#define KOMIHASH_NS_CUSTOM_NS_CUSTOM my_hashes
+#include "komihash.h"
+```
+
+This way, `komihash` functions can be referenced like
+`my_hashes::komihash(...)`. Note that since all `komihash` functions have a
+`static inline` specifier, there can be no ABI conflicts, even if the
+`komihash.h` header is included in unrelated, mixed C/C++, compilation units.
+
 ## Comparisons
 
 These are the performance comparisons made and used by the author during the
 development of `komihash`, on different compilers and platforms.
 
 1. LLVM clang-cl 18.1.8 x86-64, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz.
-Compiler options: `/Ox /arch:sse2`; overhead: `1.8` cycles/h.
+Compiler options: `/Ox /arch:sse2`.
 2. LLVM clang-cl 18.1.8 x86-64, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz.
-Compiler options: `/Ox -mavx2`; overhead: `1.8` cycles/h.
+Compiler options: `/Ox -mavx2`.
 3. ICC 19.0 x86-64, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz.
-Compiler options: `/O3 /QxSSE2`; overhead: `1.9` cycles/h.
+Compiler options: `/O3 /QxSSE2`.
 4. LLVM clang 16.0.6 x86-64, AlmaLinux 9.3, Xeon E-2386G (RocketLake), 5.1 GHz.
-Compiler options: `-O3 -mavx2`; overhead: `3.9` cycles/h.
+Compiler options: `-O3 -mavx2`.
 5. GCC 11.4.1 x86-64, AlmaLinux 9.3, Xeon E-2386G (RocketLake), 5.1 GHz.
-Compiler options: `-O3 -msse2`; overhead: `2.8` cycles/h.
+Compiler options: `-O3 -msse2`.
 6. GCC 11.4.1 x86-64, AlmaLinux 9.3, Xeon E-2386G (RocketLake), 5.1 GHz.
-Compiler options: `-O3 -mavx2`; overhead: `4.0` cycles/h.
-7. LLVM clang-cl 8.0.1 x86-64, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz.
-Compiler options: `/Ox -mavx2`; overhead: `5.5` cycles/h.
+Compiler options: `-O3 -mavx2`.
+7. LLVM clang-cl 18.1.8 x86-64, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz.
+Compiler options: `/Ox -mavx2`.
 8. ICC 19.0 x86-64, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz.
-Compiler options: `/O3 /QxSSE2`; overhead: `5.9` cycles/h.
+Compiler options: `/O3 /QxSSE2`.
 9. Apple clang 15.0.0 arm64, macOS 13.3.2, Apple M1, 3.5 GHz.
-Compiler options: `-O3`; overhead: `0` (unestimatable).
+Compiler options: `-O3`.
+10. LLVM clang-cl 18.1.8 x86-64, Windows 11, Ryzen 9950X (Zen5), 5.7 GHz.
+Compiler options: `/Ox /arch:sse2`.
 
-|Platform         |1                |1              |1              |2      |2    |2   |3      |3    |3   |4      |4    |4   |5      |5    |5   |6      |6    |6   |7      |7    |7   |8      |8    |8   |9      |9    |9   |
-|-----------------|-----------------|---------------|---------------|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|
-|Hash function    |`0-15b, cycles/h`|8-28b, cycles/h|bulk, GB/s     |`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|
-|**komihash 5.19**|`11.2`           |12.6           |26.8           |`11.2` |12.7 |26.8|`12.1` |14.2 |23.2|`12.0` |13.3 |31.7|`10.8` |12.2 |30.9|`10.8` |12.2 |31.0|`11.9` |13.6 |21.3|`15.5` |18.6 |19.3|`8.1`  |8.3  |23.6|
-|komihash 4.5     |`11.0`           |12.7           |26.2           |`11.1` |12.7 |26.3|`18.1` |21.9 |16.4|`12.8` |14.4 |22.4|`13.2` |15.1 |24.7|`13.8` |15.2 |24.7|`12.6` |14.5 |22.2|`18.1` |21.1 |17.2|`8.3`  |8.7  |23.6|
-|komihash 4.3     |`11.2`           |13.0           |26.0           |`11.2` |13.0 |25.9|`17.9` |21.6 |16.3|`15.3` |16.3 |22.8|`15.4` |16.2 |24.4|`15.3` |16.4 |24.4|`14.1` |16.0 |22.0|`18.7` |21.5 |18.5|`8.6`  |9.0  |23.6|
-|komihash 3.6     |`11.1`           |16.9           |27.5           |`11.0` |16.3 |27.5|`20.1` |24.0 |16.3|`16.0` |19.0 |22.3|`16.4` |20.3 |24.7|`15.8` |20.1 |24.7|`14.0` |22.0 |22.9|`19.5` |23.1 |18.1|`8.5`  |10.7 |23.6|
-|komihash 2.8     |`11.3`           |17.4           |27.7           |`11.1` |17.7 |27.8|`21.3` |25.6 |16.2|`18.1` |22.3 |23.5|`18.5` |22.4 |24.7|`16.6` |21.2 |24.7|`13.4` |22.7 |23.7|`20.1` |23.6 |18.4|`10.1` |11.4 |23.5|
-|wyhash_final4    |`14.5`           |18.2           |29.3           |`14.7` |18.2 |29.3|`25.9` |32.9 |12.5|`17.1` |21.9 |34.0|`17.2` |23.1 |35.3|`17.3` |23.2 |35.5|`15.5` |20.4 |29.8|`21.1` |26.1 |19.4|`7.9`  |8.1  |26.1|
-|XXH3_64 0.8.0    |`15.5`           |28.8           |30.0           |`15.5` |28.7 |61.8|`21.8` |27.2 |29.6|`18.5` |25.8 |68.2|`19.2` |25.3 |33.8|`19.7` |26.3 |63.6|`18.4` |23.0 |48.3|`19.9` |25.8 |28.0|`8.2`  |8.2  |30.5|
-|XXH64 0.8.0      |`12.5`           |17.5           |17.2           |`12.5` |17.5 |17.3|`24.3` |36.6 |8.9 |`10.5` |14.5 |20.1|`11.2` |14.6 |20.1|`11.2` |14.6 |20.0|`13.2` |17.3 |17.7|`18.8` |24.7 |16.0|`8.8`  |10.4 |14.5|
+|Platform         |1                |1              |1              |2      |2    |2   |3      |3    |3   |4      |4    |4   |5      |5    |5   |6      |6    |6   |7      |7    |7   |8      |8    |8   |9      |9    |9   |10     |10   |10  |
+|-----------------|-----------------|---------------|---------------|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|
+|Hash function    |`0-15b, cycles/h`|8-28b, cycles/h|bulk, GB/s     |`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|
+|**komihash 5.20**|`10.8`           |12.1           |27.2           |`10.8` |12.2 |27.1|`12.3` |14.0 |23.2|`12.3` |13.1 |31.7|`10.2` |11.9 |31.0|`10.2` |11.8 |31.0|`12.9` |14.4 |21.3|`15.3` |18.0 |19.3|`8.2`  |8.4  |23.6|`8.4`  |9.1  |43.1|
+|wyhash_final4    |`14.5`           |18.2           |29.3           |`14.7` |18.2 |29.3|`25.9` |32.9 |12.5|`17.1` |21.9 |34.0|`17.2` |23.1 |35.3|`17.3` |23.2 |35.5|`15.5` |20.4 |29.8|`21.1` |26.1 |19.4|`7.9`  |8.1  |26.1|`13.9` |18.5 |41.7|
+|XXH3_64 0.8.0    |`15.5`           |28.8           |30.0           |`15.5` |28.7 |61.8|`21.8` |27.2 |29.6|`18.5` |25.8 |68.2|`19.2` |25.3 |33.8|`19.7` |26.3 |63.6|`18.4` |23.0 |48.3|`19.9` |25.8 |28.0|`8.2`  |8.2  |30.5|`15.4` |31.0 |50.3|
+|XXH64 0.8.0      |`12.5`           |17.5           |17.2           |`12.5` |17.5 |17.3|`24.3` |36.6 |8.9 |`10.5` |14.5 |20.1|`11.2` |14.6 |20.1|`11.2` |14.6 |20.0|`13.2` |17.3 |17.7|`18.8` |24.7 |16.0|`8.8`  |10.4 |14.5|`9.1`  |12.7 |31.4|
+|(overhead)       |1.8              |1.8            |0              |1.8    |1.8  |0   |1.9    |1.9  |0   |3.9    |3.9  |0   |2.8    |2.8  |0   |3.6    |3.6  |0   |5.5    |5.5  |0   |5.9    |5.9  |0   |2.0    |2.0  |0   |1.0    |1.0  |0   |
 
 Notes: `XXH3_64` is unseeded (seeded variant is 1 cycle/h higher). `bulk` is
 256000 bytes: this means it is mainly a cache-bound performance, not
@@ -187,14 +210,14 @@ overhead. Measurement error is approximately 3%.
 
 |Hash function    |0-15b, cycles/h|8-28b, cycles/h|
 |----             |----           |----           |
-|**komihash 5.19**|**8.4**        |**10.0**       |
+|**komihash 5.20**|**8.1**        |**9.5**        |
 |komihash 4.5     |9.5            |11.4           |
 |komihash 4.3     |10.4           |12.1           |
 |komihash 3.6     |10.9           |15.4           |
 |komihash 2.8     |11.8           |16.7           |
-|wyhash_final4    |13.7           |18.3           |
-|XXH3_64 0.8.0    |14.3           |21.3           |
-|XXH64 0.8.0      |10.6           |15.6           |
+|wyhash_final4    |13.5           |18.0           |
+|XXH3_64 0.8.0    |14.2           |22.0           |
+|XXH64 0.8.0      |10.2           |15.0           |
 
 This is the throughput comparison of hash functions on Ryzen 3700X. The used
 measurement method actually measures hash function's "latencied throughput",
@@ -240,7 +263,7 @@ for( int k = minl; k <= maxl; k++ )
 
 printf( "%016llx\n", v );
 printf( "%.1f\n", CSystem :: getClockDiffSec( t1 ) * 4.2e9 /
-    ( rc * ( maxl - minl + 1 ))); // 4.5 on Xeon, 4.5 on i7700K, 3.5 on M1
+    ( rc * ( maxl - minl + 1 ))); // 5.1 on Xeon, 4.5 on i7700K, 3.5 on M1
 ```
 
 ## Discussion

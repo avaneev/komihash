@@ -1,7 +1,7 @@
 /**
  * @file komihash.h
  *
- * @version 5.19
+ * @version 5.20
  *
  * @brief The inclusion file for the "komihash" 64-bit hash function,
  * the "komirand" 64-bit PRNG, and streamed "komihash" implementation.
@@ -42,7 +42,15 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.19" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.20" ///< KOMIHASH source code version string.
+
+/**
+ * @def KOMIHASH_NS_CUSTOM
+ * @brief If this macro is defined externally, all symbols will be placed into
+ * the C++ namespace specified by the macro, and won't be exported to the
+ * global namespace. WARNING: if the defined value of the macro is empty, the
+ * symbols will be placed into the global namespace anyway.
+ */
 
 /**
  * @def KOMIHASH_U64_C( x )
@@ -62,19 +70,36 @@
  * with export of relevant symbols to the unnamed namespace.
  */
 
-#if defined( __cplusplus ) && __cplusplus >= 201103L
+#if defined( __cplusplus )
 
-	#include <cstdint>
 	#include <cstring>
 
-	#define KOMIHASH_U64_C( x ) UINT64_C( x )
-	#define KOMIHASH_NOEX noexcept
-	#define KOMIHASH_NS komihash_impl
+	#if __cplusplus >= 201103L
+
+		#include <cstdint>
+
+		#define KOMIHASH_U64_C( x ) UINT64_C( x )
+		#define KOMIHASH_NOEX noexcept
+
+	#else // __cplusplus >= 201103L
+
+		#include <stdint.h>
+
+		#define KOMIHASH_U64_C( x ) (uint64_t) x
+		#define KOMIHASH_NOEX throw()
+
+	#endif // __cplusplus >= 201103L
+
+	#if defined( KOMIHASH_NS_CUSTOM )
+		#define KOMIHASH_NS KOMIHASH_NS_CUSTOM
+	#else // defined( KOMIHASH_NS_CUSTOM )
+		#define KOMIHASH_NS komihash_impl
+	#endif // defined( KOMIHASH_NS_CUSTOM )
 
 #else // __cplusplus
 
-	#include <stdint.h>
 	#include <string.h>
+	#include <stdint.h>
 
 	#define KOMIHASH_U64_C( x ) (uint64_t) x
 	#define KOMIHASH_NOEX
@@ -130,8 +155,8 @@
 			__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ ) || \
 		defined( _WIN32 ) || defined( i386 ) || defined( __i386 ) || \
 		defined( __i386__ ) || defined( _M_IX86 ) || defined( _M_AMD64 ) || \
-		defined( __x86_64__ ) || defined( __amd64 ) || \
-		defined( __amd64__ ) || defined( _M_ARM ) || defined( _M_ARM64 )
+		defined( __x86_64 ) || defined( __x86_64__ ) || \
+		defined( __amd64 ) || defined( __amd64__ ) || defined( _M_ARM )
 
 		#define KOMIHASH_LITTLE_ENDIAN 1
 
@@ -287,9 +312,14 @@ namespace KOMIHASH_NS {
 
 using std :: memcpy;
 using std :: size_t;
-using std :: uint32_t;
-using std :: uint64_t;
-using uint8_t = unsigned char; ///< For C++ type aliasing compliance.
+
+#if __cplusplus >= 201103L
+
+	using std :: uint32_t;
+	using std :: uint64_t;
+	using uint8_t = unsigned char; ///< For C++ type aliasing compliance.
+
+#endif // __cplusplus >= 201103L
 
 #endif // defined( KOMIHASH_NS )
 
@@ -303,10 +333,10 @@ using uint8_t = unsigned char; ///< For C++ type aliasing compliance.
  * of in-memory unsigned values, and to avoid unaligned memory accesses.
  *
  * @param p Pointer to bytes in memory. Alignment is unimportant.
- * @return Endianness-corrected value from memory.
+ * @return Endianness-corrected value from memory, typecasted to `uint64_t`.
  */
 
-KOMIHASH_INLINE_F uint32_t kh_lu32ec( const uint8_t* const p ) KOMIHASH_NOEX
+KOMIHASH_INLINE_F uint64_t kh_lu32ec( const uint8_t* const p ) KOMIHASH_NOEX
 {
 #if defined( KOMIHASH_EC32 )
 
@@ -317,7 +347,7 @@ KOMIHASH_INLINE_F uint32_t kh_lu32ec( const uint8_t* const p ) KOMIHASH_NOEX
 
 #else // defined( KOMIHASH_EC32 )
 
-	return( p[ 0 ] | p[ 1 ] << 8 | p[ 2 ] << 16 | p[ 3 ] << 24 );
+	return( (uint64_t) ( p[ 0 ] | p[ 1 ] << 8 | p[ 2 ] << 16 | p[ 3 ] << 24 ));
 
 #endif // defined( KOMIHASH_EC32 )
 }
@@ -333,116 +363,12 @@ KOMIHASH_INLINE_F uint64_t kh_lu64ec( const uint8_t* const p ) KOMIHASH_NOEX
 
 #else // defined( KOMIHASH_EC64 )
 
-	return( kh_lu32ec( p ) | (uint64_t) kh_lu32ec( p + 4 ) << 32 );
+	return( kh_lu32ec( p ) | kh_lu32ec( p + 4 ) << 32 );
 
 #endif // defined( KOMIHASH_EC64 )
 }
 
 /** @} */
-
-/**
- * @brief Load unsigned 64-bit value with padding (Msg-3 reads).
- *
- * Function builds an unsigned 64-bit value out of remaining bytes in a
- * message, and pads it with the "final byte". This function can only be
- * called if less than 8 bytes are left to read. The message should be "long",
- * permitting `Msg[ -3 ]` reads.
- *
- * @param Msg Message pointer, alignment is unimportant.
- * @param MsgLen Message's remaining length, in bytes; can be 0.
- * @return Final byte-padded value from the message.
- */
-
-KOMIHASH_INLINE_F uint64_t kh_lpu64ec_l3( const uint8_t* const Msg,
-	const size_t MsgLen ) KOMIHASH_NOEX
-{
-	const int ml8 = (int) ( MsgLen * 8 );
-
-	if( MsgLen < 4 )
-	{
-		const uint8_t* const Msg3 = Msg + MsgLen - 3;
-		const uint64_t m = (uint64_t) Msg3[ 0 ] | (uint64_t) Msg3[ 1 ] << 8 |
-			(uint64_t) Msg3[ 2 ] << 16;
-
-		return( (uint64_t) 1 << ml8 | m >> ( 24 - ml8 ));
-	}
-
-	const uint64_t mh = kh_lu32ec( Msg + MsgLen - 4 );
-	const uint64_t ml = kh_lu32ec( Msg );
-
-	return( (uint64_t) 1 << ml8 | ml | ( mh >> ( 64 - ml8 )) << 32 );
-}
-
-/**
- * @brief Load unsigned 64-bit value with padding (non-zero message length).
- *
- * Function builds an unsigned 64-bit value out of remaining bytes in a
- * message, and pads it with the "final byte". This function can only be
- * called if less than 8 bytes are left to read. Can be used on "short"
- * messages, but `MsgLen` should be greater than 0.
- *
- * @param Msg Message pointer, alignment is unimportant.
- * @param MsgLen Message's remaining length, in bytes; cannot be 0.
- * @return Final byte-padded value from the message.
- */
-
-KOMIHASH_INLINE_F uint64_t kh_lpu64ec_nz( const uint8_t* const Msg,
-	const size_t MsgLen ) KOMIHASH_NOEX
-{
-	const int ml8 = (int) ( MsgLen * 8 );
-
-	if( MsgLen < 4 )
-	{
-		uint64_t m = Msg[ 0 ];
-
-		if( MsgLen > 1 )
-		{
-			m |= (uint64_t) Msg[ 1 ] << 8;
-
-			if( MsgLen > 2 )
-			{
-				m |= (uint64_t) Msg[ 2 ] << 16;
-			}
-		}
-
-		return( (uint64_t) 1 << ml8 | m );
-	}
-
-	const uint64_t mh = kh_lu32ec( Msg + MsgLen - 4 );
-	const uint64_t ml = kh_lu32ec( Msg );
-
-	return( (uint64_t) 1 << ml8 | ml | ( mh >> ( 64 - ml8 )) << 32 );
-}
-
-/**
- * @brief Load unsigned 64-bit value with padding (Msg-4 reads).
- *
- * Function builds an unsigned 64-bit value out of remaining bytes in a
- * message, and pads it with the "final byte". This function can only be
- * called if less than 8 bytes are left to read. The message should be "long",
- * permitting `Msg[ -4 ]` reads.
- *
- * @param Msg Message pointer, alignment is unimportant.
- * @param MsgLen Message's remaining length, in bytes; can be 0.
- * @return Final byte-padded value from the message.
- */
-
-KOMIHASH_INLINE_F uint64_t kh_lpu64ec_l4( const uint8_t* const Msg,
-	const size_t MsgLen ) KOMIHASH_NOEX
-{
-	const int ml8 = (int) ( MsgLen * 8 );
-
-	if( MsgLen < 5 )
-	{
-		const uint64_t m = kh_lu32ec( Msg + MsgLen - 4 );
-
-		return( (uint64_t) 1 << ml8 | m >> ( 32 - ml8 ));
-	}
-
-	const uint64_t m = kh_lu64ec( Msg + MsgLen - 8 );
-
-	return( (uint64_t) 1 << ml8 | m >> ( 64 - ml8 ));
-}
 
 /**
  * @def KOMIHASH_M128_IMPL
@@ -665,27 +591,56 @@ KOMIHASH_INLINE_F uint64_t komihash_epi( const uint8_t* Msg, size_t MsgLen,
 		KOMIHASH_HASH16( Msg );
 		KOMIHASH_HASH16( Msg + 16 );
 
-		Msg += 32;
 		MsgLen -= 32;
+		Msg += 32;
 	}
 
 	if( MsgLen > 15 )
 	{
 		KOMIHASH_HASH16( Msg );
 
-		Msg += 16;
 		MsgLen -= 16;
+		Msg += 16;
 	}
 
-	if( MsgLen > 7 )
+	r1h = Seed1;
+	r2h = Seed5;
+
+	if( MsgLen < 8 )
 	{
-		r2h = Seed5 ^ kh_lpu64ec_l4( Msg + 8, MsgLen - 8 );
-		r1h = Seed1 ^ kh_lu64ec( Msg );
+		const int ml8 = (int) ( MsgLen * 8 );
+
+		if( MsgLen < 5 )
+		{
+			const uint64_t m = kh_lu32ec( Msg + MsgLen - 4 ) << ml8;
+
+			r1h ^= (uint64_t) 1 << ml8 | m >> 32;
+		}
+		else
+		{
+			const uint64_t m = kh_lu64ec( Msg + MsgLen - 8 );
+
+			r1h ^= (uint64_t) 1 << ml8 | m >> ( 64 - ml8 );
+		}
 	}
 	else
 	{
-		r1h = Seed1 ^ kh_lpu64ec_l4( Msg, MsgLen );
-		r2h = Seed5;
+		r1h ^= kh_lu64ec( Msg );
+
+		const int ml8 = (int) ( MsgLen * 8 - 64 );
+
+		if( MsgLen < 13 )
+		{
+			const uint64_t m = kh_lu32ec( Msg + MsgLen - 4 ) << ml8;
+
+			r2h ^= (uint64_t) 1 << ml8 | m >> 32;
+		}
+		else
+		{
+			const uint64_t m = kh_lu64ec( Msg + MsgLen - 8 );
+
+			r2h ^= (uint64_t) 1 << ml8 | m >> ( 64 - ml8 );
+		}
 	}
 
 	KOMIHASH_HASHFIN();
@@ -732,41 +687,121 @@ KOMIHASH_INLINE uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 		if( MsgLen > 7 )
 		{
-			// The following two XOR instructions are equivalent to mixing a
+			// The following XOR instructions are equivalent to mixing a
 			// message with a cryptographic one-time-pad (bitwise modulo 2
 			// addition). Message's statistics and distribution are thus
 			// unimportant.
 
-			r2h ^= kh_lpu64ec_l3( Msg + 8, MsgLen - 8 );
 			r1h ^= kh_lu64ec( Msg );
+
+			const int ml8 = (int) ( MsgLen * 8 - 64 );
+
+			if( MsgLen < 12 )
+			{
+				const uint64_t m = (uint64_t) Msg[ MsgLen - 3 ] |
+					(uint64_t) Msg[ MsgLen - 2 ] << 8 |
+					(uint64_t) Msg[ MsgLen - 1 ] << 16 | (uint64_t) 1 << 24;
+
+				r2h ^= ( m << ml8 ) >> 24;
+			}
+			else
+			{
+				const int mhs = (int) ( 64 - ml8 );
+				const uint64_t mh = ( kh_lu32ec( Msg + MsgLen - 4 ) |
+					(uint64_t) 1 << 32 ) >> mhs;
+
+				const uint64_t ml = kh_lu32ec( Msg + 8 );
+
+				r2h ^= mh << 32 | ml;
+			}
 		}
 		else
-		if( KOMIHASH_LIKELY( MsgLen != 0 ))
 		{
-			r1h ^= kh_lpu64ec_nz( Msg, MsgLen );
+			const int ml8 = (int) ( MsgLen * 8 );
+
+			if( MsgLen < 4 )
+			{
+				if( KOMIHASH_LIKELY( MsgLen != 0 ))
+				{
+					r1h ^= (uint64_t) 1 << ml8;
+					r1h ^= (uint64_t) Msg[ 0 ];
+
+					if( MsgLen != 1 )
+					{
+						r1h ^= (uint64_t) Msg[ 1 ] << 8;
+
+						if( MsgLen != 2 )
+						{
+							r1h ^= (uint64_t) Msg[ 2 ] << 16;
+						}
+					}
+				}
+			}
+			else
+			{
+				const int mhs = (int) ( 64 - ml8 );
+				const uint64_t mh = ( kh_lu32ec( Msg + MsgLen - 4 ) |
+					(uint64_t) 1 << 32 ) >> mhs;
+
+				const uint64_t ml = kh_lu32ec( Msg );
+
+				r1h ^= mh << 32 | ml;
+			}
+		}
+	}
+	else
+	{
+		if( KOMIHASH_UNLIKELY( MsgLen > 31 ))
+		{
+			goto _long;
 		}
 
-		KOMIHASH_HASHFIN();
-	}
-
-	if( KOMIHASH_LIKELY( MsgLen < 32 ))
-	{
 		KOMIHASH_HASH16( Msg );
 
-		if( MsgLen > 23 )
+		r1h = Seed1;
+		r2h = Seed5;
+
+		if( MsgLen < 24 )
 		{
-			r2h = Seed5 ^ kh_lpu64ec_l4( Msg + 24, MsgLen - 24 );
-			r1h = Seed1 ^ kh_lu64ec( Msg + 16 );
-			KOMIHASH_HASHFIN();
+			const int ml8 = (int) ( MsgLen * 8 - 128 );
+
+			if( MsgLen < 21 )
+			{
+				const uint64_t m = kh_lu32ec( Msg + MsgLen - 4 ) << ml8;
+
+				r1h ^= (uint64_t) 1 << ml8 | m >> 32;
+			}
+			else
+			{
+				const uint64_t m = kh_lu64ec( Msg + MsgLen - 8 );
+
+				r1h ^= (uint64_t) 1 << ml8 | m >> ( 64 - ml8 );
+			}
 		}
 		else
 		{
-			r1h = Seed1 ^ kh_lpu64ec_l4( Msg + 16, MsgLen - 16 );
-			r2h = Seed5;
-			KOMIHASH_HASHFIN();
+			r1h ^= kh_lu64ec( Msg + 16 );
+
+			const int ml8 = (int) ( MsgLen * 8 - 192 );
+
+			if( MsgLen < 29 )
+			{
+				const uint64_t m = kh_lu32ec( Msg + MsgLen - 4 ) << ml8;
+
+				r2h ^= (uint64_t) 1 << ml8 | m >> 32;
+			}
+			else
+			{
+				const uint64_t m = kh_lu64ec( Msg + MsgLen - 8 );
+
+				r2h ^= (uint64_t) 1 << ml8 | m >> ( 64 - ml8 );
+			}
 		}
 	}
 
+	KOMIHASH_HASHFIN();
+
+_long:
 	if( KOMIHASH_LIKELY( MsgLen > 63 ))
 	{
 		uint64_t Seed2 = KOMIHASH_IVAL2 ^ Seed1;
@@ -1055,6 +1090,28 @@ KOMIHASH_INLINE uint64_t komihash_stream_oneshot( const void* const Msg,
 	return( komihash_stream_final( &ctx ));
 }
 
+#if defined( KOMIHASH_NS )
+
+} // namespace KOMIHASH_NS
+
+#if !defined( KOMIHASH_NS_CUSTOM )
+
+namespace {
+
+using KOMIHASH_NS :: komihash;
+using KOMIHASH_NS :: komirand;
+using KOMIHASH_NS :: komihash_stream_t;
+using KOMIHASH_NS :: komihash_stream_init;
+using KOMIHASH_NS :: komihash_stream_update;
+using KOMIHASH_NS :: komihash_stream_final;
+using KOMIHASH_NS :: komihash_stream_oneshot;
+
+} // namespace
+
+#endif // !defined( KOMIHASH_NS_CUSTOM )
+
+#endif // defined( KOMIHASH_NS )
+
 #undef KOMIHASH_U64_C
 #undef KOMIHASH_NOEX
 #undef KOMIHASH_IVAL1
@@ -1084,23 +1141,5 @@ KOMIHASH_INLINE uint64_t komihash_stream_oneshot( const void* const Msg,
 #if defined( KOMIHASH_EC32 )
 	#undef KOMIHASH_EC32
 #endif // defined( KOMIHASH_EC32 )
-
-#if defined( KOMIHASH_NS )
-
-} // namespace KOMIHASH_NS
-
-namespace {
-
-using KOMIHASH_NS :: komihash;
-using KOMIHASH_NS :: komirand;
-using KOMIHASH_NS :: komihash_stream_t;
-using KOMIHASH_NS :: komihash_stream_init;
-using KOMIHASH_NS :: komihash_stream_update;
-using KOMIHASH_NS :: komihash_stream_final;
-using KOMIHASH_NS :: komihash_stream_oneshot;
-
-} // namespace
-
-#endif // defined( KOMIHASH_NS )
 
 #endif // KOMIHASH_INCLUDED
