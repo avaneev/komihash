@@ -156,7 +156,7 @@ Similarly, `komihash` symbols can be placed into any other custom namespace
 (e.g., a namespace with hash functions):
 
 ```c++
-#define KOMIHASH_NS_CUSTOM_NS_CUSTOM my_hashes
+#define KOMIHASH_NS_CUSTOM my_hashes
 #include "komihash.h"
 ```
 
