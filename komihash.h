@@ -1,7 +1,7 @@
 /**
  * @file komihash.h
  *
- * @version 5.20
+ * @version 5.21
  *
  * @brief The inclusion file for the "komihash" 64-bit hash function,
  * the "komirand" 64-bit PRNG, and streamed "komihash" implementation.
@@ -42,7 +42,7 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.20" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.21" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_NS_CUSTOM
@@ -698,11 +698,12 @@ KOMIHASH_INLINE uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 			if( MsgLen < 12 )
 			{
-				const uint64_t m = (uint64_t) Msg[ MsgLen - 3 ] |
-					(uint64_t) Msg[ MsgLen - 2 ] << 8 |
-					(uint64_t) Msg[ MsgLen - 1 ] << 16 | (uint64_t) 1 << 24;
+				const int ms = (int) ( 24 - ml8 );
+				const uint64_t m = (uint64_t) ( Msg[ MsgLen - 3 ] |
+					Msg[ MsgLen - 1 ] << 16 | 1 << 24 |
+					Msg[ MsgLen - 2 ] << 8 );
 
-				r2h ^= ( m << ml8 ) >> 24;
+				r2h ^= m >> ms;
 			}
 			else
 			{

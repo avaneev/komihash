@@ -11,7 +11,7 @@ inlineable C (C++ compatible).
 
 This function features both a high large-block hashing performance (27 GB/s
 on Ryzen 3700X) and a high hashing throughput for small strings/messages
-(about 9 cycles/hash for 0-15-byte strings, hashed repeatedly). Performance on
+(about 8 cycles/hash for 0-15-byte strings, hashed repeatedly). Performance on
 32-bit systems is, however, quite low. Also, large-block hashing performance
 on big-endian systems may be 20% lower due to the need of byte-swapping (can
 be switched off with a define).
@@ -189,12 +189,12 @@ Compiler options: `/O3 /QxSSE2`.
 9. Apple clang 15.0.0 arm64, macOS 13.3.2, Apple M1, 3.5 GHz.
 Compiler options: `-O3`.
 10. LLVM clang-cl 18.1.8 x86-64, Windows 11, Ryzen 9950X (Zen5), 5.7 GHz.
-Compiler options: `/Ox /arch:sse2`.
+Compiler options: `/Ox -msse2`.
 
 |Platform         |1                |1              |1              |2      |2    |2   |3      |3    |3   |4      |4    |4   |5      |5    |5   |6      |6    |6   |7      |7    |7   |8      |8    |8   |9      |9    |9   |10     |10   |10  |
 |-----------------|-----------------|---------------|---------------|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|
 |Hash function    |`0-15b, cycles/h`|8-28b, cycles/h|bulk, GB/s     |`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|
-|**komihash 5.20**|`10.8`           |12.1           |27.2           |`10.8` |12.2 |27.1|`12.3` |14.0 |23.2|`12.3` |13.1 |31.7|`10.2` |11.9 |31.0|`10.2` |11.8 |31.0|`12.9` |14.4 |21.3|`15.3` |18.0 |19.3|`8.2`  |8.4  |23.6|`8.4`  |9.1  |43.1|
+|**komihash 5.21**|`9.8`            |11.5           |27.1           |`9.8`  |11.5 |27.0|`12.2` |13.9 |23.2|`10.9` |12.0 |31.7|`10.3` |11.9 |31.0|`10.3` |11.9 |31.0|`11.9` |13.6 |22.8|`15.5` |18.1 |19.4|`8.1`  |8.4  |23.6|`7.0`  |8.1  |43.2|
 |wyhash_final4    |`14.5`           |18.2           |29.3           |`14.7` |18.2 |29.3|`25.9` |32.9 |12.5|`17.1` |21.9 |34.0|`17.2` |23.1 |35.3|`17.3` |23.2 |35.5|`15.5` |20.4 |29.8|`21.1` |26.1 |19.4|`7.9`  |8.1  |26.1|`13.9` |18.5 |41.7|
 |XXH3_64 0.8.0    |`15.5`           |28.8           |30.0           |`15.5` |28.7 |61.8|`21.8` |27.2 |29.6|`18.5` |25.8 |68.2|`19.2` |25.3 |33.8|`19.7` |26.3 |63.6|`18.4` |23.0 |48.3|`19.9` |25.8 |28.0|`8.2`  |8.2  |30.5|`15.4` |31.0 |50.3|
 |XXH64 0.8.0      |`12.5`           |17.5           |17.2           |`12.5` |17.5 |17.3|`24.3` |36.6 |8.9 |`10.5` |14.5 |20.1|`11.2` |14.6 |20.1|`11.2` |14.6 |20.0|`13.2` |17.3 |17.7|`18.8` |24.7 |16.0|`8.8`  |10.4 |14.5|`9.1`  |12.7 |31.4|
@@ -210,7 +210,7 @@ overhead. Measurement error is approximately 3%.
 
 |Hash function    |0-15b, cycles/h|8-28b, cycles/h|
 |----             |----           |----           |
-|**komihash 5.20**|**8.1**        |**9.5**        |
+|**komihash 5.21**|**7.6**        |**9.1**        |
 |komihash 4.5     |9.5            |11.4           |
 |komihash 4.3     |10.4           |12.1           |
 |komihash 3.6     |10.9           |15.4           |
