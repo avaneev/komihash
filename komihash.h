@@ -1,7 +1,7 @@
 /**
  * @file komihash.h
  *
- * @version 5.21
+ * @version 5.22
  *
  * @brief The inclusion file for the "komihash" 64-bit hash function,
  * the "komirand" 64-bit PRNG, and streamed "komihash" implementation.
@@ -42,7 +42,7 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.21" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.22" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_NS_CUSTOM
@@ -66,8 +66,9 @@
 
 /**
  * @def KOMIHASH_NS
- * @brief Macro that defines an implementation namespace in C++ environment,
- * with export of relevant symbols to the unnamed namespace.
+ * @brief Macro that defines an actual implementation namespace in C++
+ * environment, with export of relevant symbols to the global namespace
+ * (if @ref KOMIHASH_NS_CUSTOM is undefined).
  */
 
 #if defined( __cplusplus )
@@ -96,7 +97,7 @@
 		#define KOMIHASH_NS komihash_impl
 	#endif // defined( KOMIHASH_NS_CUSTOM )
 
-#else // __cplusplus
+#else // defined( __cplusplus )
 
 	#include <string.h>
 	#include <stdint.h>
@@ -104,7 +105,7 @@
 	#define KOMIHASH_U64_C( x ) (uint64_t) x
 	#define KOMIHASH_NOEX
 
-#endif // __cplusplus
+#endif // defined( __cplusplus )
 
 #if defined( _MSC_VER )
 	#include <intrin.h>
@@ -603,44 +604,25 @@ KOMIHASH_INLINE_F uint64_t komihash_epi( const uint8_t* Msg, size_t MsgLen,
 		Msg += 16;
 	}
 
-	r1h = Seed1;
-	r2h = Seed5;
+	int ml8 = (int) ( MsgLen * 8 );
 
 	if( MsgLen < 8 )
 	{
-		const int ml8 = (int) ( MsgLen * 8 );
+		ml8 ^= 56;
+		const uint64_t m = ( kh_lu64ec( Msg + MsgLen - 8 ) >> 8 |
+			(uint64_t) 1 << 56 );
 
-		if( MsgLen < 5 )
-		{
-			const uint64_t m = kh_lu32ec( Msg + MsgLen - 4 ) << ml8;
-
-			r1h ^= (uint64_t) 1 << ml8 | m >> 32;
-		}
-		else
-		{
-			const uint64_t m = kh_lu64ec( Msg + MsgLen - 8 );
-
-			r1h ^= (uint64_t) 1 << ml8 | m >> ( 64 - ml8 );
-		}
+		r2h = Seed5;
+		r1h = Seed1 ^ ( m >> ml8 );
 	}
 	else
 	{
-		r1h ^= kh_lu64ec( Msg );
+		const uint64_t m = ( kh_lu64ec( Msg + MsgLen - 8 ) >> 8 |
+			(uint64_t) 1 << 56 );
 
-		const int ml8 = (int) ( MsgLen * 8 - 64 );
-
-		if( MsgLen < 13 )
-		{
-			const uint64_t m = kh_lu32ec( Msg + MsgLen - 4 ) << ml8;
-
-			r2h ^= (uint64_t) 1 << ml8 | m >> 32;
-		}
-		else
-		{
-			const uint64_t m = kh_lu64ec( Msg + MsgLen - 8 );
-
-			r2h ^= (uint64_t) 1 << ml8 | m >> ( 64 - ml8 );
-		}
+		ml8 ^= 120;
+		r1h = Seed1 ^ kh_lu64ec( Msg );
+		r2h = Seed5 ^ ( m >> ml8 );
 	}
 
 	KOMIHASH_HASHFIN();
@@ -694,20 +676,20 @@ KOMIHASH_INLINE uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 			r1h ^= kh_lu64ec( Msg );
 
-			const int ml8 = (int) ( MsgLen * 8 - 64 );
+			int ml8 = (int) ( MsgLen * 8 );
 
 			if( MsgLen < 12 )
 			{
-				const int ms = (int) ( 24 - ml8 );
+				ml8 ^= 88;
 				const uint64_t m = (uint64_t) ( Msg[ MsgLen - 3 ] |
 					Msg[ MsgLen - 1 ] << 16 | 1 << 24 |
 					Msg[ MsgLen - 2 ] << 8 );
 
-				r2h ^= m >> ms;
+				r2h ^= m >> ml8;
 			}
 			else
 			{
-				const int mhs = (int) ( 64 - ml8 );
+				const int mhs = 128 - ml8;
 				const uint64_t mh = ( kh_lu32ec( Msg + MsgLen - 4 ) |
 					(uint64_t) 1 << 32 ) >> mhs;
 
@@ -717,30 +699,28 @@ KOMIHASH_INLINE uint64_t komihash( const void* const Msg0, size_t MsgLen,
 			}
 		}
 		else
+		if( KOMIHASH_LIKELY( MsgLen != 0 ))
 		{
 			const int ml8 = (int) ( MsgLen * 8 );
 
 			if( MsgLen < 4 )
 			{
-				if( KOMIHASH_LIKELY( MsgLen != 0 ))
+				r1h ^= (uint64_t) 1 << ml8;
+				r1h ^= (uint64_t) Msg[ 0 ];
+
+				if( MsgLen != 1 )
 				{
-					r1h ^= (uint64_t) 1 << ml8;
-					r1h ^= (uint64_t) Msg[ 0 ];
+					r1h ^= (uint64_t) Msg[ 1 ] << 8;
 
-					if( MsgLen != 1 )
+					if( MsgLen != 2 )
 					{
-						r1h ^= (uint64_t) Msg[ 1 ] << 8;
-
-						if( MsgLen != 2 )
-						{
-							r1h ^= (uint64_t) Msg[ 2 ] << 16;
-						}
+						r1h ^= (uint64_t) Msg[ 2 ] << 16;
 					}
 				}
 			}
 			else
 			{
-				const int mhs = (int) ( 64 - ml8 );
+				const int mhs = 64 - ml8;
 				const uint64_t mh = ( kh_lu32ec( Msg + MsgLen - 4 ) |
 					(uint64_t) 1 << 32 ) >> mhs;
 
@@ -759,44 +739,27 @@ KOMIHASH_INLINE uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 		KOMIHASH_HASH16( Msg );
 
-		r1h = Seed1;
-		r2h = Seed5;
+		int ml8 = (int) ( MsgLen * 8 );
 
 		if( MsgLen < 24 )
 		{
-			const int ml8 = (int) ( MsgLen * 8 - 128 );
+			ml8 ^= 184;
+			const uint64_t m = ( kh_lu64ec( Msg + MsgLen - 8 ) >> 8 |
+				(uint64_t) 1 << 56 );
 
-			if( MsgLen < 21 )
-			{
-				const uint64_t m = kh_lu32ec( Msg + MsgLen - 4 ) << ml8;
+			r2h = Seed5;
+			r1h = Seed1 ^ ( m >> ml8 );
 
-				r1h ^= (uint64_t) 1 << ml8 | m >> 32;
-			}
-			else
-			{
-				const uint64_t m = kh_lu64ec( Msg + MsgLen - 8 );
-
-				r1h ^= (uint64_t) 1 << ml8 | m >> ( 64 - ml8 );
-			}
+			KOMIHASH_HASHFIN();
 		}
 		else
 		{
-			r1h ^= kh_lu64ec( Msg + 16 );
+			const uint64_t m = ( kh_lu64ec( Msg + MsgLen - 8 ) >> 8 |
+				(uint64_t) 1 << 56 );
 
-			const int ml8 = (int) ( MsgLen * 8 - 192 );
-
-			if( MsgLen < 29 )
-			{
-				const uint64_t m = kh_lu32ec( Msg + MsgLen - 4 ) << ml8;
-
-				r2h ^= (uint64_t) 1 << ml8 | m >> 32;
-			}
-			else
-			{
-				const uint64_t m = kh_lu64ec( Msg + MsgLen - 8 );
-
-				r2h ^= (uint64_t) 1 << ml8 | m >> ( 64 - ml8 );
-			}
+			ml8 ^= 248;
+			r1h = Seed1 ^ kh_lu64ec( Msg + 16 );
+			r2h = Seed5 ^ ( m >> ml8 );
 		}
 	}
 
@@ -1113,6 +1076,13 @@ using KOMIHASH_NS :: komihash_stream_oneshot;
 
 #endif // defined( KOMIHASH_NS )
 
+// Defines for Doxygen.
+
+#if !defined( KOMIHASH_NS_CUSTOM )
+	#define KOMIHASH_NS_CUSTOM
+#endif // !defined( KOMIHASH_NS_CUSTOM )
+
+#undef KOMIHASH_NS_CUSTOM
 #undef KOMIHASH_U64_C
 #undef KOMIHASH_NOEX
 #undef KOMIHASH_IVAL1
@@ -1125,6 +1095,9 @@ using KOMIHASH_NS :: komihash_stream_oneshot;
 #undef KOMIHASH_IVAL8
 #undef KOMIHASH_VAL01
 #undef KOMIHASH_VAL10
+#undef KOMIHASH_ICC_GCC
+#undef KOMIHASH_GCC_BUILTINS
+#undef KOMIHASH_EC32
 #undef KOMIHASH_LIKELY
 #undef KOMIHASH_UNLIKELY
 #undef KOMIHASH_PREFETCH
@@ -1134,13 +1107,5 @@ using KOMIHASH_NS :: komihash_stream_oneshot;
 #undef KOMIHASH_HASH16
 #undef KOMIHASH_HASHFIN
 #undef KOMIHASH_HASHLOOP64
-
-#if defined( KOMIHASH_ICC_GCC )
-	#undef KOMIHASH_ICC_GCC
-#endif // defined( KOMIHASH_ICC_GCC )
-
-#if defined( KOMIHASH_EC32 )
-	#undef KOMIHASH_EC32
-#endif // defined( KOMIHASH_EC32 )
 
 #endif // KOMIHASH_INCLUDED

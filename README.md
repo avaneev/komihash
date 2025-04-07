@@ -5,8 +5,8 @@
 The `komihash()` function available in the `komihash.h` file implements a very
 fast 64-bit hash function, mainly designed for hash-table, hash-map, and
 bloom-filter uses; produces identical hashes on both big- and little-endian
-systems. Suitable for file and large data hashing. Function's code is
-portable, cross-platform, scalar, zero-allocation, is header-only,
+systems. Suitable for file and large data hashing (checksums). Function's code
+is portable, cross-platform, scalar, zero-allocation, is header-only,
 inlineable C (C++ compatible).
 
 This function features both a high large-block hashing performance (27 GB/s
@@ -194,7 +194,7 @@ Compiler options: `/Ox -msse2`.
 |Platform         |1                |1              |1              |2      |2    |2   |3      |3    |3   |4      |4    |4   |5      |5    |5   |6      |6    |6   |7      |7    |7   |8      |8    |8   |9      |9    |9   |10     |10   |10  |
 |-----------------|-----------------|---------------|---------------|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|
 |Hash function    |`0-15b, cycles/h`|8-28b, cycles/h|bulk, GB/s     |`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|
-|**komihash 5.21**|`9.8`            |11.5           |27.1           |`9.8`  |11.5 |27.0|`12.2` |13.9 |23.2|`10.9` |12.0 |31.7|`10.3` |11.9 |31.0|`10.3` |11.9 |31.0|`11.9` |13.6 |22.8|`15.5` |18.1 |19.4|`8.1`  |8.4  |23.6|`7.0`  |8.1  |43.2|
+|**komihash 5.22**|`9.8`            |11.2           |27.1           |`9.8`  |11.2 |27.0|`12.7` |13.9 |23.0|`10.7` |11.8 |31.7|`10.0` |11.4 |30.9|`10.0` |11.4 |31.0|`12.0` |13.3 |22.8|`15.8` |17.9 |19.4|`8.0`  |8.0  |23.6|`7.0`  |8.0  |43.1|
 |wyhash_final4    |`14.5`           |18.2           |29.3           |`14.7` |18.2 |29.3|`25.9` |32.9 |12.5|`17.1` |21.9 |34.0|`17.2` |23.1 |35.3|`17.3` |23.2 |35.5|`15.5` |20.4 |29.8|`21.1` |26.1 |19.4|`7.9`  |8.1  |26.1|`13.9` |18.5 |41.7|
 |XXH3_64 0.8.0    |`15.5`           |28.8           |30.0           |`15.5` |28.7 |61.8|`21.8` |27.2 |29.6|`18.5` |25.8 |68.2|`19.2` |25.3 |33.8|`19.7` |26.3 |63.6|`18.4` |23.0 |48.3|`19.9` |25.8 |28.0|`8.2`  |8.2  |30.5|`15.4` |31.0 |50.3|
 |XXH64 0.8.0      |`12.5`           |17.5           |17.2           |`12.5` |17.5 |17.3|`24.3` |36.6 |8.9 |`10.5` |14.5 |20.1|`11.2` |14.6 |20.1|`11.2` |14.6 |20.0|`13.2` |17.3 |17.7|`18.8` |24.7 |16.0|`8.8`  |10.4 |14.5|`9.1`  |12.7 |31.4|
@@ -210,7 +210,8 @@ overhead. Measurement error is approximately 3%.
 
 |Hash function    |0-15b, cycles/h|8-28b, cycles/h|
 |----             |----           |----           |
-|**komihash 5.21**|**7.6**        |**9.1**        |
+|**komihash 5.22**|**7.6**        |**8.8**        |
+|komihash 5.10    |8.2            |9.8            |
 |komihash 4.5     |9.5            |11.4           |
 |komihash 4.3     |10.4           |12.1           |
 |komihash 3.6     |10.9           |15.4           |
