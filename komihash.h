@@ -1,7 +1,7 @@
 /**
  * @file komihash.h
  *
- * @version 5.22
+ * @version 5.23
  *
  * @brief The inclusion file for the "komihash" 64-bit hash function,
  * the "komirand" 64-bit PRNG, and streamed "komihash" implementation.
@@ -42,7 +42,7 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.22" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.23" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_NS_CUSTOM
@@ -676,20 +676,19 @@ KOMIHASH_INLINE uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 			r1h ^= kh_lu64ec( Msg );
 
-			int ml8 = (int) ( MsgLen * 8 );
-
 			if( MsgLen < 12 )
 			{
-				ml8 ^= 88;
+				int ml8 = (int) ( MsgLen * 8 );
 				const uint64_t m = (uint64_t) ( Msg[ MsgLen - 3 ] |
 					Msg[ MsgLen - 1 ] << 16 | 1 << 24 |
 					Msg[ MsgLen - 2 ] << 8 );
 
+				ml8 ^= 88;
 				r2h ^= m >> ml8;
 			}
 			else
 			{
-				const int mhs = 128 - ml8;
+				const int mhs = (int) ( 128 - MsgLen * 8 );
 				const uint64_t mh = ( kh_lu32ec( Msg + MsgLen - 4 ) |
 					(uint64_t) 1 << 32 ) >> mhs;
 
@@ -699,22 +698,24 @@ KOMIHASH_INLINE uint64_t komihash( const void* const Msg0, size_t MsgLen,
 			}
 		}
 		else
-		if( KOMIHASH_LIKELY( MsgLen != 0 ))
 		{
 			const int ml8 = (int) ( MsgLen * 8 );
 
 			if( MsgLen < 4 )
 			{
-				r1h ^= (uint64_t) 1 << ml8;
-				r1h ^= (uint64_t) Msg[ 0 ];
-
-				if( MsgLen != 1 )
+				if( KOMIHASH_LIKELY( MsgLen != 0 ))
 				{
-					r1h ^= (uint64_t) Msg[ 1 ] << 8;
+					r1h ^= (uint64_t) 1 << ml8;
+					r1h ^= (uint64_t) Msg[ 0 ];
 
-					if( MsgLen != 2 )
+					if( MsgLen != 1 )
 					{
-						r1h ^= (uint64_t) Msg[ 2 ] << 16;
+						r1h ^= (uint64_t) Msg[ 1 ] << 8;
+
+						if( MsgLen != 2 )
+						{
+							r1h ^= (uint64_t) Msg[ 2 ] << 16;
+						}
 					}
 				}
 			}
