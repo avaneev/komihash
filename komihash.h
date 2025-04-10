@@ -1,7 +1,7 @@
 /**
  * @file komihash.h
  *
- * @version 5.23
+ * @version 5.24
  *
  * @brief The inclusion file for the "komihash" 64-bit hash function,
  * the "komirand" 64-bit PRNG, and streamed "komihash" implementation.
@@ -42,7 +42,7 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.23" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.24" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_NS_CUSTOM
@@ -55,6 +55,7 @@
 /**
  * @def KOMIHASH_U64_C( x )
  * @brief Macro that defines a numeric value as unsigned 64-bit value.
+ *
  * @param x Value.
  */
 
@@ -208,6 +209,7 @@
  * @def KOMIHASH_EC32( v )
  * @brief Macro that appies 32-bit byte-swapping, for endianness-correction.
  * Undefined for unknown compilers, if big-endian.
+ *
  * @param v Value to byte-swap.
  */
 
@@ -215,6 +217,7 @@
  * @def KOMIHASH_EC64( v )
  * @brief Macro that appies 64-bit byte-swapping, for endianness-correction.
  * Undefined for unknown compilers, if big-endian.
+ *
  * @param v Value to byte-swap.
  */
 
@@ -243,6 +246,7 @@
  * @def KOMIHASH_LIKELY( x )
  * @brief Likelihood macro that is used for manually-guided
  * micro-optimization.
+ *
  * @param x Expression that is likely to be evaluated to `true`.
  */
 
@@ -250,6 +254,7 @@
  * @def KOMIHASH_UNLIKELY( x )
  * @brief Unlikelihood macro that is used for manually-guided
  * micro-optimization.
+ *
  * @param x Expression that is unlikely to be evaluated to `true`.
  */
 
@@ -348,7 +353,7 @@ KOMIHASH_INLINE_F uint64_t kh_lu32ec( const uint8_t* const p ) KOMIHASH_NOEX
 
 #else // defined( KOMIHASH_EC32 )
 
-	return( (uint64_t) ( p[ 0 ] | p[ 1 ] << 8 | p[ 2 ] << 16 | p[ 3 ] << 24 ));
+	return( (uint32_t) ( p[ 0 ] | p[ 1 ] << 8 | p[ 2 ] << 16 | p[ 3 ] << 24 ));
 
 #endif // defined( KOMIHASH_EC32 )
 }
@@ -378,7 +383,8 @@ KOMIHASH_INLINE_F uint64_t kh_lu64ec( const uint8_t* const p ) KOMIHASH_NOEX
 
 /**
  * @def KOMIHASH_EMULU( u, v )
- * @brief Aux macro for `__emulu` intrinsic.
+ * @brief Aux macro for `__emulu()` intrinsic.
+ *
  * @param u Multiplier 1.
  * @param v Multiplier 2.
  */
@@ -509,6 +515,7 @@ void kh_m128( const uint64_t u, const uint64_t v,
 /**
  * @def KOMIHASH_HASH16( m )
  * @brief Macro for a common hashing round with 16-byte input.
+ *
  * @param m Message pointer, alignment is unimportant.
  */
 
@@ -577,8 +584,8 @@ void kh_m128( const uint64_t u, const uint64_t v,
  *
  * @param Msg Pointer to the remaining part of the message.
  * @param MsgLen Remaining part's length, can be 0.
- * @param Seed1 Latest Seed1 value.
- * @param Seed5 Latest Seed5 value.
+ * @param Seed1 Latest `Seed1` value.
+ * @param Seed5 Latest `Seed5` value.
  * @return 64-bit hash value.
  */
 
@@ -587,7 +594,7 @@ KOMIHASH_INLINE_F uint64_t komihash_epi( const uint8_t* Msg, size_t MsgLen,
 {
 	uint64_t r1h, r2h;
 
-	if( KOMIHASH_LIKELY( MsgLen > 31 ))
+	if( MsgLen > 31 )
 	{
 		KOMIHASH_HASH16( Msg );
 		KOMIHASH_HASH16( Msg + 16 );
@@ -632,19 +639,20 @@ KOMIHASH_INLINE_F uint64_t komihash_epi( const uint8_t* Msg, size_t MsgLen,
  * @brief KOMIHASH 64-bit hash function.
  *
  * Produces and returns a 64-bit hash value of the specified message, string,
- * or binary data block. Designed for 64-bit hash-table and hash-map uses.
- * Produces identical hashes on both big- and little-endian systems.
+ * or binary data block. Designed for 64-bit hash-table and hash-map uses, and
+ * can be also used for checksums. Produces identical hashes on both big- and
+ * little-endian systems.
  *
  * @param Msg0 The message to produce a hash from. The alignment of this
  * pointer is unimportant. It is valid to pass 0 when `MsgLen` equals 0
- * (assuming that compiler's implementation of the address prefetch permits
- * the use of zero address).
+ * (assuming that compiler's implementation of the address prefetch is
+ * non-failing, as per GCC specification).
  * @param MsgLen Message's length, in bytes, can be zero.
  * @param UseSeed Optional value, to use instead of the default seed. To use
- * the default seed, set to 0. The UseSeed value can have any bit length and
- * statistical quality, and is used only as an additional entropy source. May
- * need endianness-correction via KOMIHASH_EC64(), if this value is shared
- * between big- and little-endian systems.
+ * the default seed, set to 0. This value can have any number of significant
+ * bits, and any statistical quality. May need endianness-correction via
+ * KOMIHASH_EC64(), if this value is shared between big- and little-endian
+ * systems.
  * @return 64-bit hash of the input data. Should be endianness-corrected when
  * this value is shared between big- and little-endian systems.
  */
@@ -698,24 +706,22 @@ KOMIHASH_INLINE uint64_t komihash( const void* const Msg0, size_t MsgLen,
 			}
 		}
 		else
+		if( MsgLen != 0 )
 		{
 			const int ml8 = (int) ( MsgLen * 8 );
 
 			if( MsgLen < 4 )
 			{
-				if( KOMIHASH_LIKELY( MsgLen != 0 ))
+				r1h ^= (uint64_t) 1 << ml8;
+				r1h ^= (uint64_t) Msg[ 0 ];
+
+				if( MsgLen != 1 )
 				{
-					r1h ^= (uint64_t) 1 << ml8;
-					r1h ^= (uint64_t) Msg[ 0 ];
+					r1h ^= (uint64_t) Msg[ 1 ] << 8;
 
-					if( MsgLen != 1 )
+					if( MsgLen != 2 )
 					{
-						r1h ^= (uint64_t) Msg[ 1 ] << 8;
-
-						if( MsgLen != 2 )
-						{
-							r1h ^= (uint64_t) Msg[ 2 ] << 16;
-						}
+						r1h ^= (uint64_t) Msg[ 2 ] << 16;
 					}
 				}
 			}
@@ -857,10 +863,10 @@ typedef struct {
  *
  * @param[out] ctx Pointer to the context structure.
  * @param UseSeed Optional value, to use instead of the default seed. To use
- * the default seed, set to 0. The UseSeed value can have any bit length and
- * statistical quality, and is used only as an additional entropy source. May
- * need endianness-correction via KOMIHASH_EC64(), if this value is shared
- * between big- and little-endian systems.
+ * the default seed, set to 0. This value can have any number of significant
+ * bits, and any statistical quality. May need endianness-correction via
+ * KOMIHASH_EC64(), if this value is shared between big- and little-endian
+ * systems.
  */
 
 KOMIHASH_INLINE void komihash_stream_init( komihash_stream_t* const ctx,
@@ -987,7 +993,7 @@ KOMIHASH_INLINE void komihash_stream_update( komihash_stream_t* const ctx,
  * 
  * Returns the resulting hash value of the previously hashed data. This value
  * is equal to the value returned by the komihash() function for the same
- * provided data.
+ * overall provided data.
  *
  * Note that since this function is non-destructive to the context structure,
  * the function can be used to obtain intermediate hashes of the data stream
