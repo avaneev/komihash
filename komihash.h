@@ -1,7 +1,7 @@
 /**
  * @file komihash.h
  *
- * @version 5.24
+ * @version 5.25
  *
  * @brief The inclusion file for the "komihash" 64-bit hash function,
  * the "komirand" 64-bit PRNG, and streamed "komihash" implementation.
@@ -42,7 +42,7 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.24" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.25" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_NS_CUSTOM
@@ -146,37 +146,55 @@
 /**
  * @def KOMIHASH_LITTLE_ENDIAN
  * @brief Endianness definition macro, can be used as a logical constant.
+ * Equals 0, if C++20 `endian` is in use.
  *
  * Can be defined externally (e.g., =1, if endianness-correction and
  * hash-value portability are unnecessary in any case, to reduce overhead).
  */
 
+/**
+ * @def KOMIHASH_COND_EC( vl, vb )
+ * @brief Macro that emits either `vl` or `vb`, depending on platform's
+ * endianness.
+ */
+
 #if !defined( KOMIHASH_LITTLE_ENDIAN )
-	#if defined( __LITTLE_ENDIAN__ ) || defined( __LITTLE_ENDIAN ) || \
-		defined( _LITTLE_ENDIAN ) || ( defined( __BYTE_ORDER__ ) && \
+	#if ( defined( __BYTE_ORDER__ ) && \
 			__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ ) || \
+		( defined( __BYTE_ORDER ) && __BYTE_ORDER == __LITTLE_ENDIAN ) || \
+		defined( __LITTLE_ENDIAN__ ) || defined( _LITTLE_ENDIAN ) || \
 		defined( _WIN32 ) || defined( i386 ) || defined( __i386 ) || \
 		defined( __i386__ ) || defined( _M_IX86 ) || defined( _M_AMD64 ) || \
-		defined( __x86_64 ) || defined( __x86_64__ ) || \
+		defined( _X86_ ) || defined( __x86_64 ) || defined( __x86_64__ ) || \
 		defined( __amd64 ) || defined( __amd64__ ) || defined( _M_ARM )
 
 		#define KOMIHASH_LITTLE_ENDIAN 1
 
-	#elif defined( __BIG_ENDIAN__ ) || defined( __BIG_ENDIAN ) || \
-		defined( _BIG_ENDIAN ) || ( defined( __BYTE_ORDER__ ) && \
+	#elif ( defined( __BYTE_ORDER__ ) && \
 			__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ ) || \
+		( defined( __BYTE_ORDER ) && __BYTE_ORDER == __BIG_ENDIAN ) || \
+		defined( __BIG_ENDIAN__ ) || defined( _BIG_ENDIAN ) || \
 		defined( __SYSC_ZARCH__ ) || defined( __zarch__ ) || \
 		defined( __s390x__ ) || defined( __sparc ) || defined( __sparc__ )
 
 		#define KOMIHASH_LITTLE_ENDIAN 0
+		#define KOMIHASH_COND_EC( vl, vb ) ( vb )
 
-	#else // defined( __BIG_ENDIAN__ )
+	#elif defined( __cplusplus ) && __cplusplus >= 202002L
+
+		#include <bit>
+
+		#define KOMIHASH_LITTLE_ENDIAN 0
+		#define KOMIHASH_COND_EC( vl, vb ) ( std :: endian :: native == \
+			std :: endian :: little ? vl : vb )
+
+	#else // defined( __cplusplus )
 
 		#warning KOMIHASH: cannot determine endianness, assuming little-endian.
 
 		#define KOMIHASH_LITTLE_ENDIAN 1
 
-	#endif // defined( __BIG_ENDIAN__ )
+	#endif // defined( __cplusplus )
 #endif // !defined( KOMIHASH_LITTLE_ENDIAN )
 
 /**
@@ -230,15 +248,28 @@
 
 	#if defined( KOMIHASH_GCC_BUILTINS )
 
-		#define KOMIHASH_EC32( v ) __builtin_bswap32( v )
-		#define KOMIHASH_EC64( v ) __builtin_bswap64( v )
+		#define KOMIHASH_EC32( v ) KOMIHASH_COND_EC( v, __builtin_bswap32( v ))
+		#define KOMIHASH_EC64( v ) KOMIHASH_COND_EC( v, __builtin_bswap64( v ))
 
 	#elif defined( _MSC_VER )
 
-		#define KOMIHASH_EC32( v ) _byteswap_ulong( v )
-		#define KOMIHASH_EC64( v ) _byteswap_uint64( v )
+		#if defined( __cplusplus )
+			#include <cstdlib>
+		#else // defined( __cplusplus )
+			#include <stdlib.h>
+		#endif // defined( __cplusplus )
 
-	#endif // defined( _MSC_VER )
+		#define KOMIHASH_EC32( v ) KOMIHASH_COND_EC( v, _byteswap_ulong( v ))
+		#define KOMIHASH_EC64( v ) KOMIHASH_COND_EC( v, _byteswap_uint64( v ))
+
+	#elif defined( __cplusplus ) && __cplusplus >= 202302L
+
+		#include <bit>
+
+		#define KOMIHASH_EC32( v ) KOMIHASH_COND_EC( v, std :: byteswap( v ))
+		#define KOMIHASH_EC64( v ) KOMIHASH_COND_EC( v, std :: byteswap( v ))
+
+	#endif // defined( __cplusplus )
 
 #endif // KOMIHASH_LITTLE_ENDIAN
 
@@ -260,15 +291,20 @@
 
 #if defined( KOMIHASH_GCC_BUILTINS )
 
-	#define KOMIHASH_LIKELY( x ) __builtin_expect( x, 1 )
-	#define KOMIHASH_UNLIKELY( x ) __builtin_expect( x, 0 )
+	#define KOMIHASH_LIKELY( x ) ( __builtin_expect( x, 1 ))
+	#define KOMIHASH_UNLIKELY( x ) ( __builtin_expect( x, 0 ))
 
-#else // defined( KOMIHASH_GCC_BUILTINS )
+#elif defined( __cplusplus ) && __cplusplus >= 202002L
+
+	#define KOMIHASH_LIKELY( x ) ( x ) [[likely]]
+	#define KOMIHASH_UNLIKELY( x ) ( x ) [[unlikely]]
+
+#else // defined( __cplusplus )
 
 	#define KOMIHASH_LIKELY( x ) ( x )
 	#define KOMIHASH_UNLIKELY( x ) ( x )
 
-#endif // defined( KOMIHASH_GCC_BUILTINS )
+#endif // defined( __cplusplus )
 
 /**
  * @def KOMIHASH_PREFETCH( a )
@@ -290,8 +326,21 @@
 
 #endif // Prefetch macro
 
-#define KOMIHASH_INLINE static inline ///< Macro that defines a function as
-	///< inlinable at compiler's discretion.
+/**
+ * @def KOMIHASH_INLINE
+ * @brief Macro that defines a function as inlinable at compiler's discretion.
+ */
+
+#if ( defined( __cplusplus ) && __cplusplus >= 201703L ) || \
+	( defined( __STDC_VERSION__ ) && __STDC_VERSION__ >= 202311L )
+
+	#define KOMIHASH_INLINE [[maybe_unused]] static inline
+
+#else // defined( __cplusplus )
+
+	#define KOMIHASH_INLINE static inline
+
+#endif // defined( __cplusplus )
 
 /**
  * @def KOMIHASH_INLINE_F
@@ -520,8 +569,8 @@ void kh_m128( const uint64_t u, const uint64_t v,
  */
 
 #define KOMIHASH_HASH16( m ) \
-	kh_m128( Seed1 ^ kh_lu64ec( m ), \
-		Seed5 ^ kh_lu64ec( m + 8 ), &Seed1, &Seed5 ); \
+	kh_m128( kh_lu64ec( m ) ^ Seed1, \
+		kh_lu64ec( m + 8 ) ^ Seed5, &Seed1, &Seed5 ); \
 	Seed1 ^= Seed5
 
 /**
@@ -555,17 +604,17 @@ void kh_m128( const uint64_t u, const uint64_t v,
 #define KOMIHASH_HASHLOOP64() \
 	do \
 	{ \
-		kh_m128( Seed1 ^ kh_lu64ec( Msg ), \
-			Seed5 ^ kh_lu64ec( Msg + 32 ), &Seed1, &Seed5 ); \
+		kh_m128( kh_lu64ec( Msg ) ^ Seed1, \
+			kh_lu64ec( Msg + 32 ) ^ Seed5, &Seed1, &Seed5 ); \
 	\
-		kh_m128( Seed2 ^ kh_lu64ec( Msg + 8 ), \
-			Seed6 ^ kh_lu64ec( Msg + 40 ), &Seed2, &Seed6 ); \
+		kh_m128( kh_lu64ec( Msg + 8 ) ^ Seed2, \
+			kh_lu64ec( Msg + 40 ) ^ Seed6, &Seed2, &Seed6 ); \
 	\
-		kh_m128( Seed3 ^ kh_lu64ec( Msg + 16 ), \
-			Seed7 ^ kh_lu64ec( Msg + 48 ), &Seed3, &Seed7 ); \
+		kh_m128( kh_lu64ec( Msg + 16 ) ^ Seed3, \
+			kh_lu64ec( Msg + 48 ) ^ Seed7, &Seed3, &Seed7 ); \
 	\
-		kh_m128( Seed4 ^ kh_lu64ec( Msg + 24 ), \
-			Seed8 ^ kh_lu64ec( Msg + 56 ), &Seed4, &Seed8 ); \
+		kh_m128( kh_lu64ec( Msg + 24 ) ^ Seed4, \
+			kh_lu64ec( Msg + 56 ) ^ Seed8, &Seed4, &Seed8 ); \
 	\
 		Msg += 64; \
 		MsgLen -= 64; \
@@ -577,7 +626,7 @@ void kh_m128( const uint64_t u, const uint64_t v,
 	\
 		KOMIHASH_PREFETCH( Msg ); \
 	\
-	} while( KOMIHASH_LIKELY( MsgLen > 63 ))
+	} while KOMIHASH_LIKELY( MsgLen > 63 )
 
 /**
  * @brief The hashing epilogue function (for internal use).
@@ -594,7 +643,7 @@ KOMIHASH_INLINE_F uint64_t komihash_epi( const uint8_t* Msg, size_t MsgLen,
 {
 	uint64_t r1h, r2h;
 
-	if( MsgLen > 31 )
+	if KOMIHASH_LIKELY( MsgLen > 31 )
 	{
 		KOMIHASH_HASH16( Msg );
 		KOMIHASH_HASH16( Msg + 16 );
@@ -616,20 +665,16 @@ KOMIHASH_INLINE_F uint64_t komihash_epi( const uint8_t* Msg, size_t MsgLen,
 	if( MsgLen < 8 )
 	{
 		ml8 ^= 56;
-		const uint64_t m = ( kh_lu64ec( Msg + MsgLen - 8 ) >> 8 |
-			(uint64_t) 1 << 56 );
-
+		r1h = kh_lu64ec( Msg + MsgLen - 8 ) >> 8 | (uint64_t) 1 << 56;
 		r2h = Seed5;
-		r1h = Seed1 ^ ( m >> ml8 );
+		r1h = ( r1h >> ml8 ) ^ Seed1;
 	}
 	else
 	{
-		const uint64_t m = ( kh_lu64ec( Msg + MsgLen - 8 ) >> 8 |
-			(uint64_t) 1 << 56 );
-
+		r2h = kh_lu64ec( Msg + MsgLen - 8 ) >> 8 | (uint64_t) 1 << 56;
 		ml8 ^= 120;
-		r1h = Seed1 ^ kh_lu64ec( Msg );
-		r2h = Seed5 ^ ( m >> ml8 );
+		r1h = kh_lu64ec( Msg ) ^ Seed1;
+		r2h = ( r2h >> ml8 ) ^ Seed5;
 	}
 
 	KOMIHASH_HASHFIN();
@@ -670,7 +715,7 @@ KOMIHASH_INLINE uint64_t komihash( const void* const Msg0, size_t MsgLen,
 
 	KOMIHASH_HASHROUND(); // Required for Perlin Noise.
 
-	if( KOMIHASH_LIKELY( MsgLen < 16 ))
+	if KOMIHASH_LIKELY( MsgLen < 16 )
 	{
 		r1h = Seed1;
 		r2h = Seed5;
@@ -706,7 +751,7 @@ KOMIHASH_INLINE uint64_t komihash( const void* const Msg0, size_t MsgLen,
 			}
 		}
 		else
-		if( MsgLen != 0 )
+		if KOMIHASH_LIKELY( MsgLen != 0 )
 		{
 			const int ml8 = (int) ( MsgLen * 8 );
 
@@ -739,7 +784,7 @@ KOMIHASH_INLINE uint64_t komihash( const void* const Msg0, size_t MsgLen,
 	}
 	else
 	{
-		if( KOMIHASH_UNLIKELY( MsgLen > 31 ))
+		if KOMIHASH_UNLIKELY( MsgLen > 31 )
 		{
 			goto _long;
 		}
@@ -751,29 +796,25 @@ KOMIHASH_INLINE uint64_t komihash( const void* const Msg0, size_t MsgLen,
 		if( MsgLen < 24 )
 		{
 			ml8 ^= 184;
-			const uint64_t m = ( kh_lu64ec( Msg + MsgLen - 8 ) >> 8 |
-				(uint64_t) 1 << 56 );
-
+			r1h = kh_lu64ec( Msg + MsgLen - 8 ) >> 8 | (uint64_t) 1 << 56;
 			r2h = Seed5;
-			r1h = Seed1 ^ ( m >> ml8 );
+			r1h = ( r1h >> ml8 ) ^ Seed1;
 
 			KOMIHASH_HASHFIN();
 		}
 		else
 		{
-			const uint64_t m = ( kh_lu64ec( Msg + MsgLen - 8 ) >> 8 |
-				(uint64_t) 1 << 56 );
-
+			r2h = kh_lu64ec( Msg + MsgLen - 8 ) >> 8 | (uint64_t) 1 << 56;
 			ml8 ^= 248;
-			r1h = Seed1 ^ kh_lu64ec( Msg + 16 );
-			r2h = Seed5 ^ ( m >> ml8 );
+			r1h = kh_lu64ec( Msg + 16 ) ^ Seed1;
+			r2h = ( r2h >> ml8 ) ^ Seed5;
 		}
 	}
 
 	KOMIHASH_HASHFIN();
 
 _long:
-	if( KOMIHASH_LIKELY( MsgLen > 63 ))
+	if KOMIHASH_LIKELY( MsgLen > 63 )
 	{
 		uint64_t Seed2 = KOMIHASH_IVAL2 ^ Seed1;
 		uint64_t Seed3 = KOMIHASH_IVAL3 ^ Seed1;
@@ -1102,6 +1143,7 @@ using KOMIHASH_NS :: komihash_stream_oneshot;
 #undef KOMIHASH_IVAL8
 #undef KOMIHASH_VAL01
 #undef KOMIHASH_VAL10
+#undef KOMIHASH_COND_EC
 #undef KOMIHASH_ICC_GCC
 #undef KOMIHASH_GCC_BUILTINS
 #undef KOMIHASH_EC32

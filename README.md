@@ -66,13 +66,13 @@ source code is compiled with a C++ compiler.
 #include <stdio.h>
 #include "komihash.h"
 
-int main()
+int main(void)
 {
     const char s1[] = "This is a test of komihash.";
     const char s2[] = "7 chars";
 
-    printf( "%llx\n", komihash( s1, strlen( s1 ), 0 )); // 5b13177fc68b4f96
-    printf( "%llx\n", komihash( s2, strlen( s2 ), 0 )); // 2c514f6e5dcb11cb
+    printf( "%016llx\n", komihash( s1, strlen( s1 ), 0 )); // 5b13177fc68b4f96
+    printf( "%016llx\n", komihash( s2, strlen( s2 ), 0 )); // 2c514f6e5dcb11cb
 }
 ```
 
@@ -171,12 +171,12 @@ These are the performance comparisons made and used by the author during the
 development of `komihash`, on different compilers and platforms.
 
 1. LLVM clang-cl 18.1.8 x86-64, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz.
-Compiler options: `/Ox /arch:sse2`.
+Compiler options: `/Ox -msse2`.
 2. LLVM clang-cl 18.1.8 x86-64, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz.
 Compiler options: `/Ox -mavx2`.
 3. ICC 19.0 x86-64, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz.
 Compiler options: `/O3 /QxSSE2`.
-4. LLVM clang 16.0.6 x86-64, AlmaLinux 9.3, Xeon E-2386G (RocketLake), 5.1 GHz.
+4. LLVM clang 18.1.8 x86-64, AlmaLinux 9.3, Xeon E-2386G (RocketLake), 5.1 GHz.
 Compiler options: `-O3 -mavx2`.
 5. GCC 11.4.1 x86-64, AlmaLinux 9.3, Xeon E-2386G (RocketLake), 5.1 GHz.
 Compiler options: `-O3 -msse2`.
@@ -194,10 +194,10 @@ Compiler options: `/Ox -msse2`.
 |Platform         |1                |1              |1              |2      |2    |2   |3      |3    |3   |4      |4    |4   |5      |5    |5   |6      |6    |6   |7      |7    |7   |8      |8    |8   |9      |9    |9   |10     |10   |10  |
 |-----------------|-----------------|---------------|---------------|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|
 |Hash function    |`0-15b, cycles/h`|8-28b, cycles/h|bulk, GB/s     |`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|
-|**komihash 5.24**|`9.7`            |11.2           |27.1           |`9.7`  |11.2 |27.1|`11.9` |13.9 |23.2|`10.8` |11.8 |31.7|`10.0` |11.4 |31.0|`9.9`  |11.4 |31.0|`12.0` |13.2 |22.9|`15.0` |18.0 |19.3|`8.1`  |7.9  |23.6|`7.0`  |8.0  |43.1|
-|wyhash_final4    |`14.5`           |18.2           |29.3           |`14.7` |18.2 |29.3|`25.9` |32.9 |12.5|`17.1` |21.9 |34.0|`17.2` |23.1 |35.3|`17.3` |23.2 |35.5|`15.5` |20.4 |29.8|`21.1` |26.1 |19.4|`7.9`  |8.1  |26.1|`13.9` |18.5 |41.7|
-|XXH3_64 0.8.0    |`15.5`           |28.8           |30.0           |`15.5` |28.7 |61.8|`21.8` |27.2 |29.6|`18.5` |25.8 |68.2|`19.2` |25.3 |33.8|`19.7` |26.3 |63.6|`18.4` |23.0 |48.3|`19.9` |25.8 |28.0|`8.2`  |8.2  |30.5|`15.4` |31.0 |50.3|
-|XXH64 0.8.0      |`12.5`           |17.5           |17.2           |`12.5` |17.5 |17.3|`24.3` |36.6 |8.9 |`10.5` |14.5 |20.1|`11.2` |14.6 |20.1|`11.2` |14.6 |20.0|`13.2` |17.3 |17.7|`18.8` |24.7 |16.0|`8.8`  |10.4 |14.5|`9.1`  |12.7 |31.4|
+|**komihash 5.25**|`9.7`            |11.2           |27.0           |`9.7`  |11.2 |27.1|`11.8` |13.9 |23.2|`9.7`  |11.3 |31.7|`10.0` |11.4 |31.0|`10.0` |11.4 |31.0|`12.0` |13.2 |22.9|`15.0` |18.0 |19.4|`8.1`  |8.0  |23.6|`7.0`  |8.0  |43.1|
+|wyhash_final4    |`14.5`           |18.2           |29.3           |`14.7` |18.2 |29.3|`25.9` |32.9 |12.5|`16.8` |21.6 |34.6|`17.2` |23.1 |35.3|`17.3` |23.2 |35.5|`15.5` |20.4 |29.8|`21.1` |26.1 |19.4|`7.9`  |8.1  |26.1|`13.9` |18.5 |41.7|
+|XXH3_64 0.8.0    |`15.5`           |28.8           |30.0           |`15.5` |28.7 |61.8|`21.8` |27.2 |29.6|`18.5` |25.6 |68.3|`19.2` |25.3 |33.8|`19.7` |26.3 |63.6|`18.4` |23.0 |48.3|`19.9` |25.8 |28.0|`8.2`  |8.2  |30.5|`15.4` |31.0 |50.3|
+|XXH64 0.8.0      |`12.5`           |17.5           |17.2           |`12.5` |17.5 |17.3|`24.3` |36.6 |8.9 |`10.5` |14.2 |20.1|`11.2` |14.6 |20.1|`11.2` |14.6 |20.0|`13.2` |17.3 |17.7|`18.8` |24.7 |16.0|`8.8`  |10.4 |14.5|`9.1`  |12.7 |31.4|
 |(overhead)       |1.8              |1.8            |0              |1.8    |1.8  |0   |1.9    |1.9  |0   |3.9    |3.9  |0   |2.8    |2.8  |0   |3.6    |3.6  |0   |5.5    |5.5  |0   |5.9    |5.9  |0   |2.0    |2.0  |0   |1.0    |1.0  |0   |
 
 Notes: `XXH3_64` is unseeded (seeded variant is 1 cycle/h higher). `bulk` is
@@ -210,7 +210,7 @@ overhead. Measurement error is approximately 3%.
 
 |Hash function    |0-15b, cycles/h|8-28b, cycles/h|
 |----             |----           |----           |
-|**komihash 5.24**|**7.4**        |**8.8**        |
+|**komihash 5.25**|**7.3**        |**8.7**        |
 |komihash 5.10    |8.2            |9.8            |
 |komihash 4.5     |9.5            |11.4           |
 |komihash 4.3     |10.4           |12.1           |
@@ -347,14 +347,14 @@ and do not change the uniform distribution of $s_{1}$ and $s_{2}$.
 #include <stdio.h>
 #include "komihash.h"
 
-int main()
+int main(void)
 {
     uint64_t Seed1 = 0, Seed2 = 0;
     int i;
 
     for( i = 0; i < 8; i++ )
     {
-        printf( "%llx\n", komirand( &Seed1, &Seed2 ));
+        printf( "%016llx\n", komirand( &Seed1, &Seed2 ));
     }
 }
 ```
