@@ -1,7 +1,7 @@
 /**
  * @file komihash.h
  *
- * @version 5.25
+ * @version 5.26
  *
  * @brief The inclusion file for the "komihash" 64-bit hash function,
  * the "komirand" 64-bit PRNG, and streamed "komihash" implementation.
@@ -42,7 +42,7 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.25" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.26" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_NS_CUSTOM
@@ -310,7 +310,7 @@
  * @def KOMIHASH_PREFETCH( a )
  * @brief Memory address prefetch macro, to preload some data into CPU cache.
  *
- * Temporal locality=2, in case a collision resolution would be necessary,
+ * Temporal locality=3, in case a collision resolution would be necessary,
  * or for a subsequent disk write.
  *
  * @param a Prefetch address.
@@ -318,7 +318,7 @@
 
 #if defined( KOMIHASH_GCC_BUILTINS ) && !defined( __COMPCERT__ )
 
-	#define KOMIHASH_PREFETCH( a ) __builtin_prefetch( a, 0, 2 )
+	#define KOMIHASH_PREFETCH( a ) __builtin_prefetch( a, 0, 3 )
 
 #else // Prefetch macro
 
@@ -459,7 +459,8 @@ KOMIHASH_INLINE_F uint64_t kh_lu64ec( const uint8_t* const p ) KOMIHASH_NOEX
 	( defined( KOMIHASH_ICC_GCC ) && defined( __x86_64__ ))
 
 	#define KOMIHASH_M128_IMPL \
-		const __uint128_t r = (__uint128_t) u * v; \
+		__uint128_t r = u; \
+		r *= v; \
 		const uint64_t rh = (uint64_t) ( r >> 64 ); \
 		*rl = (uint64_t) r; \
 		*rha += rh;
@@ -616,8 +617,8 @@ void kh_m128( const uint64_t u, const uint64_t v,
 		kh_m128( kh_lu64ec( Msg + 24 ) ^ Seed4, \
 			kh_lu64ec( Msg + 56 ) ^ Seed8, &Seed4, &Seed8 ); \
 	\
-		Msg += 64; \
 		MsgLen -= 64; \
+		Msg += 64; \
 	\
 		Seed2 ^= Seed5; \
 		Seed3 ^= Seed6; \
