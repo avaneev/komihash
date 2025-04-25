@@ -1,7 +1,7 @@
 /**
  * @file komihash.h
  *
- * @version 5.26
+ * @version 5.27
  *
  * @brief The inclusion file for the "komihash" 64-bit hash function,
  * the "komirand" 64-bit PRNG, and streamed "komihash" implementation.
@@ -42,7 +42,7 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.26" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.27" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_NS_CUSTOM
@@ -617,15 +617,15 @@ void kh_m128( const uint64_t u, const uint64_t v,
 		kh_m128( kh_lu64ec( Msg + 24 ) ^ Seed4, \
 			kh_lu64ec( Msg + 56 ) ^ Seed8, &Seed4, &Seed8 ); \
 	\
-		MsgLen -= 64; \
 		Msg += 64; \
-	\
-		Seed2 ^= Seed5; \
-		Seed3 ^= Seed6; \
-		Seed4 ^= Seed7; \
-		Seed1 ^= Seed8; \
+		MsgLen -= 64; \
 	\
 		KOMIHASH_PREFETCH( Msg ); \
+	\
+		Seed4 ^= Seed7; \
+		Seed1 ^= Seed8; \
+		Seed3 ^= Seed6; \
+		Seed2 ^= Seed5; \
 	\
 	} while KOMIHASH_LIKELY( MsgLen > 63 )
 
@@ -644,7 +644,7 @@ KOMIHASH_INLINE_F uint64_t komihash_epi( const uint8_t* Msg, size_t MsgLen,
 {
 	uint64_t r1h, r2h;
 
-	if KOMIHASH_LIKELY( MsgLen > 31 )
+	if( MsgLen > 31 )
 	{
 		KOMIHASH_HASH16( Msg );
 		KOMIHASH_HASH16( Msg + 16 );
