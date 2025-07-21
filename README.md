@@ -140,6 +140,7 @@ produce a hash value of any required bit-size.
 * [.NET, by TommasoBelluzzo](https://www.nuget.org/packages/FastHashes/)
 * [Rust, by thynson](https://crates.io/crates/komihash)
 * [Perl, by scottchiefbaker](https://github.com/scottchiefbaker/perl-Crypt-Komihash)
+* [C3, by NotsoanoNimus](https://github.com/c3lang/c3c/blob/master/lib/std/hash/komi.c3)
 
 ## Customizing C++ namespace
 
