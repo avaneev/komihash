@@ -135,11 +135,13 @@ produce a hash value of any required bit-size.
 
 ## Ports
 
+* [C++, VCPKG](https://vcpkg.link/ports/komihash)
+* [C3, by NotsoanoNimus](https://github.com/c3lang/c3c/blob/master/lib/std/hash/komi.c3)
 * [Java, by Dynatrace](https://github.com/dynatrace-oss/hash4j)
 * [LUA, by rangercyh](https://github.com/rangercyh/lua-komihash)
 * [.NET, by TommasoBelluzzo](https://www.nuget.org/packages/FastHashes/)
-* [Rust, by thynson](https://crates.io/crates/komihash)
 * [Perl, by scottchiefbaker](https://github.com/scottchiefbaker/perl-Crypt-Komihash)
+* [Rust, by thynson](https://crates.io/crates/komihash)
 
 ## Customizing C++ namespace
 
