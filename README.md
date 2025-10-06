@@ -135,8 +135,9 @@ produce a hash value of any required bit-size.
 
 ## Ports
 
-* [C++, VCPKG](https://vcpkg.link/ports/komihash)
+* [C++, vcpkg](https://vcpkg.link/ports/komihash)
 * [C3, by NotsoanoNimus](https://github.com/c3lang/c3c/blob/master/lib/std/hash/komi.c3)
+* [Crystal, by Coral Pink](https://codeberg.org/coralpink/komihash.cr)
 * [Java, by Dynatrace](https://github.com/dynatrace-oss/hash4j)
 * [LUA, by rangercyh](https://github.com/rangercyh/lua-komihash)
 * [.NET, by TommasoBelluzzo](https://www.nuget.org/packages/FastHashes/)
