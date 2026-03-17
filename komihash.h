@@ -315,7 +315,7 @@
 	#define KOMIHASH_LIKELY( x ) ( __builtin_expect( x, 1 ))
 	#define KOMIHASH_UNLIKELY( x ) ( __builtin_expect( x, 0 ))
 
-#elif defined( __cplusplus ) && __cplusplus >= 202002L
+#elif defined( __cplusplus ) && __cplusplus >= 202002L && !defined( _MSC_VER )
 
 	#define KOMIHASH_LIKELY( x ) ( x ) [[likely]]
 	#define KOMIHASH_UNLIKELY( x ) ( x ) [[unlikely]]
