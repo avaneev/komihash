@@ -1,7 +1,7 @@
 /**
  * @file komihash.h
  *
- * @version 5.28
+ * @version 5.29
  *
  * @brief The header file for the "komihash" 64-bit hash function,
  * the "komirand" 64-bit PRNG, and the streamed "komihash" implementation.
@@ -42,7 +42,7 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.28" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.29" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_NS_CUSTOM
@@ -107,10 +107,6 @@
 	#define KOMIHASH_NOEX
 
 #endif // defined( __cplusplus )
-
-#if defined( _MSC_VER )
-	#include <intrin.h>
-#endif // defined( _MSC_VER )
 
 /**
  * @{
@@ -310,6 +306,19 @@
  * @param x Expression that is unlikely to be evaluated to `true`.
  */
 
+/**
+ * @def KOMIHASH_LIKELY_DO( x )
+ * @brief Likelihood statement for `do-while` loops in C++20.
+ */
+
+/**
+ * @def KOMIHASH_LIKELY_DO_EXPR( x )
+ * @brief Likelihood macro that is used for manually-guided
+ * micro-optimization of `do-while` loops.
+ *
+ * @param x An expression that is likely to be evaluated to 1.
+ */
+
 #if defined( KOMIHASH_GCC_BUILTINS )
 
 	#define KOMIHASH_LIKELY( x ) ( __builtin_expect( x, 1 ))
@@ -319,6 +328,8 @@
 
 	#define KOMIHASH_LIKELY( x ) ( x ) [[likely]]
 	#define KOMIHASH_UNLIKELY( x ) ( x ) [[unlikely]]
+	#define KOMIHASH_LIKELY_DO [[likely]]
+	#define KOMIHASH_LIKELY_DO_EXPR( x ) ( x )
 
 #else // defined( __cplusplus )
 
@@ -326,6 +337,11 @@
 	#define KOMIHASH_UNLIKELY( x ) ( x )
 
 #endif // defined( __cplusplus )
+
+#if !defined( KOMIHASH_LIKELY_DO )
+	#define KOMIHASH_LIKELY_DO
+	#define KOMIHASH_LIKELY_DO_EXPR( x ) KOMIHASH_LIKELY( x )
+#endif // !defined( KOMIHASH_LIKELY_DO )
 
 /**
  * @def KOMIHASH_PREFETCH( a )
@@ -644,7 +660,7 @@ void kh_m128( const uint64_t u, const uint64_t v,
  */
 
 #define KOMIHASH_HASHLOOP64() \
-	do \
+	do KOMIHASH_LIKELY_DO \
 	{ \
 		kh_m128( kh_lu64ec( Msg ) ^ Seed1, \
 			kh_lu64ec( Msg + 32 ) ^ Seed5, &Seed1, &Seed5 ); \
@@ -668,7 +684,7 @@ void kh_m128( const uint64_t u, const uint64_t v,
 		Seed3 ^= Seed6; \
 		Seed2 ^= Seed5; \
 	\
-	} while KOMIHASH_LIKELY( MsgLen > 63 )
+	} while KOMIHASH_LIKELY_DO_EXPR( MsgLen > 63 )
 
 /**
  * @brief The hashing epilogue function (for internal use).
@@ -1189,6 +1205,8 @@ using KOMIHASH_NS :: komihash_stream_oneshot;
 #undef KOMIHASH_EC32
 #undef KOMIHASH_LIKELY
 #undef KOMIHASH_UNLIKELY
+#undef KOMIHASH_LIKELY_DO
+#undef KOMIHASH_LIKELY_DO_EXPR
 #undef KOMIHASH_PREFETCH
 #undef KOMIHASH_INLINE
 #undef KOMIHASH_INLINE_F
