@@ -6,15 +6,15 @@ The `komihash()` function available in the `komihash.h` file implements a very
 fast 64-bit hash function, mainly designed for hash-table, hash-map, and
 bloom-filter uses; produces identical hashes on both big- and little-endian
 systems. Suitable for file and large data hashing (checksums). Function's code
-is portable, cross-platform, scalar, zero-allocation, is header-only,
-inlineable C (C++ compatible).
+is portable, cross-platform, scalar, zero-allocation, header-only, inlinable C
+(compatible with C++).
 
 This function features both a high large-block hashing performance (27 GB/s
 on Ryzen 3700X) and a high hashing throughput for small strings/messages
-(about 8 cycles/hash for 0-15-byte strings, hashed repeatedly). Performance on
-32-bit systems is, however, quite low. Also, large-block hashing performance
-on big-endian systems may be 20% lower due to the need of byte-swapping (can
-be switched off with a define).
+(about 8 cycles/hash for 0-15-byte strings, if hashed repeatedly). Performance
+on 32-bit systems is, however, quite low. Also, large-block hashing
+performance on big-endian systems may be 20% lower due to the need of
+byte-swapping (can be switched off with a define).
 
 Technically, `komihash` is close to the class of hash functions like `wyhash`
 and `CircleHash`, which are, in turn, close to the `lehmer64` PRNG. However,
@@ -32,12 +32,12 @@ Perlin Noise hashing.
 An aspect worth noting, important to some users, is that `komihash` at its
 base uses a simple mathematical construct, and uses no author-intended nor
 author-fabricated information. The base state of the function is equal to the
-first mantissa bits of PI, and can be changed to any uniformly-random values.
+first mantissa bits of PI, and can be changed to any uniformly random values.
 This means that statistical properties (collision resistance) of `komihash`
 are not based on manual fine-tuning, but are a product of the mathematical
 construct.
 
-Note that this function is not cryptographically-secure: in open systems, and
+Note that this function is not cryptographically secure: in open systems, and
 within any server-side internal structures, it should only be used with a
 secret seed, to minimize the chance of a collision attack (hash flooding).
 However, when the default seed is used (0), this further reduces function's
@@ -316,8 +316,8 @@ The `komirand()` function available in the `komihash.h` file implements a
 simple, but reliable, self-starting, and fast (`0.62` cycles/byte) 64-bit
 pseudo-random number generator (PRNG) with a `2^64` period. It is based on the
 same mathematical construct as the `komihash` hash function. `komirand`
-passes `PractRand` tests (at least up to 1 TB length, at the default settings)
-and `SmokeRand` tests (full setting).
+passes `PractRand` tests (at least up to 1 TiB length, at the default
+settings).
 
 The PRNG has a 128-bit state which is divided into two 64-bit unsigned integer
 variables ($s_{1}$ and $s_{2}$).
@@ -334,7 +334,7 @@ $s_{1}'$ is used as PRNG output.
 
 This construct can be scaled to any even-sized registers beside 64-bit ones
 (e.g., 32, 48) - it is invariant to the register size. The $C$ used in
-`komirand` (`0xAAAA...`) is a good choice as such constant carries no bit-wise
+`komirand` (`0xAAAA...`) is a good choice as such constant carries no bitwise
 spectral information, and its influence on the statistics and modes is
 minimal.
 
@@ -344,7 +344,7 @@ $$ m_{128}=(s_{1} \oplus x_{1}) * (s_{2} \oplus x_{2}) $$
 
 Where $x_{1}$ and $x_{2}$ are 64-bit parts of a message/string being hashed.
 Since $s_{1}$ and $s_{2}$ are uniformly-distributed values, such mixing is
-equivalent to mixing a message with a cryptographic one-time-pad (bitwise
+equivalent to mixing a message with a cryptographic one-time pad (bitwise
 modulo 2 addition). Message's statistics and distribution become unimportant,
 and do not change the uniform distribution of $s_{1}$ and $s_{2}$.
 
@@ -383,18 +383,18 @@ This function is named the way it is named is to honor
 the [Komi Republic](https://en.wikipedia.org/wiki/Komi_Republic) (located in
 Russia), native to the author.
 
-According to OMNIUM REGIONUM MOSCOVIAE DESCRIPTIO by ALEXANDRI GWAGNINI
-VERONENSIS 1611, the territory of the Komi Republic was internationally
-known as Condora Regio inhabited by people worshipping a golden
-(sun-shining) woman-goddess, usually depicted as holding a child and
-a spear, Zarni Ana (Зарни Ань), and usually roughly translated as
-Zlatababa. Condora is also mentioned as a territory near the Mezena
-(Мезень) river on the map produced by Englishman Anthony Jenkinson in
-1562. "Condora" may have meant a "pine country" (from Komi "conda"-pine
+According to [Sarmatiae Europeae descriptio](https://www.digitale-sammlungen.de/en/details/bsb11202361)
+by Alexander Gwagnin 1581 (Moschoviae Descriptio p.86.b), the territory of
+the Komi Republic was internationally known as Condora Regio inhabited by
+people worshipping a golden (sun-shining) woman-goddess, usually depicted as
+holding a child and a spear, Zarni Ana (Зарни Ань), and usually roughly
+translated as Zlatababa. Condora is also mentioned as a territory near
+the Mezena (Мезень) river on the map produced by Englishman Anthony Jenkinson
+in 1562. "Condora" may have meant a "pine country" (from Komi "conda"-pine
 and "dor"-region, land area, country). Southern part of the modern Komi
-Republic near the Voichegda and Vischera rivers, baptized by bishop
-Stephen Velickopermsky, was known as Permia, which does not correspond
-to the modern Perm region near the Cama river.
+Republic near the Voichegda and Vischera rivers, baptized by bishop Stephen
+Velickopermsky, was known as Permia, which does not correspond to the modern
+Perm region near the Cama river.
 
 ## Test Vectors
 
