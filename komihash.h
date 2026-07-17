@@ -1,12 +1,12 @@
 /**
  * @file komihash.h
  *
- * @version 5.31
+ * @version 5.32
  *
  * @brief The header file for the `komihash` 64-bit hash function,
  * the `komirand` 64-bit PRNG, and the streamed `komihash` implementation.
  *
- * The source code is written in ISO C99 and provides full C++ compliance
+ * The source code is written in ISO C99 and provides full C++ compatibility
  * automatically when compiled with a C++ compiler.
  *
  * The `komihash` function is named in honor of the Komi Republic (located in
@@ -42,14 +42,14 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.31" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.32" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_NS_CUSTOM
- * @brief If this macro is defined externally, all symbols will be placed into
- * the C++ namespace specified by the macro, and will not be placed into the
+ * @brief If this macro is defined externally, all symbols will be placed in
+ * the C++ namespace specified by the macro, and will not be placed in the
  * global namespace. WARNING: If the defined value of the macro is empty, the
- * symbols will be placed into the global namespace anyway.
+ * symbols will be placed in the global namespace anyway.
  */
 
 /**
@@ -68,7 +68,7 @@
 /**
  * @def KOMIHASH_NS
  * @brief Macro that defines the actual implementation namespace in a C++
- * environment and places relevant symbols into the global namespace
+ * environment and places relevant symbols in the global namespace
  * (if @ref KOMIHASH_NS_CUSTOM is undefined).
  */
 
@@ -265,8 +265,8 @@
  * @def KOMIHASH_EC32( v )
  * @brief Macro that applies 32-bit byte-swapping for endianness correction.
  *
- * On big-endian platforms, this macro is left undefined when using an unknown
- * compiler.
+ * On big-endian platforms, this macro is left undefined when an unknown
+ * compiler is used.
  *
  * @param v Value to byte-swap.
  */
@@ -275,8 +275,8 @@
  * @def KOMIHASH_EC64( v )
  * @brief Macro that applies 64-bit byte-swapping for endianness correction.
  *
- * On big-endian platforms, this macro is left undefined when using an unknown
- * compiler.
+ * On big-endian platforms, this macro is left undefined when an unknown
+ * compiler is used.
  *
  * @param v Value to byte-swap.
  */
@@ -331,13 +331,13 @@
 
 /**
  * @def KOMIHASH_LIKELY_DO
- * @brief A `likely` statement for the `do-while` loops in C++20.
+ * @brief A `likely` statement for `do-while` loops in C++20.
  */
 
 /**
  * @def KOMIHASH_LIKELY_DO_EXPR( x )
  * @brief A `likely` macro that is used for manual micro-optimization of
- * the `do-while` loops.
+ * `do-while` loops.
  *
  * @param x Expression that is likely to evaluate to `true`.
  */
@@ -371,8 +371,8 @@
  * @brief Macro that prefetches data at the given memory address into the CPU
  * cache.
  *
- * A temporal locality of level 3 is used because the data may later be used
- * for collision resolution or for a subsequent disk write.
+ * Temporal locality of level 3 is used because the data may later be used for
+ * collision resolution or for a subsequent disk write.
  *
  * @param a Prefetch address.
  */
@@ -660,8 +660,8 @@ void kh_m128( const uint64_t u, const uint64_t v,
  * To make this PRNG reliable and self-starting, and to eliminate the risk of
  * stalling, the following variant can be used, which adds a "register
  * checkerboard" constant - a source of raw entropy. This constant is not
- * required for hashing (but works in that context), since the input entropy
- * is abundantly available during hashing. The PRNG is available as the
+ * required for hashing (but works in that context), since input entropy is
+ * abundantly available during hashing. The PRNG is available as the
  * komirand() function.
  *
  * `Seed5 += 0xAAAAAAAAAAAAAAAA;`
@@ -1385,6 +1385,8 @@ using KOMIHASH_NS::komihash_stream_oneshot;
 #undef KOMIHASH_EC64
 #undef KOMIHASH_LIKELY
 #undef KOMIHASH_UNLIKELY
+#undef KOMIHASH_LIKELY_DO
+#undef KOMIHASH_LIKELY_DO_EXPR
 #undef KOMIHASH_PREFETCH
 #undef KOMIHASH_STATIC
 #undef KOMIHASH_INLINE

@@ -36,13 +36,13 @@ construct and contains no arbitrarily chosen or artificially tuned constants.
 The base state of the function consists of the first few digits of the
 fractional part of pi, and this state can be replaced with any uniformly
 distributed random values. This means that the statistical properties
-(collision resistance) of `komihash` are not based on manual fine-tuning but
-rather rely on its mathematical construct.
+(collision resistance) of `komihash` are based not on manual fine-tuning but
+rather on its mathematical construct.
 
 Note that `komihash` is not cryptographically secure. In open systems and
 internal server-side data structures, it should be used only with a secret
 seed to minimize the risk of collision attacks (hash flooding). However, using
-the default seed (0) reduces the overhead by 1-2 cycles/hash (depending on the
+the default seed (0) reduces overhead by 1-2 cycles/hash (depending on the
 compiler).
 
 The function passes all [SMHasher](https://github.com/rurban/smhasher) and
@@ -54,12 +54,11 @@ via the [ECRYPT/eBASH project](https://bench.cr.yp.to/results-hash.html).
 Credit is due to [Daniel J. Bernstein](https://en.wikipedia.org/wiki/Daniel_J._Bernstein)
 for maintaining the benchmark.
 
-This function, whose source code conforms to
-[ISO C99](https://en.wikipedia.org/wiki/C99), was tested on Clang, GCC, MSVC,
-and Intel C++ compilers; on x86, x86-64 (Intel, AMD), and AArch64 (Apple
-Silicon) architectures; and on Windows 10, AlmaLinux 9.3, and macOS 13.3.
-Full C++ compliance is automatically provided when the source code is compiled
-with a C++ compiler.
+This function's source code conforms to [ISO C99](https://en.wikipedia.org/wiki/C99)
+and has been tested with Clang, GCC, MSVC, and the Intel C++ compiler on x86,
+x86-64 (Intel, AMD), and AArch64 (Apple Silicon) systems running Windows 10,
+AlmaLinux 9.3, and macOS 13.3. Full C++ compatibility is automatically
+provided when the source code is compiled with a C++ compiler.
 
 ## Usage
 
@@ -83,8 +82,8 @@ It is often desirable to set a specific random seed statically and then use it
 with the hash function throughout the program's execution. This has the
 benefit of improving hashing throughput without compromising hash quality.
 
-When using pre-seeding, a context structure should be initialized once and
-then passed to the `komihash_with_preseed()` function.
+With pre-seeding, a context structure should be initialized once and then
+passed to the `komihash_with_preseed()` function.
 
 ```c
 #include <stdio.h>
@@ -156,16 +155,17 @@ Since the `final` function does not destructively alter the context structure,
 it can be used to obtain intermediate "incremental" hashes of the data stream
 being hashed, and hashing can then be resumed.
 
-The hash value produced via streamed hashing can be used together with the
-discrete-incremental hashing outlined above (e.g., for files and blobs).
+The hash value produced via streamed hashing can be combined with the
+discrete-incremental hashing approach outlined above (e.g., for files and
+blobs).
 
 You may also consider using [PRVHASH64S](https://github.com/avaneev/prvhash),
-which provides an 8.5 GB/s hashing throughput on a Ryzen 3700X and can produce
-a hash value of any required bit width.
+which provides a hashing throughput of 8.5 GB/s on a Ryzen 3700X and can
+produce a hash value of any required bit width.
 
 ## Ports
 
-* [C++, vcpkg](https://vcpkg.link/ports/komihash)
+* [C++, via vcpkg](https://vcpkg.link/ports/komihash)
 * [C3, by NotsoanoNimus](https://github.com/c3lang/c3c/blob/master/lib/std/hash/komi.c3)
 * [Crystal, by Coral Pink](https://repo.or.cz/komihash.cr.git)
 * [Java, by Dynatrace](https://github.com/dynatrace-oss/hash4j)
@@ -193,8 +193,8 @@ Similarly, `komihash` symbols can be placed into any other custom namespace
 #include "komihash.h"
 ```
 
-In this way, `komihash` functions can be referenced as
-`my_hashes::komihash(...)`. Note that since all `komihash` functions are
+As a result, `komihash` functions can be referred to as
+`my_hashes::komihash(...)`. Note that because all `komihash` functions are
 declared with the `static` specifier, there will be no ABI conflicts, even if
 the `komihash.h` header is included in multiple C/C++ translation units.
 
@@ -227,7 +227,7 @@ Compiler options: `/Ox -msse2`.
 |Platform         |1                |1              |1              |2      |2    |2   |3      |3    |3   |4      |4    |4   |5      |5    |5   |6      |6    |6   |7      |7    |7   |8      |8    |8   |9      |9    |9   |10     |10   |10  |
 |-----------------|-----------------|---------------|---------------|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|
 |Hash function    |`0-15b, cycles/h`|8-28b, cycles/h|bulk, GB/s     |`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|
-|**komihash 5.31**|`9.7`            |11.2           |27.1           |`9.7`  |11.2 |27.1|`11.8` |13.9 |23.2|`9.7`  |11.3 |31.7|`10.0` |11.4 |31.0|`10.0` |11.4 |31.0|`12.0` |13.2 |22.8|`15.0` |18.0 |19.4|`8.1`  |7.9  |23.6|`7.0`  |8.0  |42.7|
+|**komihash 5.32**|`9.7`            |11.2           |27.1           |`9.7`  |11.2 |27.1|`11.8` |13.9 |23.2|`9.7`  |11.3 |31.7|`10.0` |11.4 |31.0|`10.0` |11.4 |31.0|`12.0` |13.2 |22.8|`15.0` |18.0 |19.4|`8.1`  |7.9  |23.6|`7.0`  |8.0  |42.7|
 |wyhash_final4    |`14.5`           |18.2           |29.3           |`14.7` |18.2 |29.3|`25.9` |32.9 |12.5|`16.8` |21.6 |34.6|`17.2` |23.1 |35.3|`17.3` |23.2 |35.5|`15.5` |20.4 |29.8|`21.1` |26.1 |19.4|`7.9`  |8.1  |26.1|`13.9` |18.5 |41.7|
 |XXH3_64 0.8.0    |`15.5`           |28.8           |30.0           |`15.5` |28.7 |61.8|`21.8` |27.2 |29.6|`18.5` |25.6 |68.3|`19.2` |25.3 |33.8|`19.7` |26.3 |63.6|`18.4` |23.0 |48.3|`19.9` |25.8 |28.0|`8.2`  |8.2  |30.5|`15.4` |31.0 |50.3|
 |XXH64 0.8.0      |`12.5`           |17.5           |17.2           |`12.5` |17.5 |17.3|`24.3` |36.6 |8.9 |`10.5` |14.2 |20.1|`11.2` |14.6 |20.1|`11.2` |14.6 |20.0|`13.2` |17.3 |17.7|`18.8` |24.7 |16.0|`8.8`  |10.4 |14.5|`9.1`  |12.7 |31.4|
@@ -243,7 +243,7 @@ value`, including overhead. The margin of error is approximately 3%.
 
 |Hash function    |0-15b, cycles/h|8-28b, cycles/h|
 |-----------------|---------------|---------------|
-|**komihash 5.31**|**7.3**        |**8.7**        |
+|**komihash 5.32**|**7.3**        |**8.7**        |
 |komihash 5.10    |8.2            |9.8            |
 |komihash 4.5     |9.5            |11.4           |
 |komihash 4.3     |10.4           |12.1           |
@@ -324,10 +324,10 @@ the result.
 
 Is a 128-bit version of this hash function planned? Probably not. While such
 a version may be reasonable for data structure compatibility reasons, there is
-little practical benefit in using 128-bit hashes at the local scale:
+little practical benefit in using 128-bit hashes on the local scale:
 a reliable 64-bit hash can accommodate 2.1 billion diverse binary objects
 (e.g., files in a file system or entries in a hash map) with a low probability
-of collisions. On the other hand, on a global scale, 128-bit hashes are
+of collisions. On the other hand, on the global scale, 128-bit hashes are
 clearly insufficient, considering the multitude of digital devices and the
 diverse binary objects (e.g., files and records in databases) on each device.
 
@@ -367,7 +367,7 @@ $s_{1}'$ is used as the PRNG output.
 This construct can be scaled to registers of any even bit width (e.g., 32,
 48, or 64 bits); it is invariant with respect to the register size.
 The constant $C$ used in `komirand` (`0xAAAA...`) is a good choice because it
-carries no bitwise spectral information, and its influence on the statistics
+carries no bitwise spectral information, and its influence on the statistical
 and spectral properties is minimal.
 
 For hashing, the following expression for $m_{128}$ is used:
