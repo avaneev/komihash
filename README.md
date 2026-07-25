@@ -57,8 +57,8 @@ for maintaining the benchmark.
 This function's source code conforms to [ISO C99](https://en.wikipedia.org/wiki/C99)
 and has been tested with Clang, GCC, MSVC, and the Intel C++ compiler on x86,
 x86-64 (Intel, AMD), and AArch64 (Apple Silicon) systems running Windows 10,
-AlmaLinux 9.3, and macOS 13.3. Full C++ compatibility is automatically
-provided when the source code is compiled with a C++ compiler.
+Windows 11, AlmaLinux 9.6, and macOS 26.4. Full C++ compatibility is
+automatically provided when the source code is compiled with a C++ compiler.
 
 ## Usage
 
@@ -203,35 +203,35 @@ the `komihash.h` header is included in multiple C/C++ translation units.
 The table below presents a performance comparison across different compilers
 and platforms that the author used during the development of `komihash`.
 
-1. LLVM clang-cl 18.1.8 x86-64, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz.
+1. LLVM clang-cl 18.1.8 x86-64, Windows 10, Ryzen 3700X (Zen 2), 4.2 GHz.
 Compiler options: `/Ox -msse2`.
-2. LLVM clang-cl 18.1.8 x86-64, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz.
+2. LLVM clang-cl 18.1.8 x86-64, Windows 10, Ryzen 3700X (Zen 2), 4.2 GHz.
 Compiler options: `/Ox -mavx2`.
-3. ICC 19.0 x86-64, Windows 10, Ryzen 3700X (Zen2), 4.2 GHz.
+3. ICC 19.0 x86-64, Windows 10, Ryzen 3700X (Zen 2), 4.2 GHz.
 Compiler options: `/O3 /QxSSE2`.
-4. LLVM clang 18.1.8 x86-64, AlmaLinux 9.3, Xeon E-2386G (RocketLake), 5.1 GHz.
+4. LLVM clang 19.1.7 x86-64, AlmaLinux 9.6, Xeon E-2386G (Rocket Lake), 5.1 GHz.
 Compiler options: `-O3 -mavx2`.
-5. GCC 11.4.1 x86-64, AlmaLinux 9.3, Xeon E-2386G (RocketLake), 5.1 GHz.
+5. GCC 11.5.0 x86-64, AlmaLinux 9.6, Xeon E-2386G (Rocket Lake), 5.1 GHz.
 Compiler options: `-O3 -msse2`.
-6. GCC 11.4.1 x86-64, AlmaLinux 9.3, Xeon E-2386G (RocketLake), 5.1 GHz.
+6. GCC 11.5.0 x86-64, AlmaLinux 9.6, Xeon E-2386G (Rocket Lake), 5.1 GHz.
 Compiler options: `-O3 -mavx2`.
-7. LLVM clang-cl 18.1.8 x86-64, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz.
+7. LLVM clang-cl 18.1.8 x86-64, Windows 10, Core i7-7700K (Kaby Lake), 4.5 GHz.
 Compiler options: `/Ox -mavx2`.
-8. ICC 19.0 x86-64, Windows 10, Core i7-7700K (KabyLake), 4.5 GHz.
+8. ICC 19.0 x86-64, Windows 10, Core i7-7700K (Kaby Lake), 4.5 GHz.
 Compiler options: `/O3 /QxSSE2`.
-9. Apple clang 15.0.0 arm64, macOS 13.3.2, Apple M1, 3.5 GHz.
+9. Apple clang 15.0.0 arm64, macOS 26.4, Apple M1, 3.5 GHz.
 Compiler options: `-O3`.
-10. LLVM clang-cl 18.1.8 x86-64, Windows 11, Ryzen 9950X (Zen5), 5.7 GHz.
+10. LLVM clang-cl 18.1.8 x86-64, Windows 11, Ryzen 9950X (Zen 5), 5.7 GHz.
 Compiler options: `/Ox -msse2`.
 
 |Platform         |1                |1              |1              |2      |2    |2   |3      |3    |3   |4      |4    |4   |5      |5    |5   |6      |6    |6   |7      |7    |7   |8      |8    |8   |9      |9    |9   |10     |10   |10  |
 |-----------------|-----------------|---------------|---------------|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|-------|-----|----|
 |Hash function    |`0-15b, cycles/h`|8-28b, cycles/h|bulk, GB/s     |`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|`0-15b`|8-28b|bulk|
-|**komihash 5.32**|`9.7`            |11.2           |27.1           |`9.7`  |11.2 |27.1|`11.8` |13.9 |23.2|`9.7`  |11.3 |31.7|`10.0` |11.4 |31.0|`10.0` |11.4 |31.0|`12.0` |13.2 |22.8|`15.0` |18.0 |19.4|`8.1`  |7.9  |23.6|`7.0`  |8.0  |42.7|
-|wyhash_final4    |`14.5`           |18.2           |29.3           |`14.7` |18.2 |29.3|`25.9` |32.9 |12.5|`16.8` |21.6 |34.6|`17.2` |23.1 |35.3|`17.3` |23.2 |35.5|`15.5` |20.4 |29.8|`21.1` |26.1 |19.4|`7.9`  |8.1  |26.1|`13.9` |18.5 |41.7|
-|XXH3_64 0.8.0    |`15.5`           |28.8           |30.0           |`15.5` |28.7 |61.8|`21.8` |27.2 |29.6|`18.5` |25.6 |68.3|`19.2` |25.3 |33.8|`19.7` |26.3 |63.6|`18.4` |23.0 |48.3|`19.9` |25.8 |28.0|`8.2`  |8.2  |30.5|`15.4` |31.0 |50.3|
-|XXH64 0.8.0      |`12.5`           |17.5           |17.2           |`12.5` |17.5 |17.3|`24.3` |36.6 |8.9 |`10.5` |14.2 |20.1|`11.2` |14.6 |20.1|`11.2` |14.6 |20.0|`13.2` |17.3 |17.7|`18.8` |24.7 |16.0|`8.8`  |10.4 |14.5|`9.1`  |12.7 |31.4|
-|(overhead)       |1.8              |1.8            |0              |1.8    |1.8  |0   |1.9    |1.9  |0   |3.9    |3.9  |0   |2.8    |2.8  |0   |3.6    |3.6  |0   |5.5    |5.5  |0   |5.9    |5.9  |0   |2.0    |2.0  |0   |1.0    |1.0  |0   |
+|**komihash 5.33**|`9.7`            |11.2           |27.6           |`9.7`  |11.2 |27.6|`11.8` |13.7 |23.4|`9.9`  |11.3 |31.9|`9.9`  |11.4 |31.1|`9.9`  |11.2 |31.0|`12.0` |13.3 |22.9|`14.0` |16.7 |19.3|`8.0`  |7.9  |23.6|`7.0`  |8.0  |42.7|
+|wyhash_final4    |`14.5`           |18.2           |29.3           |`14.7` |18.2 |29.3|`25.9` |32.9 |12.5|`16.8` |21.5 |34.5|`17.1` |22.8 |35.6|`17.2` |22.8 |35.7|`15.5` |20.4 |29.8|`21.1` |26.1 |19.4|`7.9`  |8.1  |26.1|`13.9` |18.5 |41.7|
+|XXH3_64 0.8.0    |`15.5`           |28.8           |30.0           |`15.5` |28.7 |61.8|`21.8` |27.2 |29.6|`18.4` |24.3 |68.4|`19.0` |25.1 |33.9|`19.7` |25.8 |65.8|`18.4` |23.0 |48.3|`19.9` |25.8 |28.0|`8.2`  |8.2  |30.5|`15.4` |31.0 |50.3|
+|XXH64 0.8.0      |`12.5`           |17.5           |17.2           |`12.5` |17.5 |17.3|`24.3` |36.6 |8.9 |`10.4` |14.2 |20.1|`11.1` |14.5 |20.2|`11.1` |14.6 |20.1|`13.2` |17.3 |17.7|`18.8` |24.7 |16.0|`8.8`  |10.4 |14.5|`9.1`  |12.7 |31.4|
+|(overhead)       |1.8              |1.8            |0              |1.8    |1.8  |0   |1.9    |1.9  |0   |3.9    |3.9  |0   |3.6    |3.6  |0   |2.8    |2.8  |0   |5.5    |5.5  |0   |5.9    |5.9  |0   |1.5    |1.5  |0   |1.0    |1.0  |0   |
 
 Notes: `XXH3_64` is unseeded (the seeded variant incurs an additional 1
 cycle/h). `bulk` is 256000 bytes: this test mainly represents cache-bound
@@ -243,14 +243,14 @@ value`, including overhead. The margin of error is approximately 3%.
 
 |Hash function    |0-15b, cycles/h|8-28b, cycles/h|
 |-----------------|---------------|---------------|
-|**komihash 5.32**|**7.3**        |**8.7**        |
+|**komihash 5.33**|**7.2**        |**8.6**        |
 |komihash 5.10    |8.2            |9.8            |
 |komihash 4.5     |9.5            |11.4           |
 |komihash 4.3     |10.4           |12.1           |
 |komihash 3.6     |10.9           |15.4           |
 |komihash 2.8     |11.8           |16.7           |
 |wyhash_final4    |13.5           |18.0           |
-|XXH3_64 0.8.0    |14.2           |22.0           |
+|XXH3_64 0.8.0    |14.2           |21.8           |
 |XXH64 0.8.0      |10.2           |15.0           |
 
 This is a throughput comparison of hash functions on a Ryzen 3700X.
@@ -348,31 +348,42 @@ The `komirand()` function, available in the `komihash.h` header file,
 implements a simple, reliable, self-starting, and fast (`0.62` cycles/byte)
 64-bit pseudorandom number generator (PRNG) with a period of `2^64`. It is
 based on the same mathematical construct as the `komihash` function.
-`komirand` passes `PractRand` tests (tested up to 1 TiB with the default
+`komirand` passes `PractRand` tests (tested up to 32 TiB with the default
 settings).
 
 The PRNG has a 128-bit state composed of two unsigned 64-bit integers
 ($s_{1}$ and $s_{2}$).
 
-$$ m_{128}=s_{1} \cdot s_{2} $$
+$$\begin{aligned}
+m_{128} &= s_{1} \cdot s_{2} \\
+rh &= \left\lfloor \frac{m_{128}}{2^{64}} \right\rfloor \\
+s_{2}' &= (s_{2} + rh + C_1) \mod 2^{64} \\
+s_{1}' &= ((m_{128} \mod 2^{64} \oplus rh) + C_2) \mod 2^{64} \\
+\end{aligned}$$
 
-$$ s_{2}'=(s_{2} + \lfloor m_{128} / 2^{64} \rfloor + C) \mod 2^{64} $$
-
-$$ s_{1}'=(m_{128} \mod 2^{64}) \oplus s_{2}' $$
-
-$C$ can be any 64-bit constant (to provide the PRNG's self-starting capability
-from the $m_{128}=0$ state) or zero if such self-starting is not needed.
-$s_{1}'$ is used as the PRNG output.
+$C_1$ and $C_2$ can be any 64-bit constants (to provide the PRNG's
+self-starting capability from the $m_{128}=0$ state) or zero if such
+self-starting is not needed. $s_{1}'$ is used as the PRNG output.
 
 This construct can be scaled to registers of any even bit width (e.g., 32,
 48, or 64 bits); it is invariant with respect to the register size.
-The constant $C$ used in `komirand` (`0xAAAA...`) is a good choice because it
-carries no bitwise spectral information, and its influence on the statistical
-and spectral properties is minimal.
+The constants used in `komirand` (`0x5555...` and `0xAAAA...`) are a good
+choice because they carry no bitwise spectral information, and their influence
+on the statistical and spectral properties is minimal.
 
-For hashing, the following expression for $m_{128}$ is used:
+Note that although this PRNG is classified as "chaotic", one should not assume
+that it can enter degenerate cycles (with these specific constants in use).
+When properly initialized, it does not exhibit degenerate cycles, regardless
+of the initial state.
 
-$$ m_{128}=(s_{1} \oplus x_{1}) \cdot (s_{2} \oplus x_{2}) $$
+For hashing, the following "hardened" constant-less construct is used:
+
+$$\begin{aligned}
+m_{128} &= (s_{1} \oplus x_{1}) \cdot (s_{2} \oplus x_{2}) \\
+rh &= \left\lfloor \frac{m_{128}}{2^{64}} \right\rfloor \\
+s_{2}' &= (s_{2} + rh) \mod 2^{64} \\
+s_{1}' &= m_{128} \mod 2^{64} \oplus s_{2}' \\
+\end{aligned}$$
 
 Here, $x_{1}$ and $x_{2}$ are 64-bit portions of the message or string being
 hashed. Since $s_{1}$ and $s_{2}$ are uniformly distributed values, such
@@ -400,14 +411,14 @@ int main(void)
 Output:
 
 ```
-aaaaaaaaaaaaaaaa
-fffffffffffffffe
-4924924924924910
-baebaebaebaeba00
-400c62cc4727496b
-35a969173e8f925b
-db47f6bae9a247ad
-98e0f6cece6711fe
+5555555555555555
+79e79e79e79e79e6
+af5b2bd6caf5b2bc
+eed5a85374f06b25
+1c42877a440ae8ee
+0f45472b14548870
+45f57b7d95187bbe
+f24fa16f6f3733b2
 ```
 
 ## Etymology
@@ -512,45 +523,45 @@ bulk(132) = 0x410f9c129ad88aea
 bulk(256) = 0x066c7b25f4f569ae
 
 komirand Seed1/Seed2 = 0x0000000000000000:
-0xaaaaaaaaaaaaaaaa
-0xfffffffffffffffe
-0x4924924924924910
-0xbaebaebaebaeba00
-0x400c62cc4727496b
-0x35a969173e8f925b
-0xdb47f6bae9a247ad
-0x98e0f6cece6711fe
-0x97ffa2397fda534b
-0x11834262360df918
-0x34e53df5399f2252
-0xecaeb74a81d648ed
+0x5555555555555555
+0x79e79e79e79e79e6
+0xaf5b2bd6caf5b2bc
+0xeed5a85374f06b25
+0x1c42877a440ae8ee
+0x0f45472b14548870
+0x45f57b7d95187bbe
+0xf24fa16f6f3733b2
+0x34ea4920dced05f2
+0xecb7a488c91c6b30
+0xccf97a0677013efc
+0x3a0b6c6188146bc3
 
 komirand Seed1/Seed2 = 0x0123456789abcdef:
-0x776ad9718078ca64
-0x737aa5d5221633d0
-0x685046cca30f6f44
-0xfb725cb01b30c1ba
-0xc501cc999ede619f
-0x8427298e525db507
-0xd9baf3c54781f75e
-0x7f5a4e5b97b37c7b
-0xde8a0afe8e03b8c1
-0xb6ed3e72b69fc3d6
-0xa68727902f7628d0
-0x44162b63af484587
+0x31f9fec3a216a8e2
+0x3b9a95c9960f2e0b
+0x598a4ee1bda1bb7b
+0xa1d31cdf930f8008
+0x19a95c363ccfdb39
+0x1a24fa564cd4f59e
+0x2c8fa55ab9c0e3d7
+0x05f18c498f4ea766
+0x54a2e5df8f4bf2ec
+0x0d93606f32af73f5
+0x727533e108541de9
+0x2304050a71385a42
 
 komirand Seed1/Seed2 = 0x0000000000000100:
-0xaaaaaaaaaaababaa
-0xfffffffff8fcf8fe
-0xdb6dba1e4dbb1134
-0xf5b7d3aec37f4cb1
-0x66a571da7ded7051
-0x2d59ec9245bf03d9
-0x5c06a41bd510aed8
-0xea5e7ea9d2bd07a2
-0xe395015ddce7756f
-0xc07981aaeaae3b38
-0x2e120ebfee59a5a2
-0x9001eee495244dba
+0x5555555555565555
+0x79e79e79e69de7e6
+0x50e512e49e38e3f3
+0x9c69166a0a85e8bb
+0xd46eb0849ece68e8
+0xa1a7a0a02bd44f77
+0x73b523fe1127610c
+0x3b9743566f8cc553
+0xf2c8f20c192716b8
+0xedeb9fe484d6c18c
+0x514c781eeae7b289
+0x0c662c62b8405bd6
 
 ```

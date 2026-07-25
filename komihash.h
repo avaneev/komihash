@@ -1,13 +1,13 @@
 /**
  * @file komihash.h
  *
- * @version 5.32
+ * @version 5.33
  *
  * @brief The header file for the `komihash` 64-bit hash function,
  * the `komirand` 64-bit PRNG, and the streamed `komihash` implementation.
  *
- * The source code is written in ISO C99 and provides full C++ compatibility
- * automatically when compiled with a C++ compiler.
+ * The source code is written in ISO C99 and automatically provides full C++
+ * compatibility when compiled with a C++ compiler.
  *
  * The `komihash` function is named in honor of the Komi Republic (located in
  * Russia), the author's native region.
@@ -42,13 +42,13 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.32" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.33" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_NS_CUSTOM
- * @brief If this macro is defined externally, all symbols will be placed in
- * the C++ namespace specified by the macro, and will not be placed in the
- * global namespace. WARNING: If the defined value of the macro is empty, the
+ * @brief If this macro is defined externally, all symbols will be placed
+ * in the namespace specified by the macro, and they will not be placed in the
+ * global namespace. WARNING: If the value defined by the macro is empty, the
  * symbols will be placed in the global namespace anyway.
  */
 
@@ -68,13 +68,13 @@
 /**
  * @def KOMIHASH_NS
  * @brief Macro that defines the actual implementation namespace in a C++
- * environment and places relevant symbols in the global namespace
+ * environment. Relevant symbols are also placed in the global namespace
  * (if @ref KOMIHASH_NS_CUSTOM is undefined).
  */
 
 #if defined( __cplusplus )
 
-	#include <cstring> // Defines std::size_t.
+	#include <cstring> // This header defines std::size_t.
 
 	#if __cplusplus >= 201103L
 
@@ -85,7 +85,7 @@
 
 	#else // __cplusplus >= 201103L
 
-		#include <stdint.h> // A C99 fallback, as C++98 has no `cstdint`.
+		#include <stdint.h> // A C99 fallback, as C++98 has no cstdint header.
 
 		#define KOMIHASH_U64_C( x ) (uint64_t) x
 		#define KOMIHASH_NOEXC throw()
@@ -100,7 +100,7 @@
 
 #else // defined( __cplusplus )
 
-	#include <string.h> // Defines size_t.
+	#include <string.h> // This header defines size_t.
 	#include <stdint.h>
 
 	#define KOMIHASH_U64_C( x ) (uint64_t) x
@@ -141,17 +141,23 @@
 
 /**
  * @def KOMIHASH_DEFSEED1
- * @brief The initial `Seed1` value for the default (0) seed.
+ * @brief Initial `Seed1` value for the default (0) seed.
  */
 
 #define KOMIHASH_DEFSEED1 KOMIHASH_U64_C( 0x01D2EE0AE40A48DC )
 
 /**
  * @def KOMIHASH_DEFSEED5
- * @brief The initial `Seed5` value for the default (0) seed.
+ * @brief Initial `Seed5` value for the default (0) seed.
  */
 
 #define KOMIHASH_DEFSEED5 KOMIHASH_U64_C( 0x4EF2E8526FEA8BC9 )
+
+/**
+ * @def KOMIHASH_ENDIAN_DEFS
+ * @brief This macro is defined if the KOMIHASH_LITTLE_ENDIAN macro is not
+ * defined externally.
+ */
 
 /**
  * @def KOMIHASH_LITTLE_ENDIAN
@@ -171,6 +177,8 @@
  */
 
 #if !defined( KOMIHASH_LITTLE_ENDIAN )
+	#define KOMIHASH_ENDIAN_DEFS
+
 	#if ( defined( __BYTE_ORDER__ ) && defined( __ORDER_LITTLE_ENDIAN__ ) && \
 			__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ ) || \
 		( defined( __BYTE_ORDER ) && defined( __LITTLE_ENDIAN ) && \
@@ -317,27 +325,30 @@
 
 /**
  * @def KOMIHASH_LIKELY( x )
- * @brief A `likely` macro that is used for manual micro-optimization.
+ * @brief Macro that indicates an expression is likely to be true and is used
+ * for manual micro-optimization.
  *
  * @param x Expression that is likely to evaluate to `true`.
  */
 
 /**
  * @def KOMIHASH_UNLIKELY( x )
- * @brief An `unlikely` macro that is used for manual micro-optimization.
+ * @brief Macro that indicates an expression is unlikely to be true and is
+ * used for manual micro-optimization.
  *
  * @param x Expression that is unlikely to evaluate to `true`.
  */
 
 /**
  * @def KOMIHASH_LIKELY_DO
- * @brief A `likely` statement for `do-while` loops in C++20.
+ * @brief Macro that applies the C++20 `[[likely]]` attribute to do-while
+ * loops.
  */
 
 /**
  * @def KOMIHASH_LIKELY_DO_EXPR( x )
- * @brief A `likely` macro that is used for manual micro-optimization of
- * `do-while` loops.
+ * @brief Macro that indicates a likely condition and is used for manual
+ * micro-optimization of do-while loops.
  *
  * @param x Expression that is likely to evaluate to `true`.
  */
@@ -368,11 +379,11 @@
 
 /**
  * @def KOMIHASH_PREFETCH( a )
- * @brief Macro that prefetches data at the given memory address into the CPU
- * cache.
+ * @brief Macro that prefetches data from the given memory address into the
+ * CPU cache.
  *
- * Temporal locality of level 3 is used because the data may later be used for
- * collision resolution or for a subsequent disk write.
+ * The level-3 temporal locality hint is used because the data may later be
+ * used for collision resolution or for a subsequent disk write.
  *
  * @param a Prefetch address.
  */
@@ -400,25 +411,25 @@
  * @brief Macro that defines a function as "static".
  */
 
-#if ( defined( __cplusplus ) && __cplusplus >= 201703L ) || \
+#if defined( KOMIHASH_GCC_BUILTINS )
+
+	#define KOMIHASH_STATIC static __attribute__((unused))
+
+#elif ( defined( __cplusplus ) && __cplusplus >= 201703L ) || \
 	( defined( __STDC_VERSION__ ) && __STDC_VERSION__ >= 202311L )
 
 	#define KOMIHASH_STATIC [[maybe_unused]] static
 
-#elif defined( KOMIHASH_GCC_BUILTINS )
-
-	#define KOMIHASH_STATIC static __attribute__((unused))
-
-#else // defined( KOMIHASH_GCC_BUILTINS )
+#else // defined( __cplusplus )
 
 	#define KOMIHASH_STATIC static
 
-#endif // defined( KOMIHASH_GCC_BUILTINS )
+#endif // defined( __cplusplus )
 
 /**
  * @def KOMIHASH_INLINE
- * @brief Macro that defines a function as inline, at the compiler's
- * discretion.
+ * @brief Macro that defines a function as an inline function, at the
+ * compiler's discretion.
  */
 
 #define KOMIHASH_INLINE KOMIHASH_STATIC inline
@@ -483,7 +494,7 @@ KOMIHASH_INLINE_F int kh_is_little_endian(void) KOMIHASH_NOEXC
  * @brief Loads an unsigned value of the corresponding bit size, with
  * endianness correction.
  *
- * An auxiliary function that returns an unsigned value created from a
+ * This is an auxiliary function that returns an unsigned value created from a
  * sequence of bytes in memory. This function is used to correct the
  * endianness of in-memory unsigned values and to avoid unaligned memory
  * accesses.
@@ -544,8 +555,7 @@ KOMIHASH_INLINE_F uint64_t kh_lu64ec( const uint8_t* const p ) KOMIHASH_NOEXC
 
 	#define KOMIHASH_M128_IMPL \
 		unsigned long long rh; \
-		*rl = _mulx_u64( u, v, &rh ); \
-		*rha += rh;
+		*rl = _mulx_u64( u, v, &rh );
 
 #elif defined( _MSC_VER ) && \
 	( defined( _M_ARM64 ) || defined( _M_ARM64EC ) || \
@@ -553,8 +563,7 @@ KOMIHASH_INLINE_F uint64_t kh_lu64ec( const uint8_t* const p ) KOMIHASH_NOEXC
 
 	#define KOMIHASH_M128_IMPL \
 		const uint64_t rh = __umulh( u, v ); \
-		*rl = u * v; \
-		*rha += rh;
+		*rl = u * v;
 
 #elif defined( _MSC_VER ) && ( defined( _M_AMD64 ) || defined( _M_IA64 ))
 
@@ -562,8 +571,7 @@ KOMIHASH_INLINE_F uint64_t kh_lu64ec( const uint8_t* const p ) KOMIHASH_NOEXC
 
 	#define KOMIHASH_M128_IMPL \
 		uint64_t rh; \
-		*rl = _umul128( u, v, &rh ); \
-		*rha += rh;
+		*rl = _umul128( u, v, &rh );
 
 #elif defined( __SIZEOF_INT128__ ) || \
 	( defined( KOMIHASH_ICC_GCC ) && defined( __x86_64__ ))
@@ -572,15 +580,13 @@ KOMIHASH_INLINE_F uint64_t kh_lu64ec( const uint8_t* const p ) KOMIHASH_NOEXC
 		__uint128_t r = u; \
 		r *= v; \
 		const uint64_t rh = (uint64_t) ( r >> 64 ); \
-		*rl = (uint64_t) r; \
-		*rha += rh;
+		*rl = (uint64_t) r;
 
 #elif ( defined( __IBMC__ ) || defined( __IBMCPP__ )) && defined( __LP64__ )
 
 	#define KOMIHASH_M128_IMPL \
 		const uint64_t rh = __mulhdu( u, v ); \
-		*rl = u * v; \
-		*rha += rh;
+		*rl = u * v;
 
 #else // defined( __IBMC__ )
 
@@ -626,8 +632,8 @@ void kh_m128( const uint64_t u, const uint64_t v,
 
 #else // defined( KOMIHASH_M128_IMPL )
 
-	// _umul128() code for 32-bit systems, adapted from Hacker's Delight by
-	// Henry S. Warren, Jr.
+	// This is the `_umul128()` code for 32-bit systems, adapted from
+	// Hacker's Delight by Henry S. Warren, Jr.
 
 	*rl = u * v;
 
@@ -639,36 +645,19 @@ void kh_m128( const uint64_t u, const uint64_t v,
 	const uint64_t t = KOMIHASH_EMULU( u1, v0 ) + (uint32_t) ( w0 >> 32 );
 	const uint64_t w1 = KOMIHASH_EMULU( u0, v1 ) + (uint32_t) t;
 
-	*rha += KOMIHASH_EMULU( u1, v1 ) + (uint32_t) ( w1 >> 32 ) +
+	const uint64_t rh = KOMIHASH_EMULU( u1, v1 ) + (uint32_t) ( w1 >> 32 ) +
 		(uint32_t) ( t >> 32 );
 
 	#undef KOMIHASH_EMULU
 
 #endif // defined( KOMIHASH_M128_IMPL )
+
+	*rha += rh;
 }
 
 /**
  * @def KOMIHASH_HASHROUND()
  * @brief Macro for a common hashing round without input data.
- *
- * The three instructions performed by this macro (multiplication, addition,
- * and XOR) represent the simplest constant-free PRNG that works with state
- * variables of any even bit width, with `Seed1` as the PRNG output (the PRNG
- * has a period of 2^64). It passes `PractRand` tests with only rare,
- * non-systematic "unusual" assessments.
- *
- * To make this PRNG reliable and self-starting, and to eliminate the risk of
- * stalling, the following variant can be used, which adds a "register
- * checkerboard" constant - a source of raw entropy. This constant is not
- * required for hashing (but works in that context), since input entropy is
- * abundantly available during hashing. The PRNG is available as the
- * komirand() function.
- *
- * `Seed5 += 0xAAAAAAAAAAAAAAAA;`
- *
- * (The `0xAAAA...` constant should match the width of the register;
- * essentially, it is a repetition of the `10` bit pair; it is not an
- * arbitrary constant.)
  */
 
 #define KOMIHASH_HASHROUND() \
@@ -799,10 +788,10 @@ KOMIHASH_INLINE_F uint64_t komihash_epi( const uint8_t* Msg, size_t MsgLen,
 /**
  * @brief Implementation of the KOMIHASH 64-bit hash function.
  *
- * Produces and returns a 64-bit hash value of the specified message, string,
- * or binary data block. It is designed for hash tables and hash maps
- * and can also be used to generate checksums. It produces identical hashes
- * across big- and little-endian systems.
+ * This function produces and returns a 64-bit hash value of the specified
+ * message, string, or binary data block. It is designed for hash tables and
+ * hash maps and can also be used to generate checksums. It produces identical
+ * hashes across big- and little-endian systems.
  *
  * @param Msg The message to hash.
  * @param MsgLen The message length, in bytes; can be zero.
@@ -859,8 +848,8 @@ KOMIHASH_INLINE uint64_t komihash_inner( const uint8_t* Msg, size_t MsgLen,
 
 			if( MsgLen < 4 )
 			{
-				r1h ^= (uint64_t) 1 << ml8;
 				r1h ^= (uint64_t) Msg[ 0 ];
+				r1h ^= (uint64_t) 1 << ml8;
 
 				if( MsgLen != 1 )
 				{
@@ -987,10 +976,10 @@ KOMIHASH_INLINE_F void komihash_set_preseed( komihash_preseed_t* const ps,
 /**
  * @brief The KOMIHASH 64-bit hash function.
  *
- * Produces and returns a 64-bit hash value of the specified message, string,
- * or binary data block. It is designed for hash tables and hash maps
- * and can also be used to generate checksums. It produces identical hashes
- * across big- and little-endian systems.
+ * This function produces and returns a 64-bit hash value of the specified
+ * message, string, or binary data block. It is designed for hash tables and
+ * hash maps and can also be used to generate checksums. It produces identical
+ * hashes across big- and little-endian systems.
  *
  * @param Msg0 The message to hash. The alignment of this pointer is
  * unimportant. It is valid to pass a null pointer when `MsgLen` equals 0
@@ -1021,7 +1010,8 @@ KOMIHASH_INLINE_F uint64_t komihash( const void* const Msg0,
 /**
  * @brief The KOMIHASH 64-bit hash function with pre-seeding.
  *
- * A faster, statically pre-seeded hash function. @see komihash() for details.
+ * This is a faster, statically pre-seeded hash function. @see komihash() for
+ * details.
  *
  * @param Msg0 The message to hash.
  * @param MsgLen The message length, in bytes; can be zero.
@@ -1043,8 +1033,8 @@ KOMIHASH_INLINE_F uint64_t komihash_with_preseed( const void* const Msg0,
 /**
  * @brief The KOMIHASH 64-bit hash function without a seed.
  *
- * A faster hash function without a seed argument (using the default seed
- * of 0). @see komihash() for details.
+ * This is a faster hash function without a seed argument (using the default
+ * seed of 0). @see komihash() for details.
  *
  * @param Msg0 The message to hash.
  * @param MsgLen The message length, in bytes; can be zero.
@@ -1065,14 +1055,18 @@ KOMIHASH_INLINE_F uint64_t komihash_seedless( const void* const Msg0,
 /**
  * @brief The KOMIRAND 64-bit pseudorandom number generator.
  *
- * A simple, reliable, self-starting, and efficient PRNG with a period of
- * 2^64. Its performance is 0.62 cycles/byte. It self-starts within 4
+ * This is a simple, reliable, self-starting, and efficient PRNG with a period
+ * of 2^64. Its performance is 0.62 cycles/byte. It self-starts within 4
  * iterations that constitute the suggested "warm-up" period (needed before
  * using the output if the seeds are initialized with an arbitrary value).
  *
  * If the seeds are initialized with a high-quality, uniformly random value
- * (e.g., from the operating system's entropy pool or a hash function's
- * output), the PRNG produces valid output from the start.
+ * (e.g., from the operating system's entropy pool or the output of a hash
+ * function), the PRNG produces valid output from the start.
+ *
+ * Note that although this PRNG is classified as "chaotic", one should not
+ * assume that it can enter degenerate cycles. When properly initialized, it
+ * does not exhibit degenerate cycles, regardless of the initial state.
  *
  * @param[in,out] Seed1 Seed value 1. Can be initialized to any value
  * (even 0). This is the usual "PRNG seed" value.
@@ -1087,10 +1081,31 @@ KOMIHASH_INLINE_F uint64_t komirand( uint64_t* const Seed1,
 {
 	uint64_t s1 = *Seed1;
 	uint64_t s2 = *Seed2;
+	uint64_t rh = 0;
 
-	kh_m128( s1, s2, &s1, &s2 );
+	// The three instructions performed by this function (multiplication,
+	// addition, and XOR) represent the simplest constant-free PRNG that works
+	// with state variables of any even bit width, where `Seed1` serves as the
+	// PRNG output (the PRNG has a period of 2^64). It passes `PractRand`
+	// tests with only rare, non-systematic "unusual" assessments.
+	//
+	// To make this PRNG reliable and self-starting, and to eliminate the risk
+	// of stalling, the "register checkerboard" constants are added - a source
+	// of raw entropy. These constants are not required for hashing (but work
+	// in that context), since input entropy is abundantly available during
+	// hashing. Besides that, to minimize the risk of stalling, the hashing
+	// uses an adjusted construction of this PRNG.
+	//
+	// (The `0x5555` and `0xAAAA...` constants should match the width of the
+	// register; essentially, they repeat the `01` and `10` bit pairs; they
+	// are not arbitrary constants.)
+
+	kh_m128( s1, s2, &s1, &rh );
+	s2 += rh;
+	s1 ^= rh;
+
 	s2 += KOMIHASH_VAL10;
-	s1 ^= s2;
+	s1 += KOMIHASH_VAL01;
 
 	*Seed2 = s2;
 	*Seed1 = s1;
@@ -1262,8 +1277,9 @@ KOMIHASH_INLINE void komihash_stream_update( komihash_stream_t* const ctx,
 /**
  * @brief Finalizes a streamed `komihash` hashing session.
  *
- * Returns the hash value of the previously hashed data. This value is equal
- * to the value returned by the komihash() function for all of the input data.
+ * This function returns the hash value of the previously hashed data. This
+ * value is equal to the value returned by the komihash() function for all of
+ * the input data.
  *
  * Since this function does not destructively alter the context structure,
  * it can be used to obtain intermediate hashes of the data stream being
@@ -1355,12 +1371,18 @@ using KOMIHASH_NS::komihash_stream_oneshot;
 
 #endif // defined( KOMIHASH_NS )
 
-// Defines for Doxygen.
+// Macro definitions for Doxygen.
 
 #if !defined( KOMIHASH_NS_CUSTOM )
 	#define KOMIHASH_NS_CUSTOM
 	#undef KOMIHASH_NS_CUSTOM
 #endif // !defined( KOMIHASH_NS_CUSTOM )
+
+#if defined( KOMIHASH_ENDIAN_DEFS )
+	#undef KOMIHASH_LITTLE_ENDIAN
+	#undef KOMIHASH_COND_EC
+	#undef KOMIHASH_ENDIAN_DEFS
+#endif // defined( KOMIHASH_ENDIAN_DEFS )
 
 #undef KOMIHASH_NS
 #undef KOMIHASH_U64_C
@@ -1377,7 +1399,6 @@ using KOMIHASH_NS::komihash_stream_oneshot;
 #undef KOMIHASH_VAL10
 #undef KOMIHASH_DEFSEED1
 #undef KOMIHASH_DEFSEED5
-#undef KOMIHASH_COND_EC
 #undef KOMIHASH_ICC_GCC
 #undef KOMIHASH_GCC_BUILTINS
 #undef KOMIHASH_BMI2
