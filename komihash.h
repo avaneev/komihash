@@ -1,7 +1,7 @@
 /**
  * @file komihash.h
  *
- * @version 5.33
+ * @version 5.34
  *
  * @brief The header file for the `komihash` 64-bit hash function,
  * the `komirand` 64-bit PRNG, and the streamed `komihash` implementation.
@@ -42,7 +42,7 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.33" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.34" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_NS_CUSTOM
@@ -165,8 +165,14 @@
  *
  * When C++20 is available, this macro is defined as 0, and the actual
  * endianness is determined at compile time via std::endian::native.
+ * This means that a value of 0 for this macro indicates "big-endian" or
+ * "unknown".
  *
- * It can be externally defined as 1 to reduce overhead if endianness
+ * Note that for exotic platforms, you may need to include
+ * a compiler-dependent `endian.h` header before including `komihash.h` to
+ * avoid using a potentially slower fallback.
+ *
+ * This macro can be externally defined as 1 to reduce overhead if endianness
  * correction and hash value portability are unnecessary.
  */
 
@@ -177,17 +183,25 @@
  */
 
 #if !defined( KOMIHASH_LITTLE_ENDIAN )
+
 	#define KOMIHASH_ENDIAN_DEFS
 
 	#if ( defined( __BYTE_ORDER__ ) && defined( __ORDER_LITTLE_ENDIAN__ ) && \
 			__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ ) || \
 		( defined( __BYTE_ORDER ) && defined( __LITTLE_ENDIAN ) && \
 			__BYTE_ORDER == __LITTLE_ENDIAN ) || \
-		defined( __LITTLE_ENDIAN__ ) || defined( _LITTLE_ENDIAN ) || \
-		defined( _WIN32 ) || defined( i386 ) || defined( __i386 ) || \
-		defined( __i386__ ) || defined( _M_IX86 ) || defined( _M_AMD64 ) || \
-		defined( _X86_ ) || defined( __x86_64 ) || defined( __x86_64__ ) || \
-		defined( __amd64 ) || defined( __amd64__ ) || defined( _M_ARM )
+		( defined( _BYTE_ORDER ) && defined( _LITTLE_ENDIAN ) && \
+			_BYTE_ORDER == _LITTLE_ENDIAN ) || \
+		defined( __LITTLE_ENDIAN__ ) || defined( __little_endian__ ) || \
+		( !defined( __BYTE_ORDER ) && !defined( __BIG_ENDIAN ) && \
+			defined( __LITTLE_ENDIAN )) || \
+		( !defined( _BYTE_ORDER ) && !defined( _BIG_ENDIAN ) && \
+			defined( _LITTLE_ENDIAN )) || \
+		defined( _WIN32 ) || (( defined( i386 ) || defined( __i386 ) || \
+		defined( __i386__ )) && !defined( __VOS__ )) || defined( _X86_ ) || \
+		defined( _M_IX86 ) || defined( _M_AMD64 ) || defined( _M_ARM ) || \
+		defined( __x86_64 ) || defined( __x86_64__ ) || \
+		defined( __amd64 ) || defined( __amd64__ )
 
 		#define KOMIHASH_LITTLE_ENDIAN 1
 
@@ -195,9 +209,16 @@
 			__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ ) || \
 		( defined( __BYTE_ORDER ) && defined( __BIG_ENDIAN ) && \
 			__BYTE_ORDER == __BIG_ENDIAN ) || \
-		defined( __BIG_ENDIAN__ ) || defined( _BIG_ENDIAN ) || \
+		( defined( _BYTE_ORDER ) && defined( _BIG_ENDIAN ) && \
+			_BYTE_ORDER == _BIG_ENDIAN ) || \
+		defined( __BIG_ENDIAN__ ) || defined( __big_endian__ ) || \
+		( !defined( __BYTE_ORDER ) && !defined( __LITTLE_ENDIAN ) && \
+			defined( __BIG_ENDIAN )) || \
+		( !defined( _BYTE_ORDER ) && !defined( _LITTLE_ENDIAN ) && \
+			defined( _BIG_ENDIAN )) || \
 		defined( __SYSC_ZARCH__ ) || defined( __zarch__ ) || \
-		defined( __s390x__ ) || defined( __sparc ) || defined( __sparc__ )
+		defined( __s390__ ) || defined( __s390x__ ) || \
+		defined( __sparc ) || defined( __sparc__ ) || defined( __VOS__ )
 
 		#define KOMIHASH_LITTLE_ENDIAN 0
 		#define KOMIHASH_COND_EC( vl, vb ) ( vb )
@@ -216,10 +237,13 @@
 		#define KOMIHASH_COND_EC( vl, vb ) ( kh_is_little_endian() ? vl : vb )
 
 	#endif // defined( __cplusplus )
+
 #else // !defined( KOMIHASH_LITTLE_ENDIAN )
+
 	#if !KOMIHASH_LITTLE_ENDIAN
 		#error The KOMIHASH_LITTLE_ENDIAN macro must evaluate to true.
 	#endif // !KOMIHASH_LITTLE_ENDIAN
+
 #endif // !defined( KOMIHASH_LITTLE_ENDIAN )
 
 /**
@@ -514,8 +538,8 @@ KOMIHASH_INLINE_F uint64_t kh_lu32ec( const uint8_t* const p ) KOMIHASH_NOEXC
 
 #else // defined( KOMIHASH_EC32 )
 
-	return( (uint32_t) p[ 0 ] | (uint32_t) p[ 1 ] << 8 |
-		(uint32_t) p[ 2 ] << 16 | (uint32_t) p[ 3 ] << 24 );
+	return( (uint64_t) p[ 0 ] | (uint64_t) p[ 1 ] << 8 |
+		(uint64_t) p[ 2 ] << 16 | (uint64_t) p[ 3 ] << 24 );
 
 #endif // defined( KOMIHASH_EC32 )
 }
@@ -628,8 +652,6 @@ void kh_m128( const uint64_t u, const uint64_t v,
 
 	KOMIHASH_M128_IMPL
 
-	#undef KOMIHASH_M128_IMPL
-
 #else // defined( KOMIHASH_M128_IMPL )
 
 	// This is the `_umul128()` code for 32-bit systems, adapted from
@@ -647,8 +669,6 @@ void kh_m128( const uint64_t u, const uint64_t v,
 
 	const uint64_t rh = KOMIHASH_EMULU( u1, v1 ) + (uint32_t) ( w1 >> 32 ) +
 		(uint32_t) ( t >> 32 );
-
-	#undef KOMIHASH_EMULU
 
 #endif // defined( KOMIHASH_M128_IMPL )
 
@@ -1412,6 +1432,8 @@ using KOMIHASH_NS::komihash_stream_oneshot;
 #undef KOMIHASH_STATIC
 #undef KOMIHASH_INLINE
 #undef KOMIHASH_INLINE_F
+#undef KOMIHASH_M128_IMPL
+#undef KOMIHASH_EMULU
 #undef KOMIHASH_HASHROUND
 #undef KOMIHASH_HASH16
 #undef KOMIHASH_HASHFIN
