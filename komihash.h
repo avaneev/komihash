@@ -1,7 +1,7 @@
 /**
  * @file komihash.h
  *
- * @version 5.34
+ * @version 5.34.1
  *
  * @brief The header file for the `komihash` 64-bit hash function,
  * the `komirand` 64-bit PRNG, and the streamed `komihash` implementation.
@@ -42,7 +42,7 @@
 #ifndef KOMIHASH_INCLUDED
 #define KOMIHASH_INCLUDED
 
-#define KOMIHASH_VER_STR "5.34" ///< KOMIHASH source code version string.
+#define KOMIHASH_VER_STR "5.34.1" ///< KOMIHASH source code version string.
 
 /**
  * @def KOMIHASH_NS_CUSTOM
@@ -717,37 +717,30 @@ void kh_m128( const uint64_t u, const uint64_t v,
  * This macro expects `Msg` to point to the data and `MsgLen` to be greater
  * than 63, and requires `Seed1` through `Seed8` to be initialized.
  *
- * The "shifting" arrangement of the `Seed1` to `Seed4` XOR operations (below)
- * does not increase the PRNG period of individual `SeedN` values, but reduces
- * the chance of occasional synchronization between PRNG lanes. In practice,
- * `Seed1` to `Seed4` together become a single "fused" 256-bit PRNG value,
- * which gives the state a total PRNG period of 2^66.
+ * The probability of any two lines synchronizing is 2^-63 which is already
+ * practically acceptable since remaining lines remain unsynchronized.
+ * The probability of three or all four lines synchronization is negligible.
  */
 
 #define KOMIHASH_HASHLOOP64() \
 	do KOMIHASH_LIKELY_DO \
 	{ \
-		kh_m128( kh_lu64ec( Msg ) ^ Seed1, \
+		kh_m128( kh_lu64ec( Msg ) ^ Seed1 ^ Seed5, \
 			kh_lu64ec( Msg + 32 ) ^ Seed5, &Seed1, &Seed5 ); \
 	\
-		kh_m128( kh_lu64ec( Msg + 8 ) ^ Seed2, \
+		kh_m128( kh_lu64ec( Msg + 8 ) ^ Seed2 ^ Seed6, \
 			kh_lu64ec( Msg + 40 ) ^ Seed6, &Seed2, &Seed6 ); \
 	\
-		kh_m128( kh_lu64ec( Msg + 16 ) ^ Seed3, \
+		kh_m128( kh_lu64ec( Msg + 16 ) ^ Seed3 ^ Seed7, \
 			kh_lu64ec( Msg + 48 ) ^ Seed7, &Seed3, &Seed7 ); \
 	\
-		kh_m128( kh_lu64ec( Msg + 24 ) ^ Seed4, \
+		kh_m128( kh_lu64ec( Msg + 24 ) ^ Seed4 ^ Seed8, \
 			kh_lu64ec( Msg + 56 ) ^ Seed8, &Seed4, &Seed8 ); \
 	\
-		Msg += 64; \
+		KOMIHASH_PREFETCH( Msg + 64 ); \
+	\
 		MsgLen -= 64; \
-	\
-		KOMIHASH_PREFETCH( Msg ); \
-	\
-		Seed4 ^= Seed7; \
-		Seed1 ^= Seed8; \
-		Seed2 ^= Seed5; \
-		Seed3 ^= Seed6; \
+		Msg += 64; \
 	\
 	} while KOMIHASH_LIKELY_DO_EXPR( MsgLen > 63 )
 
@@ -927,17 +920,24 @@ KOMIHASH_INLINE uint64_t komihash_inner( const uint8_t* Msg, size_t MsgLen,
 longmsg:
 	if KOMIHASH_LIKELY( MsgLen > 63 )
 	{
-		uint64_t Seed2 = KOMIHASH_IVAL2 ^ Seed1;
-		uint64_t Seed3 = KOMIHASH_IVAL3 ^ Seed1;
-		uint64_t Seed4 = KOMIHASH_IVAL4 ^ Seed1;
-		uint64_t Seed6 = KOMIHASH_IVAL6 ^ Seed5;
-		uint64_t Seed7 = KOMIHASH_IVAL7 ^ Seed5;
-		uint64_t Seed8 = KOMIHASH_IVAL8 ^ Seed5;
+		uint64_t Seed2, Seed6 = Seed5;
+		kh_m128( Seed1 ^ KOMIHASH_IVAL2,
+			Seed5 ^ KOMIHASH_IVAL6, &Seed2, &Seed6 );
+
+		Seed1 ^= Seed5;
+
+		uint64_t Seed3, Seed7 = Seed6;
+		kh_m128( Seed2 ^ Seed6 ^ KOMIHASH_IVAL3,
+			Seed6 ^ KOMIHASH_IVAL7, &Seed3, &Seed7 );
+
+		uint64_t Seed4, Seed8 = Seed7;
+		kh_m128( Seed3 ^ Seed7 ^ KOMIHASH_IVAL4,
+			Seed7 ^ KOMIHASH_IVAL8, &Seed4, &Seed8 );
 
 		KOMIHASH_HASHLOOP64();
 
 		Seed5 ^= Seed6 ^ Seed7 ^ Seed8;
-		Seed1 ^= Seed2 ^ Seed3 ^ Seed4;
+		Seed1 ^= Seed2 ^ Seed3 ^ Seed4 ^ Seed5;
 	}
 
 	return( komihash_epi( Msg, MsgLen, Seed1, Seed5 ));
@@ -1246,12 +1246,19 @@ KOMIHASH_INLINE void komihash_stream_update( komihash_stream_t* const ctx,
 
 				komihash_set_preseed_inner( &Seed1, &Seed5, ctx -> Seed[ 0 ]);
 
-				Seed2 = KOMIHASH_IVAL2 ^ Seed1;
-				Seed3 = KOMIHASH_IVAL3 ^ Seed1;
-				Seed4 = KOMIHASH_IVAL4 ^ Seed1;
-				Seed6 = KOMIHASH_IVAL6 ^ Seed5;
-				Seed7 = KOMIHASH_IVAL7 ^ Seed5;
-				Seed8 = KOMIHASH_IVAL8 ^ Seed5;
+				Seed6 = Seed5;
+				kh_m128( Seed1 ^ KOMIHASH_IVAL2,
+					Seed5 ^ KOMIHASH_IVAL6, &Seed2, &Seed6 );
+
+				Seed1 ^= Seed5;
+
+				Seed7 = Seed6;
+				kh_m128( Seed2 ^ Seed6 ^ KOMIHASH_IVAL3,
+					Seed6 ^ KOMIHASH_IVAL7, &Seed3, &Seed7 );
+
+				Seed8 = Seed7;
+				kh_m128( Seed3 ^ Seed7 ^ KOMIHASH_IVAL4,
+					Seed7 ^ KOMIHASH_IVAL8, &Seed4, &Seed8 );
 			}
 
 			KOMIHASH_HASHLOOP64();
@@ -1340,7 +1347,7 @@ KOMIHASH_INLINE uint64_t komihash_stream_final( komihash_stream_t* const ctx )
 	}
 
 	Seed5 ^= Seed6 ^ Seed7 ^ Seed8;
-	Seed1 ^= Seed2 ^ Seed3 ^ Seed4;
+	Seed1 ^= Seed2 ^ Seed3 ^ Seed4 ^ Seed5;
 
 	return( komihash_epi( Msg, MsgLen, Seed1, Seed5 ));
 }
